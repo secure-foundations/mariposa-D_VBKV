@@ -30,11 +30,15 @@ nl_enable_files = ["lib/Math/Nonlinear.i.dfy",
 
 nl_enable_files = set([os.path.realpath(f) for f in nl_enable_files])
 
+# cur_path = os.path.realpath(".")
+
 for file_path in open(".mariposa/unique_imports.txt").readlines():
     file_path = file_path.strip() 
-    # do not give a long time for verification, we only need the query
-    command = ".dafny/dafny/Scripts/dafny /timeLimit:1 /compile:0 /proverLog:.mariposa/queries/@FILE@xxx@PROC@ " + file_path
+    command = ".dafny/dafny/Scripts/dafny /timeLimit:1 /compile:0 /proverLog:.mariposa/queries/@FILE@xxx@PROC@ "
     if file_path not in nl_enable_files:
-        command += " /noNLarith"
+        command += " /noNLarith "
+    # file_path = file_path.replace(cur_path, ".")
+    # do not give a long time for verification, we only need the query
+    command += file_path
     print(command) 
     
