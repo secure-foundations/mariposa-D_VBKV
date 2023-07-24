@@ -63,7 +63,7 @@ module JournalistImpl {
   {
     assert DropLast(a + [je]) == a;
     assert Last(a + [je]) == je;
-    reveal_WeightJournalEntries();
+    /* reveal_WeightJournalEntries(); */
     if |a| == 0 {
       assert WeightJournalEntries(a + [je])
           == 8 + SumJournalEntries(a) + WeightJournalEntry(je)
@@ -206,8 +206,8 @@ module JournalistImpl {
     ensures j.I().journalBack == None
     ensures j.I().writtenJournalLen == 0
     {
-      reveal_cyclicSlice();
-      reveal_WeightJournalEntries();
+      /* reveal_cyclicSlice(); */
+      /* reveal_WeightJournalEntries(); */
 
       linear var jes := seq_alloc_init(4096, JournalInsert([], []));
     
@@ -244,7 +244,7 @@ module JournalistImpl {
       && |JournalRangeOfByteSeq(s).value| + old_self.I().writtenJournalLen as int
           <= NumJournalBlocks() as int
     {
-      reveal_WeightJournalEntries();
+      /* reveal_WeightJournalEntries(); */
 
       s := MarshallJournalEntries(
         self.journalEntries,
@@ -275,7 +275,7 @@ module JournalistImpl {
       && |JournalRangeOfByteSeq(s).value| + old_self.I().writtenJournalLen as int
           <= NumJournalBlocks() as int
     {
-      reveal_WeightJournalEntries();
+      /* reveal_WeightJournalEntries(); */
 
       var numBlocks := (self.inMemoryWeight + 4064 - 1) / 4064;
       s := MarshallJournalEntries(
@@ -307,7 +307,7 @@ module JournalistImpl {
     ensures self.Inv()
     ensures self.I() == old_self.I().(writtenJournalLen := len as int)
     {
-      reveal_WeightJournalEntries();
+      /* reveal_WeightJournalEntries(); */
       inout self.writtenJournalBlocks := len;
       inout self.frozenJournalBlocks := 0;
     }
@@ -330,7 +330,7 @@ module JournalistImpl {
         .(inMemoryJournalFrozen :=
           old_self.I().inMemoryJournalFrozen + old_self.I().inMemoryJournal)
     {
-      reveal_WeightJournalEntries();
+      /* reveal_WeightJournalEntries(); */
 
       inout self.len1 := self.len1 + self.len2;
       inout self.len2 := 0;
@@ -340,7 +340,7 @@ module JournalistImpl {
 
       assert self.I().inMemoryJournalFrozen ==
         old_self.I().inMemoryJournalFrozen + old_self.I().inMemoryJournal
-      by { reveal_cyclicSlice(); }
+      by { /* reveal_cyclicSlice(); */ }
 
       WeightJournalEntriesSum(old_self.I().inMemoryJournalFrozen, old_self.I().inMemoryJournal);
     }
@@ -412,7 +412,7 @@ module JournalistImpl {
           + (if self.len2 == 0 then 8 else 0);
       inout self.len2 := self.len2 + 1;
       
-      reveal_cyclicSlice();
+      /* reveal_cyclicSlice(); */
 
       assert self.InMemoryJournal()
         == old_self.InMemoryJournal() + [je];

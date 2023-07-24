@@ -17,7 +17,7 @@ module JournalistMarshallingModel {
   import opened PackedIntsLib
   import CRC32_C
 
-  function {:opaque} cyclicSlice<T>(t: seq<T>, start: uint64, l: uint64) : (res: seq<T>)
+  function cyclicSlice<T>(t: seq<T>, start: uint64, l: uint64) : (res: seq<T>)
   requires 0 <= start as int < |t|
   requires 0 <= l as int <= |t|
   ensures |res| == l as int
@@ -30,7 +30,7 @@ module JournalistMarshallingModel {
 
   ///// Marshalling
 
-  function {:opaque} withoutChecksums(buf: seq<byte>, numBlocks: uint64) : (res: seq<byte>)
+  function withoutChecksums(buf: seq<byte>, numBlocks: uint64) : (res: seq<byte>)
   requires |buf| == 4096 * numBlocks as int
   ensures  |res| == 4064 * numBlocks as int
   {
@@ -44,14 +44,14 @@ module JournalistMarshallingModel {
   ensures buf[block as int * 4096 + 32 + idx as int]
       == withoutChecksums(buf, numBlocks)[block as int * 4064 + idx as int]
   {
-    reveal_withoutChecksums();
+    /* reveal_withoutChecksums(); */
     if block == 0 {
     } else {
       withoutChecksumsEq(buf[4096..], numBlocks-1, block - 1, idx);
     }
   }
 
-  function {:opaque} splice(bytes: seq<byte>, start: uint64, ins: seq<byte>) : (res: seq<byte>)
+  function splice(bytes: seq<byte>, start: uint64, ins: seq<byte>) : (res: seq<byte>)
   requires 0 <= start
   requires start as int + |ins| <= |bytes|
   requires |bytes| < 0x1_0000_0000_0000_0000
@@ -60,7 +60,7 @@ module JournalistMarshallingModel {
     bytes[.. start] + ins + bytes[start + |ins| as uint64 ..]
   }
 
-  function {:opaque} writeOnto(buf: seq<byte>, numBlocks: uint64, start: uint64, bytes: seq<byte>)
+  function writeOnto(buf: seq<byte>, numBlocks: uint64, start: uint64, bytes: seq<byte>)
       : (buf' : seq<byte>)
   requires |buf| == 4096 * numBlocks as int
   requires numBlocks <= NumJournalBlocks()
@@ -119,13 +119,13 @@ module JournalistMarshallingModel {
             withoutChecksums(writeOnto(buf, numBlocks, start, bytes), numBlocks)[4064*block_i + idx_i];
               { withoutChecksumsEq(writeOnto(buf, numBlocks, start, bytes), numBlocks, block_i as uint64, idx_i as uint64); }
             writeOnto(buf, numBlocks, start, bytes)[4096*block_i + 32 + idx_i];
-              { reveal_writeOnto(); }
+              { /* reveal_writeOnto(); */ }
             splice(buf, block * 4096 + 32 + idx, bytes)[4096*block_i + 32 + idx_i];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
             splice_get(buf, 4096*block_i as int + 32 + idx_i as int, block as int * 4096 + 32 + idx as int, bytes);
               { withoutChecksumsEq(buf, numBlocks, block_i as uint64, idx_i as uint64); }
             splice_get(withoutChecksums(buf, numBlocks), i as int, start as int, bytes);
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
             splice(withoutChecksums(buf, numBlocks), start, bytes)[i];
             b[i];
           }
@@ -138,15 +138,15 @@ module JournalistMarshallingModel {
               withoutChecksums(writeOnto(buf, numBlocks, start, bytes), numBlocks)[4064*block_i + idx_i];
               { withoutChecksumsEq(writeOnto(buf, numBlocks, start, bytes), numBlocks, block_i as uint64, idx_i as uint64); }
               writeOnto(buf, numBlocks, start, bytes)[4096*block_i + 32 + idx_i];
-              { reveal_writeOnto(); }
+              { /* reveal_writeOnto(); */ }
               buf2[4096 * block_i + 32 + idx_i];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
               buf1[4096 * block_i + 32 + idx_i];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
               buf[4096 * block_i + 32 + idx_i];
               { withoutChecksumsEq(buf, numBlocks, block_i as uint64, idx_i as uint64); }
               withoutChecksums(buf, numBlocks)[i];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
               splice(withoutChecksums(buf, numBlocks), start, bytes)[i];
               b[i];
             }
@@ -156,14 +156,14 @@ module JournalistMarshallingModel {
               withoutChecksums(writeOnto(buf, numBlocks, start, bytes), numBlocks)[4064*block_i + idx_i];
               { withoutChecksumsEq(writeOnto(buf, numBlocks, start, bytes), numBlocks, block_i as uint64, idx_i as uint64); }
               writeOnto(buf, numBlocks, start, bytes)[4096*block_i + 32 + idx_i];
-              { reveal_writeOnto(); }
+              { /* reveal_writeOnto(); */ }
               buf2[4096 * block_i + 32 + idx_i];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
               buf1[4096 * block_i + 32 + idx_i];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
               bytes[.. 4064 - idx][4096 * block_i + 32 + idx_i - (block * 4096 + 32 + idx) as int];
               bytes[i - start as int];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
               splice(withoutChecksums(buf, numBlocks), start, bytes)[i];
               b[i];
             }
@@ -173,12 +173,12 @@ module JournalistMarshallingModel {
               withoutChecksums(writeOnto(buf, numBlocks, start, bytes), numBlocks)[4064*block_i + idx_i];
               { withoutChecksumsEq(writeOnto(buf, numBlocks, start, bytes), numBlocks, block_i as uint64, idx_i as uint64); }
               writeOnto(buf, numBlocks, start, bytes)[4096*block_i + 32 + idx_i];
-              { reveal_writeOnto(); }
+              { /* reveal_writeOnto(); */ }
               buf2[4096 * block_i + 32 + idx_i];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
               bytes[4064 - idx ..][4096 * block_i + 32 + idx_i - ((block + 1) * 4096 + 32) as int];
               bytes[i - start as int];
-              { reveal_splice(); }
+              { /* reveal_splice(); */ }
               splice(withoutChecksums(buf, numBlocks), start, bytes)[i];
               b[i];
             }
@@ -187,13 +187,13 @@ module JournalistMarshallingModel {
       }
       assert a == b;
     } else {
-      assert writeOnto(buf, numBlocks, start, bytes) == buf by { reveal_writeOnto(); }
+      assert writeOnto(buf, numBlocks, start, bytes) == buf by { /* reveal_writeOnto(); */ }
       assert splice(withoutChecksums(buf, numBlocks), start, bytes)
-          == withoutChecksums(buf, numBlocks) by { reveal_splice(); }
+          == withoutChecksums(buf, numBlocks) by { /* reveal_splice(); */ }
     }
   }
 
-  function {:opaque} writeIntOnto(buf: seq<byte>, numBlocks: uint64, idx: uint64, val: uint32) : (buf' : seq<byte>)
+  function writeIntOnto(buf: seq<byte>, numBlocks: uint64, idx: uint64, val: uint32) : (buf' : seq<byte>)
   requires |buf| == 4096 * numBlocks as int
   requires numBlocks <= NumJournalBlocks()
   requires 0 <= idx
@@ -219,8 +219,8 @@ module JournalistMarshallingModel {
     ensures writeOntoAgrees(buf, numBlocks, start, bytes, i)
     {
       writeOntoResult(buf, numBlocks, start, bytes);
-      reveal_writeOnto();
-      reveal_splice();
+      /* reveal_writeOnto(); */
+      /* reveal_splice(); */
       calc {
         withoutChecksums(writeOnto(buf, numBlocks, start, bytes), numBlocks)[i];
         withoutChecksums(buf, numBlocks)[i];
@@ -262,7 +262,7 @@ module JournalistMarshallingModel {
   {
     writeOntoResult(buf, numBlocks, start, bytes);
     assert splice(withoutChecksums(buf, numBlocks), start, bytes)[start .. start as int + |bytes|] == bytes
-      by { reveal_splice(); }
+      by { /* reveal_splice(); */ }
   }
 
 
@@ -277,7 +277,7 @@ module JournalistMarshallingModel {
   requires writeIntOnto.requires(buf, numBlocks, start, val)
   ensures forall i | 0 <= i < start as int :: writeIntOntoAgrees(buf, numBlocks, start, val, i)
   {
-    reveal_writeIntOnto();
+    /* reveal_writeIntOnto(); */
     var bytes := pack_LittleEndian_Uint32(val);
     writeOntoPreserves(buf, numBlocks, start, bytes);
     forall i | 0 <= i < start as int
@@ -325,7 +325,7 @@ module JournalistMarshallingModel {
     //assert unpack_LittleEndian_Uint32(t) == val by {
     //  reveal_unpack_LittleEndian_Uint32();
     //}
-    reveal_writeIntOnto();
+    /* reveal_writeIntOnto(); */
     writeOntoMakesSlice(buf, numBlocks, start, t);
   }
 
@@ -352,11 +352,11 @@ module JournalistMarshallingModel {
     var start' := if start+1 == |entries| as uint64 then 0 else start+1;
     assert [entries[start]] + cyclicSlice(entries, start', len-1)
         == cyclicSlice(entries, start, len)
-      by { reveal_cyclicSlice(); }
+      by { /* reveal_cyclicSlice(); */ }
     SumJournalEntriesSum([entries[start]], cyclicSlice(entries, start', len-1));
   }
 
-  function {:opaque} writeJournalEntries(buf: seq<byte>, numBlocks: uint64, idx: uint64,
+  function writeJournalEntries(buf: seq<byte>, numBlocks: uint64, idx: uint64,
       entries: seq<JournalEntry>, start: uint64, len: uint64) : (buf' : seq<byte>)
   requires |buf| == 4096 * numBlocks as int
   requires numBlocks <= NumJournalBlocks()
@@ -385,7 +385,7 @@ module JournalistMarshallingModel {
     )
   }
 
-  function {:opaque} fillInChecksums(buf: seq<byte>, numBlocks: uint64, i: uint64) : (buf' : seq<byte>)
+  function fillInChecksums(buf: seq<byte>, numBlocks: uint64, i: uint64) : (buf' : seq<byte>)
   requires |buf| == numBlocks as int * 4096
   requires numBlocks <= NumJournalBlocks()
   requires 0 <= i <= numBlocks
@@ -400,7 +400,7 @@ module JournalistMarshallingModel {
     )
   }
 
-  predicate {:opaque} hasHeader(buf: seq<byte>, header: Header)
+  predicate hasHeader(buf: seq<byte>, header: Header)
   {
     && |buf| >= 8
     && unpack_LittleEndian_Uint32(buf[0..4]) as int == header.nentries
@@ -476,7 +476,7 @@ module JournalistMarshallingModel {
   ensures DropLast(cyclicSlice(entries, start, len + 1))
       == cyclicSlice(entries, start, len)
   {
-    reveal_cyclicSlice();
+    /* reveal_cyclicSlice(); */
   }
 
   lemma lemma_writeJournalEntries(
@@ -503,7 +503,7 @@ module JournalistMarshallingModel {
   decreases len'
   {
     if len' == 0 {
-      reveal_writeJournalEntries();
+      /* reveal_writeJournalEntries(); */
       return;
     }
 
@@ -549,7 +549,7 @@ module JournalistMarshallingModel {
 
     assert hasHeader(withoutChecksums(buf4, numBlocks), Header(len as int, numBlocks as int))
     by {
-      reveal_hasHeader();
+      /* reveal_hasHeader(); */
       slices_eq(withoutChecksums(buf, numBlocks), withoutChecksums(buf4, numBlocks), idx as int, 0, 4);
       slices_eq(withoutChecksums(buf, numBlocks), withoutChecksums(buf4, numBlocks), idx as int, 4, 8);
     }
@@ -574,7 +574,7 @@ module JournalistMarshallingModel {
         }
         assert idx as int == 8 + SumJournalEntries(slice[..len-len']) by {
           assert slice[..len-len'] == cyclicSlice(entries, start, len - len') by {
-            reveal_cyclicSlice();
+            /* reveal_cyclicSlice(); */
           }
         }
         JournalEntriesSumPrefix(slice[..len-len'], i+1);
@@ -593,7 +593,7 @@ module JournalistMarshallingModel {
     }
     assert hasEntry(withoutChecksums(buf4, numBlocks), slice, len as int - len' as int) by {
       var entry := slice[len as int - len' as int];
-      assert entry == entries[start'] by { reveal_cyclicSlice(); }
+      assert entry == entries[start'] by { /* reveal_cyclicSlice(); */ }
       var b := withoutChecksums(buf4, numBlocks);
       assert idx4 as int <= |b|;
       assert unpack_LittleEndian_Uint32(b[idx..idx1]) as int == |entry.key| by {
@@ -614,7 +614,7 @@ module JournalistMarshallingModel {
       assert b[idx3..idx4] == entry.value by {
         writeOntoMakesSlice(buf3, numBlocks, idx3, entry.value);
       }
-      assert slice[..len - len'] == cyclicSlice(entries, start, len - len') by { reveal_cyclicSlice(); }
+      assert slice[..len - len'] == cyclicSlice(entries, start, len - len') by {/*  reveal_cyclicSlice(); */ }
       assert 8 + SumJournalEntries(slice[..len - len']) == idx as int;
     }
     assert hasEntries(withoutChecksums(buf4, numBlocks), slice, len as int - len' as int + 1);
@@ -622,15 +622,15 @@ module JournalistMarshallingModel {
     assert idx4 as int == 8 + SumJournalEntries(cyclicSlice(entries, start, len - len' + 1)) by {
       DropLastCyclicSlice(entries, start, len - len');
       assert DropLast(cyclicSlice(entries, start, len - len' + 1))
-          == cyclicSlice(entries, start, len - len') by { reveal_cyclicSlice(); }
+          == cyclicSlice(entries, start, len - len') by { /* reveal_cyclicSlice(); */ }
       assert Last(cyclicSlice(entries, start, len - len' + 1))
-          == entries[start'] by { reveal_cyclicSlice(); }
+          == entries[start'] by { /* reveal_cyclicSlice(); */ }
     }
 
     lemma_writeJournalEntries(buf4, numBlocks, idx4, entries, start, len, 
         if start' as int + 1 == |entries| then 0 else start' + 1,
         len' - 1);
-    reveal_writeJournalEntries();
+    /* reveal_writeJournalEntries(); */
   }
 
   lemma fillInChecksumsPreserves(buf: seq<byte>, numBlocks: uint64, i: uint64)
@@ -639,7 +639,7 @@ module JournalistMarshallingModel {
       == withoutChecksums(buf, numBlocks)
   decreases numBlocks - i
   {
-    reveal_fillInChecksums();
+    /* reveal_fillInChecksums(); */
     if i == numBlocks {
     } else {
       var buf1 := splice(buf, 4096*i, CRC32_C.crc32_c_padded(buf[4096*i + 32 .. 4096*i + 4096]));
@@ -654,7 +654,7 @@ module JournalistMarshallingModel {
           c0[i];
           { withoutChecksumsEq(buf, numBlocks, block as uint64, idx as uint64); }
           buf[block * 4096 + 32 + idx];
-          { reveal_splice(); }
+          { /* reveal_splice(); */ }
           buf1[block * 4096 + 32 + idx];
           { withoutChecksumsEq(buf1, numBlocks, block as uint64, idx as uint64); }
           c1[i];
@@ -670,7 +670,7 @@ module JournalistMarshallingModel {
   ensures hasChecksums(fillInChecksums(buf, numBlocks, i), numBlocks as int)
   decreases numBlocks - i
   {
-    reveal_fillInChecksums();
+    /* reveal_fillInChecksums(); */
     if i == numBlocks {
     } else {
       var buf1 := splice(buf, 4096*i, CRC32_C.crc32_c_padded(buf[4096*i + 32 .. 4096*i + 4096]));
@@ -681,14 +681,14 @@ module JournalistMarshallingModel {
         calc {
           CRC32_C.crc32_c_padded(buf1[4096*j + 32 .. 4096*j + 4096]);
             {
-              reveal_splice();
+              /* reveal_splice(); */
               assert buf[4096*j + 32 .. 4096*j + 4096]
                   == buf1[4096*j + 32 .. 4096*j + 4096];
             }
           CRC32_C.crc32_c_padded(buf[4096*j + 32 .. 4096*j + 4096]);
             { assert hasChecksumAt(buf, j); }
           buf[4096*j .. 4096*j + 32];
-            { reveal_splice(); }
+            { /* reveal_splice(); */ }
           buf1[4096*j .. 4096*j + 32];
         }
       }
@@ -697,7 +697,7 @@ module JournalistMarshallingModel {
         calc {
           buf1[4096*i .. 4096*i + 32];
           splice(buf, 4096*i, CRC32_C.crc32_c_padded(buf[4096*i + 32 .. 4096*i + 4096]))[4096*i .. 4096*i + 32];
-            { reveal_splice(); }
+            { /* reveal_splice(); */ }
           CRC32_C.crc32_c_padded(buf[4096*i + 32 .. 4096*i + 4096]);
             {
               var t0 := buf[4096*i + 32 .. 4096*i + 4096];
@@ -708,7 +708,7 @@ module JournalistMarshallingModel {
                 calc {
                   t0[k];
                   buf[4096 * i as int + 32 + k];
-                  { reveal_splice(); }
+                  { /* reveal_splice(); */ }
                   buf1[4096 * i as int + 32 + k];
                   t1[k];
                 }
@@ -731,17 +731,17 @@ module JournalistMarshallingModel {
   ensures concatSeq(JournalRangeOfByteSeq(buf).value)
       == withoutChecksums(buf, numBlocks)
   {
-    reveal_JournalRangeOfByteSeq();
+    /* reveal_JournalRangeOfByteSeq(); */
     if numBlocks == 0 {
       assert concatSeq(JournalRangeOfByteSeq(buf).value) == []
-          by { reveal_concatSeq(); }
+          by { /* reveal_concatSeq(); */ }
       assert withoutChecksums(buf, numBlocks) == []
-          by { reveal_withoutChecksums(); }
+          by { /* reveal_withoutChecksums(); */ }
     } else {
       assert D.ChecksumChecksOut(buf[0..4096]) by {
-        reveal_JournalBlockOfByteSeq();
+        /* reveal_JournalBlockOfByteSeq(); */
         assert hasChecksumAt(buf, 0);
-        D.reveal_ChecksumChecksOut();
+       /*  D.reveal_ChecksumChecksOut(); */
       }
 
       var suffix := buf[4096..];
@@ -760,16 +760,16 @@ module JournalistMarshallingModel {
       journalRangeFromHasChecksums(buf[4096..], numBlocks - 1);
       var rest := JournalRangeOfByteSeq(buf[4096..]).value;
 
-      reveal_JournalBlockOfByteSeq();
+      /* reveal_JournalBlockOfByteSeq(); */
 
       calc {
         concatSeq(JournalRangeOfByteSeq(buf).value);
         concatSeq([buf[32..4096]] + rest);
           { concatSeqAdditive([buf[32..4096]], rest); }
         concatSeq([buf[32..4096]]) + concatSeq(rest);
-          { reveal_concatSeq(); }
+          { /* reveal_concatSeq(); */ }
         buf[32..4096] + concatSeq(rest);
-          { reveal_withoutChecksums(); }
+          { /* reveal_withoutChecksums(); */ }
         withoutChecksums(buf, numBlocks);
       }
     }
@@ -780,8 +780,8 @@ module JournalistMarshallingModel {
   requires hasHeader(buf, header)
   ensures parseHeader(buf) == header
   {
-    reveal_hasHeader();
-    reveal_parseHeader();
+    /* reveal_hasHeader(); */
+    /* reveal_parseHeader(); */
   }
 
   lemma parseEntriesFromHasEntriesI(buf: seq<byte>, entries: seq<JournalEntry>, i: int, idx: int)
@@ -830,7 +830,7 @@ module JournalistMarshallingModel {
   ensures parseJournalRange(JournalRangeOfByteSeq(buf).value)
       == Some(entries)
   {
-    assert 8 <= |buf| by { reveal_hasHeader(); }
+    assert 8 <= |buf| by { /* reveal_hasHeader(); */ }
 
     journalRangeFromHasChecksums(buf, numBlocks);
     parseHeaderFromHasHeader(withoutChecksums(buf, numBlocks), Header(|entries|, numBlocks as int));
@@ -840,8 +840,8 @@ module JournalistMarshallingModel {
     assert |jr| == numBlocks as int;
 
     assert |jr[0]| >= 8 by {
-      reveal_JournalBlockOfByteSeq();
-      reveal_JournalRangeOfByteSeq();
+      /* reveal_JournalBlockOfByteSeq(); */
+      /* reveal_JournalRangeOfByteSeq(); */
     }
     assert parseHeader(concatSeq(jr)) == parseHeader(jr[0])
     by {
@@ -852,12 +852,12 @@ module JournalistMarshallingModel {
         { concatSeqAdditive([jr[0]], jr[1..]); }
         concatSeq([jr[0]]) + concatSeq(jr[1..]);
         {
-          reveal_concatSeq();
+          /* reveal_concatSeq(); */
           assert concatSeq([jr[0]]) == jr[0];
         }
         jr[0] + concatSeq(jr[1..]);
       }
-      reveal_parseHeader();
+      /* reveal_parseHeader(); */
       assert concatSeq(jr)[0..4] == jr[0][0..4];
       assert concatSeq(jr)[4..8] == jr[0][4..8];
     }
@@ -899,7 +899,7 @@ module JournalistMarshallingModel {
       writeIntOntoMakesSlice(b0, numBlocks, 0, len as uint32);
       writeIntOntoMakesSlice(b1, numBlocks, 4, numBlocks as uint32);
       writeIntOntoPreservesSlice(b1, numBlocks, 4, numBlocks as uint32, 0, 4);
-      reveal_hasHeader();
+      /* reveal_hasHeader(); */
     }
 
     lemma_writeJournalEntries(buf1, numBlocks, 8, entries, start, len, start, len);
@@ -908,7 +908,7 @@ module JournalistMarshallingModel {
     parsesFromStuff(buf3, numBlocks, cyclicSlice(entries, start, len));
   }
 
-  function {:opaque} marshallJournalEntries(entries: seq<JournalEntry>,
+  function marshallJournalEntries(entries: seq<JournalEntry>,
       start: uint64, len: uint64, numBlocks: uint64)
     : (res: seq<byte>)
   requires 0 <= start as int < |entries|
@@ -921,7 +921,7 @@ module JournalistMarshallingModel {
        == Some(cyclicSlice(entries, start, len))
   ensures |res| == numBlocks as int * 4096
   {
-    reveal_WeightJournalEntries();
+    /* reveal_WeightJournalEntries(); */
 
     var buf := fill((numBlocks * 4096) as int, 0);
     var buf1 := writeHeader(buf, numBlocks, len);

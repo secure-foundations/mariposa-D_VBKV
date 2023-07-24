@@ -136,7 +136,7 @@ module F2_X_Lemmas {
     }
   }
 
-  function {:opaque} parity<V>(m: set<V>) : bool
+  function parity<V>(m: set<V>) : bool
   {
     |m| % 2 == 1
   }
@@ -154,7 +154,7 @@ module F2_X_Lemmas {
   decreases i + 1 - j
   ensures mul_F2_X_digit_partial(p, q, i, j) == parity(set_partial(p, q, i, j))
   {
-    reveal_parity();
+    /* reveal_parity(); */
     var m := set_partial(p, q, i, j);
     if j == i+1 {
       assert |m| == 0;
@@ -173,7 +173,7 @@ module F2_X_Lemmas {
     }
   }
 
-  function {:opaque} set_digit(p: Bits, q: Bits, i: nat) : set<(nat,nat)>
+  function set_digit(p: Bits, q: Bits, i: nat) : set<(nat,nat)>
   {
     set a:nat, b: nat
           | a <= i && b <= i && a + b == i
@@ -184,7 +184,7 @@ module F2_X_Lemmas {
   lemma mset_mul_F2_X_digit(p: Bits, q: Bits, i: nat)
   ensures mul_F2_X_digit(p, q, i) == parity(set_digit(p, q, i))
   {
-    reveal_set_digit();
+    /* reveal_set_digit(); */
     mset_mul_F2_X_digit_partial(p, q, i, 0);
     assert set_digit(p, q, i)
         == set_partial(p, q, i, 0);
@@ -211,19 +211,19 @@ module F2_X_Lemmas {
 
             forall a | a in setA ensures exists b :: b in setB && (a, b) in relation
             {
-              reveal_set_digit();
+              /* reveal_set_digit(); */
               var b := (a.1, a.0);
               assert b in setB && (a, b) in relation;
             }
             forall b | b in setB ensures exists a :: a in setA && (a, b) in relation
             {
-              reveal_set_digit();
+              /* reveal_set_digit(); */
               var a := (b.1, b.0);
               assert a in setA && (a, b) in relation;
             }
 
             SetBijectivity.BijectivityImpliesEqualCardinality(setA, setB, relation);
-            reveal_parity();
+            /* reveal_parity(); */
           }
         parity(set_digit(q, p, i));
           { mset_mul_F2_X_digit(q, p, i); }
@@ -258,7 +258,7 @@ module F2_X_Lemmas {
   ensures mul_F2_X_digit_partial(mul_F2_X(p, q), r, i, j)
        == parity(set_pq_r_partial(p, q, r, i, j))
   {
-    reveal_parity();
+    /* reveal_parity(); */
     var m := set_pq_r_partial(p, q, r, i, j);
     if j == i+1 {
       assert |m| == 0;
@@ -286,7 +286,7 @@ module F2_X_Lemmas {
           );
           {
             mset_mul_F2_X_digit(p, q, j);
-            reveal_set_digit();
+            /* reveal_set_digit(); */
           }
           bool_xor(
             parity(set_digit(p, q, j)),
@@ -311,13 +311,13 @@ module F2_X_Lemmas {
                   var relation := iset a:((nat,nat),(nat,nat,nat)) | a.0.0 == a.1.0 && a.0.1 == a.1.1;
                   forall a | a in setA ensures exists b :: b in setB && (a, b) in relation
                   {
-                    reveal_set_digit();
+                    /* reveal_set_digit(); */
                     var b := (a.0, a.1, i-j);
                     assert b in setB && (a, b) in relation;
                   }
                   forall b | b in setB ensures exists a :: a in setA && (a, b) in relation
                   {
-                    reveal_set_digit();
+                    /* reveal_set_digit(); */
                     var a := (b.0, b.1);
                     assert a in setA && (a, b) in relation;
                   }
@@ -370,7 +370,7 @@ module F2_X_Lemmas {
   ensures mul_F2_X_digit_partial(p, mul_F2_X(q, r), i, j)
        == parity(set_p_qr_partial(p, q, r, i, j))
   {
-    reveal_parity();
+    /* reveal_parity(); */
     var m := set_p_qr_partial(p, q, r, i, j);
     if j == i+1 {
       assert |m| == 0;
@@ -398,7 +398,7 @@ module F2_X_Lemmas {
           );
           {
             mset_mul_F2_X_digit(q, r, i-j);
-            reveal_set_digit();
+            /* reveal_set_digit(); */
           }
           bool_xor(
             parity(set_digit(q, r, i-j)),
@@ -423,13 +423,13 @@ module F2_X_Lemmas {
                   var relation := iset a:((nat,nat),(nat,nat,nat)) | a.0.0 == a.1.1 && a.0.1 == a.1.2;
                   forall a | a in setA ensures exists b :: b in setB && (a, b) in relation
                   {
-                    reveal_set_digit();
+                    /* reveal_set_digit(); */
                     var b := (j, a.0, a.1);
                     assert b in setB && (a, b) in relation;
                   }
                   forall b | b in setB ensures exists a :: a in setA && (a, b) in relation
                   {
-                    reveal_set_digit();
+                    /* reveal_set_digit(); */
                     var a := (b.1, b.2);
                     assert a in setA && (a, b) in relation;
                   }
@@ -519,7 +519,7 @@ module F2_X_Lemmas {
           }
           parity(set_digit(p + zeroes(n), q, i));
           {
-            reveal_set_digit();
+            /* reveal_set_digit(); */
             assert set_digit(p + zeroes(n), q, i)
                 == set_digit(p, q, i);
           }
@@ -537,11 +537,11 @@ module F2_X_Lemmas {
           }
           parity(set_digit(p + zeroes(n), q, i));
           {
-            reveal_set_digit();
+            /* reveal_set_digit(); */
             assert set_digit(p + zeroes(n), q, i) == {};
             assert |set_digit(p + zeroes(n), q, i)| == 0;
             assert 0 % 2 == 0;
-            reveal_parity();
+            /* reveal_parity(); */
           }
           false;
         }
@@ -566,11 +566,11 @@ module F2_X_Lemmas {
     forall i | 0 <= i < |y| ensures !y[i]
     {
       mset_mul_F2_X_digit(a, [], i);
-      reveal_set_digit();
+      /* reveal_set_digit(); */
       assert set_digit(a, [], i) == {};
       assert |set_digit(a, [], i)| == 0;
       assert 0 % 2 == 0;
-      reveal_parity();
+      /* reveal_parity(); */
     }
   }
 
@@ -885,14 +885,14 @@ module F2_X_Lemmas {
   ensures !mul_F2_X(x, y)[|x| + |y| - 1]
   {
     mset_mul_F2_X_digit(x, y, |x| + |y| - 1);
-    reveal_parity();
-    reveal_set_digit();
+    /* reveal_parity(); */
+    /* reveal_set_digit(); */
     assert set_digit(x, y, |x| + |y| - 1) == {};
     assert |set_digit(x, y, |x| + |y| - 1)| == 0;
     assert 0 % 2 == 0;
   }
 
-  /*function {:opaque} parity_rev_relation(x: int, y: int) : iset<((nat,nat),(nat,nat))> {
+  /*function parity_rev_relation(x: int, y: int) : iset<((nat,nat),(nat,nat))> {
     iset a:((nat,nat),(nat,nat))
           | a.0.0 + a.1.0 == x- 1
           && a.0.1 + a.1.1 == y - 1
@@ -913,7 +913,7 @@ module F2_X_Lemmas {
 
       forall a | a in setA ensures exists b :: b in setB && (a, b) in relation
       {
-        reveal_set_digit();
+        /* reveal_set_digit(); */
         //reveal_parity_rev_relation();
         var b := (|x| - 1 - a.0, |y| - 1 - a.1);
         assert bits_get(reverse(x), b.0) == bits_get(x, a.0);
@@ -923,7 +923,7 @@ module F2_X_Lemmas {
       }
       forall b | b in setB ensures exists a :: a in setA && (a, b) in relation
       {
-        reveal_set_digit();
+        /* reveal_set_digit(); */
         //reveal_parity_rev_relation();
         var a := (|x| - 1 - b.0, |y| - 1 - b.1);
         assert bits_get(reverse(x), b.0) == bits_get(x, a.0);
@@ -942,7 +942,7 @@ module F2_X_Lemmas {
 
       SetBijectivity.BijectivityImpliesEqualCardinality(setA, setB, relation);
     }
-    reveal_parity();
+    /* reveal_parity(); */
   }
 
   lemma reverse_mul(x: Bits, y: Bits)

@@ -146,7 +146,7 @@ module AsyncDisk {
               .(respReads := s.respReads[id := RespRead(req.addr, s.contents[req.addr .. req.addr as int + req.len as int])])
   }*/
 
-  predicate {:opaque} ChecksumChecksOut(s: seq<byte>) {
+  predicate ChecksumChecksOut(s: seq<byte>) {
     && |s| >= 32
     && s[0..32] == CRC32_C.crc32_c_padded(s[32..])
   }
@@ -190,7 +190,7 @@ module AsyncDisk {
               .(respReads := s.respReads[id := RespRead(req.addr, fakeContents)])
   }
 
-  function {:opaque} splice(bytes: seq<byte>, start: int, ins: seq<byte>) : seq<byte>
+  function splice(bytes: seq<byte>, start: int, ins: seq<byte>) : seq<byte>
   requires 0 <= start
   requires start + |ins| <= |bytes|
   {

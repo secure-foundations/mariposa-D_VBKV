@@ -11,7 +11,7 @@ module SeqComparison {
   // This was moved out of total_order.i.dfy because it's a .i file.
   // We need use this definition for some spec things (e.g., successor queries)
 
-  predicate {:opaque} lte(a: seq<byte>, b: seq<byte>)
+  predicate lte(a: seq<byte>, b: seq<byte>)
   decreases |a|
   {
     if |a| == 0 then (

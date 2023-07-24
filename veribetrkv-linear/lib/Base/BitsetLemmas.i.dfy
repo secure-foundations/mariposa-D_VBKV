@@ -29,23 +29,23 @@ module BitsetLemmas {
   {
   }
 
-  function method {:opaque} bit(i: uint64) : bv64
+  function method bit(i: uint64) : bv64
   requires i < 64
   {
     1 as bv64 << i
   }
 
-  function method {:opaque} bit_and(a: bv64, b: bv64) : bv64
+  function method bit_and(a: bv64, b: bv64) : bv64
   {
     a & b
   }
 
-  function method {:opaque} bit_or(a: bv64, b: bv64) : bv64
+  function method bit_or(a: bv64, b: bv64) : bv64
   {
     a | b
   }
 
-  function method {:opaque} bit_comp(a: bv64) : bv64
+  function method bit_comp(a: bv64) : bv64
   {
     0xffff_ffff_ffff_ffff ^ a
   }
@@ -54,47 +54,47 @@ module BitsetLemmas {
   ensures bit_and(bit_or(a, b), c)
       == bit_or(bit_and(a, c), bit_and(b, c))
   {
-    reveal_bit_and();
-    reveal_bit_or();
+    /* reveal_bit_and(); */
+    /* reveal_bit_or(); */
   }
 
   lemma or_and_dist(a: bv64, b: bv64, c: bv64)
   ensures bit_or(bit_and(a, b), c)
       == bit_and(bit_or(a, c), bit_or(b, c))
   {
-    reveal_bit_and();
-    reveal_bit_or();
+    /* reveal_bit_and(); */
+    /* reveal_bit_or(); */
   }
 
   lemma bit_and_self(a: bv64)
   ensures bit_and(a, a) == a;
   {
-    reveal_bit_and();
+    /* reveal_bit_and(); */
   }
 
   lemma bit_or_self(a: bv64)
   ensures bit_or(a, a) == a;
   {
-    reveal_bit_or();
+    /* reveal_bit_or(); */
   }
 
   lemma bit_or_0(a: bv64)
   ensures bit_or(a, 0) == a;
   {
-    reveal_bit_or();
+    /* reveal_bit_or(); */
   }
 
   lemma bit_and_0(a: bv64)
   ensures bit_and(a, 0) == 0;
   {
-    reveal_bit_and();
+    /* reveal_bit_and(); */
   }
 
   lemma bit_or_and_self(a: bv64, b: bv64)
   ensures bit_and(bit_or(a, b), b) == b
   {
-    reveal_bit_and();
-    reveal_bit_or();
+    /* reveal_bit_and(); */
+    /* reveal_bit_or(); */
   }
 
   lemma bit_or_result_0_implies_args_0(a: bv64, b: bv64)
@@ -102,13 +102,13 @@ module BitsetLemmas {
   ensures a == 0
   ensures b == 0
   {
-    reveal_bit_or();
+    /* reveal_bit_or(); */
   }
 
   lemma zero_or_zero_eq_zero()
   ensures bit_or(0, 0) == 0
   {
-    reveal_bit_or();
+    /* reveal_bit_or(); */
   }
 
 
@@ -118,8 +118,8 @@ module BitsetLemmas {
   requires j < 64
   ensures bit_and(bit(i), bit(j)) == 0
   {
-    reveal_bit();
-    reveal_bit_and();
+    /* reveal_bit(); */
+    /* reveal_bit_and(); */
     bit_ne_expanded(i, j);
   }
 
@@ -129,17 +129,17 @@ module BitsetLemmas {
   requires j < 64
   ensures bit_and(bit_comp(bit(i)), bit(j)) == bit(j)
   {
-    reveal_bit();
-    reveal_bit_and();
-    reveal_bit_comp();
+    /* reveal_bit(); */
+    /* reveal_bit_and(); */
+    /* reveal_bit_comp(); */
     bit_comp_ne_expanded(i, j);
   }
 
   lemma and_comp(a: bv64)
   ensures bit_and(bit_comp(a), a) == 0
   {
-    reveal_bit_and();
-    reveal_bit_comp();
+    /* reveal_bit_and(); */
+    /* reveal_bit_comp(); */
   }
 
   lemma bit_ne_0(i: uint64)
@@ -148,22 +148,22 @@ module BitsetLemmas {
   {
     // This is, by far, the greatest dafny proof I have ever written.
     assert i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 6 || i == 7 || i == 8 || i == 9 || i == 10 || i == 11 || i == 12 || i == 13 || i == 14 || i == 15 || i == 16 || i == 17 || i == 18 || i == 19 || i == 20 || i == 21 || i == 22 || i == 23 || i == 24 || i == 25 || i == 26 || i == 27 || i == 28 || i == 29 || i == 30 || i == 31 || i == 32 || i == 33 || i == 34 || i == 35 || i == 36 || i == 37 || i == 38 || i == 39 || i == 40 || i == 41 || i == 42 || i == 43 || i == 44 || i == 45 || i == 46 || i == 47 || i == 48 || i == 49 || i == 50 || i == 51 || i == 52 || i == 53 || i == 54 || i == 55 || i == 56 || i == 57 || i == 58 || i == 59 || i == 60 || i == 61 || i == 62 || i == 63;
-    reveal_bit();
+    /* reveal_bit(); */
   }
 
-  predicate method {:opaque} in_set(i: uint64, a: bv64)
+  predicate method in_set(i: uint64, a: bv64)
   requires i < 64
   {
     bit_and(a, bit(i)) != 0
   }
 
-  function method {:opaque} set_bit_to_1(a: bv64, i: uint64) : bv64
+  function method set_bit_to_1(a: bv64, i: uint64) : bv64
   requires i < 64
   {
     bit_or(a, bit(i))
   }
 
-  function method {:opaque} set_bit_to_0(a: bv64, i: uint64) : bv64
+  function method set_bit_to_0(a: bv64, i: uint64) : bv64
   requires i < 64
   {
     bit_and(a, bit_comp(bit(i)))
@@ -172,21 +172,21 @@ module BitsetLemmas {
   lemma bit_and_and_comp(a: bv64)
   ensures bit_comp(a) & a == 0
   {
-    reveal_bit_comp();
+    /* reveal_bit_comp(); */
   }
 
   lemma bit_and_assoc(a: bv64, b: bv64, c: bv64)
   ensures bit_and(a, bit_and(b, c)) == bit_and(bit_and(a, b), c)
   {
-    reveal_bit_and();
+    /* reveal_bit_and(); */
   }
 
   lemma set_bit_to_1_self(a: bv64, i: uint64)
   requires i < 64
   ensures in_set(i, set_bit_to_1(a, i))
   {
-    reveal_set_bit_to_1();
-    reveal_in_set();
+    /* reveal_set_bit_to_1(); */
+    /* reveal_in_set(); */
 
     calc {
       bit_and(set_bit_to_1(a, i), bit(i));
@@ -203,8 +203,8 @@ module BitsetLemmas {
   requires i != j
   ensures in_set(j, a) <==> in_set(j, set_bit_to_1(a, i))
   {
-    reveal_set_bit_to_1();
-    reveal_in_set();
+    /* reveal_set_bit_to_1(); */
+    /* reveal_in_set(); */
 
     calc {
       bit_and(set_bit_to_1(a, i), bit(j));
@@ -222,8 +222,8 @@ module BitsetLemmas {
   requires i < 64
   ensures !in_set(i, set_bit_to_0(a, i))
   {
-    reveal_set_bit_to_0();
-    reveal_in_set();
+    /* reveal_set_bit_to_0(); */
+    /* reveal_in_set(); */
 
     calc {
       bit_and(set_bit_to_0(a, i), bit(i));
@@ -243,8 +243,8 @@ module BitsetLemmas {
   requires i != j
   ensures in_set(j, a) <==> in_set(j, set_bit_to_0(a, i))
   {
-    reveal_set_bit_to_0();
-    reveal_in_set();
+    /* reveal_set_bit_to_0(); */
+    /* reveal_in_set(); */
 
     calc {
       bit_and(set_bit_to_0(a, i), bit(j));
@@ -260,7 +260,7 @@ module BitsetLemmas {
   requires i < 64
   ensures in_set(i, bit_or(a, b)) == (in_set(i, a) || in_set(i, b))
   {
-    reveal_in_set();
+    /* reveal_in_set(); */
 
     calc {
       bit_and(bit_or(a, b), bit(i));
@@ -280,15 +280,15 @@ module BitsetLemmas {
   requires i < 64
   ensures bit_and(0xffff_ffff_ffff_ffff, bit(i)) == bit(i)
   {
-    reveal_bit_and();
-    reveal_bit();
+    /* reveal_bit_and(); */
+    /* reveal_bit(); */
   }
 
   lemma all1s_is_set(i: uint64)
   requires i < 64
   ensures in_set(i, 0xffff_ffff_ffff_ffff)
   {
-    reveal_in_set();
+    /* reveal_in_set(); */
     all1s_and_bit_eq(i);
     bit_ne_0(i);
   }
@@ -297,9 +297,9 @@ module BitsetLemmas {
   requires forall i | 0 <= i < 64 :: in_set(i, a)
   ensures a == 0xffff_ffff_ffff_ffff
   {
-    reveal_in_set();
-    reveal_bit_and();
-    reveal_bit();
+    /* reveal_in_set(); */
+    /* reveal_bit_and(); */
+    /* reveal_bit(); */
     assert a & 1 == 1 by { assert in_set(0, a); }
     assert a & 2 == 2 by { assert in_set(1, a); }
     assert a & 4 == 4 by { assert in_set(2, a); }
@@ -372,24 +372,24 @@ module BitsetLemmas {
   //       wrappers, instead of Dafny-level casts.  That will reduce 
   //       bit-vector induced flakiness in higher-level proofs
 
-  function method {:opaque} bit_or_uint64(a: uint64, b: uint64) : uint64
+  function method bit_or_uint64(a: uint64, b: uint64) : uint64
   {
     bit_or(a as bv64, b as bv64) as uint64
   }
 
-  predicate method {:opaque} in_set_uint64(i: uint64, a: uint64)
+  predicate method in_set_uint64(i: uint64, a: uint64)
   requires i < 64
   {
     in_set(i, a as bv64)
   }
 
-  function method {:opaque} set_bit_to_1_uint64(a: uint64, i: uint64) : uint64
+  function method set_bit_to_1_uint64(a: uint64, i: uint64) : uint64
   requires i < 64
   {
     set_bit_to_1(a as bv64, i) as uint64
   }
 
-  function method {:opaque} set_bit_to_0_uint64(a: uint64, i: uint64) : uint64
+  function method set_bit_to_0_uint64(a: uint64, i: uint64) : uint64
   requires i < 64
   {
     set_bit_to_0(a as bv64, i) as uint64
@@ -407,17 +407,17 @@ module BitsetLemmas {
   {
     set_bit_to_1_self(a as bv64, i);
     bv64cast(set_bit_to_1(a as bv64, i));
-    reveal_in_set_uint64();
-    reveal_set_bit_to_1_uint64();
+    /* reveal_in_set_uint64(); */
+    /* reveal_set_bit_to_1_uint64(); */
   }
 
 
-  function {:opaque} b2u(b:bv64) : uint64
+  function b2u(b:bv64) : uint64
   {
     b as uint64
   }
 
-  function {:opaque} u2b(u:uint64) : bv64
+  function u2b(u:uint64) : bv64
   {
     u as bv64
   }
@@ -425,8 +425,8 @@ module BitsetLemmas {
   lemma u2b_inverse_b2u(a:bv64) 
     ensures u2b(b2u(a)) == a;
   {
-    reveal b2u();
-    reveal u2b();
+    /* reveal b2u(); */
+    /* reveal u2b(); */
     bv64cast(a);
   }
 
@@ -438,23 +438,23 @@ module BitsetLemmas {
   {
     calc {
       in_set_uint64(j, a);
-        { reveal in_set_uint64(); }
+        { /* reveal in_set_uint64(); */ }
       in_set(j, a as bv64);
-        { reveal u2b(); }
+        { /* reveal u2b(); */ }
       in_set(j, u2b(a));
         { set_bit_to_1_other(u2b(a), i, j); }
       in_set(j, set_bit_to_1(u2b(a), i));
         { u2b_inverse_b2u(set_bit_to_1(u2b(a), i)); }
       in_set(j, u2b(b2u(set_bit_to_1(u2b(a), i))));
-        { reveal u2b(); }
+        { /* reveal u2b(); */ }
       in_set(j, b2u(set_bit_to_1(u2b(a), i)) as bv64);
-        { reveal in_set_uint64(); }
+        { /* reveal in_set_uint64(); */ }
       in_set_uint64(j, b2u(set_bit_to_1(u2b(a), i)));
-          { reveal u2b(); }
+          { /* reveal u2b(); */ }
       in_set_uint64(j, b2u(set_bit_to_1(a as bv64, i)));
-          { reveal b2u(); }
+          { /* reveal b2u(); */ }
       in_set_uint64(j, set_bit_to_1(a as bv64, i) as uint64);
-        { reveal_set_bit_to_1_uint64(); }
+        { /* reveal_set_bit_to_1_uint64(); */ }
       in_set_uint64(j, set_bit_to_1_uint64(a, i));
     }
   }
@@ -465,8 +465,8 @@ module BitsetLemmas {
   {
     set_bit_to_0_self(a as bv64, i);
     bv64cast(set_bit_to_0(a as bv64, i));
-    reveal_in_set_uint64();
-    reveal_set_bit_to_0_uint64();
+    /* reveal_in_set_uint64(); */
+    /* reveal_set_bit_to_0_uint64(); */
   }
 
   lemma set_bit_to_0_other_uint64(a: uint64, i: uint64, j: uint64)
@@ -477,23 +477,23 @@ module BitsetLemmas {
   {
     calc {
       in_set_uint64(j, a);
-        { reveal in_set_uint64(); }
+        { /* reveal in_set_uint64(); */ }
       in_set(j, a as bv64);
-        { reveal u2b(); }
+        { /* reveal u2b(); */ }
       in_set(j, u2b(a));
         { set_bit_to_0_other(u2b(a), i, j); }
       in_set(j, set_bit_to_0(u2b(a), i));
         { u2b_inverse_b2u(set_bit_to_0(u2b(a), i)); }
       in_set(j, u2b(b2u(set_bit_to_0(u2b(a), i))));
-        { reveal u2b(); }
+        { /* reveal u2b(); */ }
       in_set(j, b2u(set_bit_to_0(u2b(a), i)) as bv64);
-        { reveal in_set_uint64(); }
+        { /* reveal in_set_uint64(); */ }
       in_set_uint64(j, b2u(set_bit_to_0(u2b(a), i)));
-          { reveal u2b(); }
+          { /* reveal u2b(); */ }
       in_set_uint64(j, b2u(set_bit_to_0(a as bv64, i)));
-          { reveal b2u(); }
+          { /* reveal b2u(); */ }
       in_set_uint64(j, set_bit_to_0(a as bv64, i) as uint64);
-        { reveal_set_bit_to_0_uint64(); }
+        { /* reveal_set_bit_to_0_uint64(); */ }
       in_set_uint64(j, set_bit_to_0_uint64(a, i));
     }
   }
@@ -505,23 +505,23 @@ module BitsetLemmas {
   {
     calc {
       in_set_uint64(i, bit_or_uint64(a, b));
-        { reveal_in_set_uint64(); } 
+        { /* reveal_in_set_uint64(); */ } 
       in_set(i, bit_or_uint64(a, b) as bv64);
-        { reveal u2b(); }
+        { /* reveal u2b(); */ }
       in_set(i, u2b(bit_or_uint64(a, b)));
-        { reveal bit_or_uint64(); }
+        { /* reveal bit_or_uint64(); */ }
       in_set(i, u2b(bit_or(a as bv64, b as bv64) as uint64));
-        { reveal u2b(); }
+        { /* reveal u2b(); */ }
       in_set(i, u2b(bit_or(u2b(a), u2b(b)) as uint64));
-        { reveal b2u(); }
+        { /* reveal b2u(); */ }
       in_set(i, u2b(b2u(bit_or(u2b(a), u2b(b)))));
         { u2b_inverse_b2u(bit_or(u2b(a), u2b(b))); }
       in_set(i, bit_or(u2b(a), u2b(b)));
         { bit_or_is_union(u2b(a), u2b(b), i); }
       in_set(i, u2b(a)) || in_set(i, u2b(b));
-        { reveal u2b(); }
+        { /* reveal u2b(); */ }
       in_set(i, a as bv64) || in_set(i, b as bv64);
-        { reveal_in_set_uint64(); } 
+        { /* reveal_in_set_uint64(); */ } 
       in_set_uint64(i, a) || in_set_uint64(i, b);
     }
   }
@@ -531,7 +531,7 @@ module BitsetLemmas {
   ensures in_set_uint64(i, 0xffff_ffff_ffff_ffff)
   {
     all1s_is_set(i);
-    reveal_in_set_uint64();
+    /* reveal_in_set_uint64(); */
   }
 
   lemma all_in_set_implies_all1s_uint64(a: uint64)
@@ -540,10 +540,10 @@ module BitsetLemmas {
   {
     forall i | 0 <= i < 64 ensures in_set(i, a as bv64)
     {
-      reveal_in_set_uint64();
+      /* reveal_in_set_uint64(); */
       assert in_set_uint64(i, a);
     }
-    reveal_in_set();
+    /* reveal_in_set(); */
     all_in_set_implies_all1s(a as bv64);
   }
 }

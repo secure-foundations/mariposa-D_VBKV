@@ -23,27 +23,27 @@ module BitmapModel {
     |bm|
   }
 
-  function {:opaque} BitSet(bm: BitmapModelT, i: int) : (bm' : BitmapModelT)
+  function BitSet(bm: BitmapModelT, i: int) : (bm' : BitmapModelT)
   requires 0 <= i < Len(bm)
   ensures Len(bm') == Len(bm)
   {
     bm[i := true]
   }
 
-  function {:opaque} BitUnset(bm: BitmapModelT, i: int) : (bm' : BitmapModelT)
+  function BitUnset(bm: BitmapModelT, i: int) : (bm' : BitmapModelT)
   requires 0 <= i < Len(bm)
   ensures Len(bm') == Len(bm)
   {
     bm[i := false]
   }
 
-  predicate {:opaque} IsSet(bm: BitmapModelT, i: int)
+  predicate IsSet(bm: BitmapModelT, i: int)
   requires 0 <= i < Len(bm)
   {
     bm[i]
   }
 
-  function {:opaque} EmptyBitmap(n: int) : (bm : BitmapModelT)
+  function EmptyBitmap(n: int) : (bm : BitmapModelT)
   requires n >= 0
   ensures Len(bm) == n
   ensures forall i | 0 <= i < Len(bm) :: !IsSet(bm, i)
@@ -51,7 +51,7 @@ module BitmapModel {
     if n == 0 then [] else (
       var bm := EmptyBitmap(n-1) + [false];
 
-      reveal_IsSet();
+      /* reveal_IsSet(); */
       assert forall i | 0 <= i < n - 1 :: !IsSet(EmptyBitmap(n-1), i);
       assert forall i | 0 <= i < n - 1 :: bm[i] == IsSet(bm, i);
       assert forall i | 0 <= i < n - 1 :: EmptyBitmap(n-1)[i] == IsSet(EmptyBitmap(n-1), i);
@@ -78,18 +78,18 @@ module BitmapModel {
     ) 
   }
 
-  function {:opaque} BitAlloc(bm: BitmapModelT) : (res: Option<int>)
+  function BitAlloc(bm: BitmapModelT) : (res: Option<int>)
   ensures res.Some? ==> 0 <= res.value < Len(bm)
   {
     BitAllocIter(bm, 0)
   }
 
-  function {:opaque} BitUnion(a: BitmapModelT, b: BitmapModelT) : (res: BitmapModelT)
+  function BitUnion(a: BitmapModelT, b: BitmapModelT) : (res: BitmapModelT)
   requires Len(a) == Len(b)
   ensures Len(res) == Len(a)
   ensures forall i | 0 <= i < Len(res) :: IsSet(res, i) == (IsSet(a, i) || IsSet(b, i))
   {
-    reveal_IsSet();
+    /* reveal_IsSet(); */
     if |a| == 0 then [] else (
       var res := BitUnion(a[..|a|-1], b[..|b|-1]) + [a[|a|-1] || b[|b|-1]];
       assert IsSet(res, |a|-1) == (IsSet(a, |a|-1) || IsSet(b, |a|-1));
@@ -107,7 +107,7 @@ module BitmapModel {
     && (j.Some? ==> (!IsSet(bm, j.value)))
   decreases |bm| - i
   {
-    reveal_IsSet();
+    /* reveal_IsSet(); */
     if i == |bm| {
     } else if !bm[i] {
     } else {
@@ -119,7 +119,7 @@ module BitmapModel {
   ensures var j := BitAlloc(bm);
     && (j.Some? ==> (!IsSet(bm, j.value)))
   {
-    reveal_BitAlloc();
+    /* reveal_BitAlloc(); */
     LemmaBitAllocIterResult(bm, 0);
   }
 
@@ -131,7 +131,7 @@ module BitmapModel {
     && (j.None? ==> (forall k | i <= k < Len(bm) :: IsSet(bm, k)))
   decreases |bm| - i
   {
-    reveal_IsSet();
+    /* reveal_IsSet(); */
     if i == |bm| {
     } else if !bm[i] {
     } else {
@@ -145,8 +145,8 @@ module BitmapModel {
     && (j.Some? ==> (forall i | 0 <= i < j.value :: IsSet(bm, i)))
     && (j.None? ==> (forall i | 0 <= i < Len(bm) :: IsSet(bm, i)))
   {
-    reveal_BitAlloc();
-    reveal_IsSet();
+    /* reveal_BitAlloc(); */
+    /* reveal_IsSet(); */
     LemmaBitAllocIterResultStronger(bm, 0);
   }
 }

@@ -360,7 +360,7 @@ module BetreeSpec {
     else RedirectChildReads(DropLast(childrefs), children) + [ ReadOp(Last(childrefs), children[Last(childrefs)]) ]
   }
   
-  function {:opaque} RedirectReads(redirect: Redirect) : (res: seq<ReadOp>)
+  function RedirectReads(redirect: Redirect) : (res: seq<ReadOp>)
     requires ValidRedirect(redirect)
     ensures |res| == |redirect.old_childrefs| + 1
   {
@@ -377,7 +377,7 @@ module BetreeSpec {
     else RedirectChildAllocs(DropLast(childrefs), children) + [ AllocOp(Last(childrefs), children[Last(childrefs)]) ]
   }
 
-  function {:opaque} RedirectOps(redirect: Redirect) : seq<Op>
+  function RedirectOps(redirect: Redirect) : seq<Op>
     requires ValidRedirect(redirect)
   {
     RedirectChildAllocs(redirect.new_childrefs, redirect.new_children)

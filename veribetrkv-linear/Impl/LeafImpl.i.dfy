@@ -46,7 +46,7 @@ module LeafImpl {
   ensures s.I() == LeafModel.repivotLeaf(old_s.I(), ref, old_s.cache.I()[ref]);
   ensures LruModel.I(s.lru.Queue()) == s.cache.I().Keys;
   {
-    LeafModel.reveal_repivotLeaf();
+   /*  LeafModel.reveal_repivotLeaf(); */
     var b := false;
 
     if s.frozenIndirectionTable.lSome? {

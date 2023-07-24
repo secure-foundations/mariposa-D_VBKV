@@ -44,7 +44,7 @@ module CRC32_C {
     + (if m[7] then 0x80 else 0)
   }
 
-  function {:opaque} crc32_c(s: seq<byte>) : (checksum : seq<byte>)
+  function crc32_c(s: seq<byte>) : (checksum : seq<byte>)
   ensures |checksum| == 4
   {
     var bitstream := zeroes(32) + reverse(bits_of_bytes(s));

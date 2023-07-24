@@ -290,7 +290,7 @@ module BucketImpl {
         return true;
       }
 
-      Lexicographic_Byte_Order.reveal_IsStrictlySorted();
+     /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
 
       var firstkey := GetFirstKey();
       var c := Pivots.KeyspaceImpl.cmp(pivots[i], Pivots.Keyspace.Element(firstkey));
@@ -319,7 +319,7 @@ module BucketImpl {
     }
 
     // related ISeq
-    static function {:opaque} ISeq(s: seq<MutBucket>) : (bs : seq<Bucket>)
+    static function ISeq(s: seq<MutBucket>) : (bs : seq<Bucket>)
     ensures |bs| == |s|
     ensures forall i | 0 <= i < |s| :: bs[i] == s[i].bucket
     decreases |s|
@@ -390,7 +390,7 @@ module BucketImpl {
         assert format.BFPkv?;
         result := PackedKV.FirstKey(format.pkv);
         assert result == PackedKV.I(format.pkv).keys[0];
-        reveal BucketsLib.Lexicographic_Byte_Order.IsSorted();
+        /* reveal BucketsLib.Lexicographic_Byte_Order.IsSorted(); */
       }
     }
 
@@ -435,7 +435,7 @@ module BucketImpl {
         assert format.BFPkv?;
         result := PackedKV.LastKey(format.pkv);
         assert result == Last(PackedKV.I(format.pkv).keys);
-        reveal BucketsLib.Lexicographic_Byte_Order.IsSorted();
+        /* reveal BucketsLib.Lexicographic_Byte_Order.IsSorted(); */
       }
     }
 
@@ -559,14 +559,14 @@ module BucketImpl {
     ensures left.Inv()
     ensures left.bucket == SplitBucketLeft(bucket, pivot)
     {
-      reveal_SplitBucketLeft();
+      /* reveal_SplitBucketLeft(); */
       var pkv := GetPkvSorted(false);
       var pkvleft := PKV.SplitLeft(pkv, pivot);
       WeightSplitBucketLeft(PKV.I(pkv), pivot);
       WeightBucketPkv_eq_WeightPkv(pkvleft);
       assert sorted ==> BucketWellMarshalled(PackedKV.I(pkvleft)) by {
-        reveal_SplitBucketLeft();
-        Lexicographic_Byte_Order.reveal_IsStrictlySorted();
+        /* reveal_SplitBucketLeft(); */
+       /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
       }
       left := AllocPkv(pkvleft, sorted);
     }
@@ -583,8 +583,8 @@ module BucketImpl {
       WeightSplitBucketRight(PKV.I(pkv), pivot);
       WeightBucketPkv_eq_WeightPkv(pkvright);
       assert sorted ==> BucketWellMarshalled(PackedKV.I(pkvright)) by {
-        reveal_SplitBucketRight();
-        Lexicographic_Byte_Order.reveal_IsStrictlySorted();
+        /* reveal_SplitBucketRight(); */
+       /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
       }
       right := AllocPkv(pkvright, sorted);
     }
@@ -615,8 +615,8 @@ module BucketImpl {
 
       ghost var ghosty := true;
       if ghosty {
-        reveal_ISeq();
-        reveal_SplitBucketInList();
+        /* reveal_ISeq(); */
+        /* reveal_SplitBucketInList(); */
         ISeq_replace1with2(lseqs(buckets), l, r, slot as int);
       }
     }
@@ -628,7 +628,7 @@ module BucketImpl {
     requires |buckets| < 0x1_0000_0000_0000_0000
     ensures weight as int == WeightBucketList(ILseq(buckets))
     {
-      reveal_WeightBucketList();
+      /* reveal_WeightBucketList(); */
       ghost var bs := ILseq(buckets);
 
       var w := 0;
@@ -782,7 +782,7 @@ module BucketImpl {
     ensures biter.bucket == bucket.I()
     ensures IIterator(biter.it) == BucketIteratorModel.IterStart(biter.bucket)
     {
-      BucketIteratorModel.reveal_IterStart();
+     /*  BucketIteratorModel.reveal_IterStart(); */
       ghost var b := bucket.I();
       var pkv := bucket.GetPkv();
       var it := makeIter(b, 0);
@@ -795,7 +795,7 @@ module BucketImpl {
     ensures biter.bucket == bucket.I()
     ensures IIterator(biter.it) == BucketIteratorModel.IterFindFirstGte(biter.bucket, key)
     {
-      BucketIteratorModel.reveal_IterFindFirstGte();
+     /*  BucketIteratorModel.reveal_IterFindFirstGte(); */
       ghost var b := bucket.I();
       var pkv := bucket.GetPkv();
       var i: uint64 := PSA.BinarySearchIndexOfFirstKeyGte(pkv.keys, key);
@@ -809,7 +809,7 @@ module BucketImpl {
     ensures biter.bucket == bucket.I()
     ensures IIterator(biter.it) == BucketIteratorModel.IterFindFirstGt(biter.bucket, key)
     {
-      BucketIteratorModel.reveal_IterFindFirstGt();
+     /*  BucketIteratorModel.reveal_IterFindFirstGt(); */
       ghost var b := bucket.I();
       var pkv := bucket.GetPkv();
       var i: uint64 := PSA.BinarySearchIndexOfFirstKeyGt(pkv.keys, key);
@@ -826,7 +826,7 @@ module BucketImpl {
     {
       BucketIteratorModel.lemma_NextFromIndex(self.bucket, IIterator(self.it));
 
-      BucketIteratorModel.reveal_IterInc();
+     /*  BucketIteratorModel.reveal_IterInc(); */
       NumElementsLteWeight(self.bucket);
       inout self.it := makeIter(self.bucket, self.it.i + 1);
     }

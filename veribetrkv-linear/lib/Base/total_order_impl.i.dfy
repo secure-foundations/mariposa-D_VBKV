@@ -43,7 +43,7 @@ abstract module Total_Order_Impl {
     {
       var b := cmp(s[i], s[i+1]);
       if 0 < b {
-        reveal_IsSorted();
+        /* reveal_IsSorted(); */
         return false;
       }
       SortedAugment(s[..i+1], s[i+1]);
@@ -59,12 +59,12 @@ abstract module Total_Order_Impl {
     ensures result == IsStrictlySorted(s)
   {
     if |s| as uint64 < 2 {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       return true;
     }
 
     assert IsStrictlySorted(s[..1]) by {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
     }
     
     var i: uint64 := 0;
@@ -74,7 +74,7 @@ abstract module Total_Order_Impl {
     {
       var b := cmp(s[i], s[i+1]);
       if 0 <= b {
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
         return false;
       }
       StrictlySortedAugment(s[..i+1], s[i+1]);
@@ -108,7 +108,7 @@ abstract module Total_Order_Impl {
     forall j | i <= j < end
       ensures lt(needle, run[j])
     {
-      reveal_IsSorted();
+      /* reveal_IsSorted(); */
       assert lt(needle, run[i]);
       assert lte(run[i], run[j]);
     }
@@ -121,7 +121,7 @@ abstract module Total_Order_Impl {
     requires IsSorted(run[start..end]);
     ensures posplus1 as int == start as int + LargestLte(run[start..end], needle) + 1
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     var lo := start;
     var hi := end + 1;
     while 1 < hi - lo 
@@ -157,7 +157,7 @@ abstract module Total_Order_Impl {
     forall j | i <= j < end
       ensures lt(needle, run[j])
     {
-      reveal_IsSorted();
+      /* reveal_IsSorted(); */
       assert lt(needle, run[i]);
       assert lte(run[i], run[j]);
     }
@@ -171,7 +171,7 @@ abstract module Total_Order_Impl {
     requires IsSorted(run[start..end]);
     ensures posplus1 as int == start as int + LargestLt(run[start..end], needle) + 1
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     var lo := start;
     var hi := end + 1;
     while 1 < hi - lo 
@@ -345,7 +345,7 @@ module Byte_Order_Impl refines Total_Order_Impl {
   import opened Ord = Byte_Order
   method cmp(a: Element, b: Element) returns (c: int32)
   {
-    reveal_lte();
+    /* reveal_lte(); */
     return if a < b then -1 else if a > b then 1 else 0;
   }
 }

@@ -109,9 +109,9 @@ module PackedStringArrayMarshalling {
     var dv := v.t[1];
     calc {
       SizeOfV(v);
-      { reveal_SeqSum(); }
+      { /* reveal_SeqSum(); */ }
       SizeOfV(ov) + SeqSum(v.t[1..]);
-      { reveal_SeqSum(); }
+      { /* reveal_SeqSum(); */ }
       SizeOfV(ov) + SizeOfV(dv);
     }
   }

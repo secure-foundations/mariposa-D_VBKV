@@ -32,7 +32,7 @@ module BucketIteratorModel {
     set k | k in bucket && Keyspace.lte(key, k)
   }
 
-  predicate {:opaque} WFIter(bucket: Bucket, it: Iterator)
+  predicate WFIter(bucket: Bucket, it: Iterator)
   ensures WFIter(bucket, it) ==>
       && PreWFBucket(bucket)
       && it.decreaser >= 0
@@ -66,7 +66,7 @@ module BucketIteratorModel {
   requires 0 <= idx <= |bucket.keys|
   ensures WFIter(bucket, it)
   {
-    reveal WFIter();
+    /* reveal WFIter(); */
 
     var it := Iterator(
       (if idx == |bucket.keys| then Done
@@ -86,21 +86,21 @@ module BucketIteratorModel {
   requires |bucket.keys| == |bucket.msgs|
   ensures WFIter(bucket, it)
   {
-    reveal WFIter();
+    /* reveal WFIter(); */
     Iterator(Done, |bucket.keys|, 0)
   }
 
   ///// Functions for initializing and manipulating iterators
 
-  function {:opaque} IterStart(bucket: Bucket) : (it' : Iterator)
+  function IterStart(bucket: Bucket) : (it' : Iterator)
   requires WFBucket(bucket)
   ensures WFIter(bucket, it')
   {
-    reveal WFIter();
+    /* reveal WFIter(); */
     iterForIndex(bucket, 0)
   }
 
-  function {:opaque} IterFindFirstGte(bucket: Bucket, key: Key) : (it' : Iterator)
+  function IterFindFirstGte(bucket: Bucket, key: Key) : (it' : Iterator)
   requires WFBucket(bucket)
   ensures WFIter(bucket, it')
   ensures it'.next.Next? ==> Keyspace.lte(key, it'.next.key)
@@ -109,24 +109,24 @@ module BucketIteratorModel {
       Keyspace.binarySearchIndexOfFirstKeyGte(bucket.keys, key))
   }
 
-  function {:opaque} IterFindFirstGt(bucket: Bucket, key: Key) : (it' : Iterator)
+  function IterFindFirstGt(bucket: Bucket, key: Key) : (it' : Iterator)
   requires WFBucket(bucket)
   ensures WFIter(bucket, it')
   ensures it'.next.Next? ==> Keyspace.lt(key, it'.next.key)
   {
-    reveal WFIter();
+    /* reveal WFIter(); */
     iterForIndex(bucket,
       Keyspace.binarySearchIndexOfFirstKeyGt(bucket.keys, key))
   }
 
-  function {:opaque} IterInc(bucket: Bucket, it: Iterator) : (it' : Iterator)
+  function IterInc(bucket: Bucket, it: Iterator) : (it' : Iterator)
   requires WFBucket(bucket)
   requires WFIter(bucket, it)
   requires it.next.Next?
   ensures WFIter(bucket, it')
   ensures it'.decreaser < it.decreaser
   {
-    reveal WFIter();
+    /* reveal WFIter(); */
     iterForIndex(bucket, it.idx + 1)
   }
 
@@ -141,9 +141,9 @@ module BucketIteratorModel {
   ensures IterInc(bucket, it).next.Done? ==>
       Keyspace.lte(key, it.next.key)
   {
-    reveal WFIter();
-    Keyspace.reveal_IsStrictlySorted();
-    reveal_IterInc();
+    /* reveal WFIter(); */
+   /*  Keyspace.reveal_IsStrictlySorted(); */
+    /* reveal_IterInc(); */
     var i := MapSeqs.GetIndex(bucket.keys, bucket.msgs, key);
   }
 
@@ -155,9 +155,9 @@ module BucketIteratorModel {
   ensures IterInc(bucket, it).next.Next? ==>
       Keyspace.lt(it.next.key, IterInc(bucket, it).next.key)
   {
-    reveal WFIter();
-    Keyspace.reveal_IsStrictlySorted();
-    reveal_IterInc();
+    /* reveal WFIter(); */
+   /*  Keyspace.reveal_IsStrictlySorted(); */
+    /* reveal_IterInc(); */
   }
 
   lemma noKeyBetweenIterFindFirstGte(bucket: Bucket, key: Key, key0: Key)
@@ -169,8 +169,8 @@ module BucketIteratorModel {
   ensures IterFindFirstGte(bucket, key).next.Done? ==>
       (Keyspace.lt(key0, key))
   {
-    Keyspace.reveal_IsStrictlySorted();
-    reveal_IterFindFirstGte();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
+    /* reveal_IterFindFirstGte(); */
     var i := MapSeqs.GetIndex(bucket.keys, bucket.msgs, key0);
   }
 
@@ -183,8 +183,8 @@ module BucketIteratorModel {
   ensures IterFindFirstGt(bucket, key).next.Done? ==>
       (Keyspace.lte(key0, key))
   {
-    Keyspace.reveal_IsStrictlySorted();
-    reveal_IterFindFirstGt();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
+    /* reveal_IterFindFirstGt(); */
     var i := MapSeqs.GetIndex(bucket.keys, bucket.msgs, key0);
   }
 
@@ -195,8 +195,8 @@ module BucketIteratorModel {
   ensures IterStart(bucket).next.Next?
   ensures Keyspace.lte(IterStart(bucket).next.key, key0)
   {
-    Keyspace.reveal_IsStrictlySorted();
-    reveal_IterStart();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
+    /* reveal_IterStart(); */
     var i := MapSeqs.GetIndex(bucket.keys, bucket.msgs, key0);
   }
 
@@ -211,6 +211,6 @@ module BucketIteratorModel {
   ensures it.idx == |bucket.keys| ==>
     && it.next.Done?
   {
-    reveal WFIter();
+    /* reveal WFIter(); */
   }
 }

@@ -82,7 +82,7 @@ module FlushPolicyModel {
     ))
   }
 
-  function {:opaque} getActionToSplit(s: BBC.Variables, stack: seq<BT.G.Reference>, slots: seq<uint64>, i: uint64) : (action : Action)
+  function getActionToSplit(s: BBC.Variables, stack: seq<BT.G.Reference>, slots: seq<uint64>, i: uint64) : (action : Action)
   requires 0 <= i as int < |stack|
   requires ValidStackSlots(s, stack, slots)
   {
@@ -110,7 +110,7 @@ module FlushPolicyModel {
     )
   }
 
-  function {:opaque} getActionToFlush(s: BBC.Variables, stack: seq<BT.G.Reference>, slots: seq<uint64>) : (BBC.Variables, Action)
+  function getActionToFlush(s: BBC.Variables, stack: seq<BT.G.Reference>, slots: seq<uint64>) : (BBC.Variables, Action)
   requires |stack| <= 40
   requires ValidStackSlots(s, stack, slots)
   requires BBC.Inv(s)
@@ -175,7 +175,7 @@ module FlushPolicyModel {
   ensures var action := getActionToSplit(s, stack, slots, i);
       action.ActionGrow? || action.ActionRepivot? || action.ActionSplit? || action.ActionEvict?
   {
-    reveal_getActionToSplit();
+    /* reveal_getActionToSplit(); */
     var action := getActionToSplit(s, stack, slots, i);
 
     if i == 0 {
@@ -204,7 +204,7 @@ module FlushPolicyModel {
     && ValidAction(s', action)
     && s == s'
   {
-    reveal_getActionToFlush();
+    /* reveal_getActionToFlush(); */
     var action := getActionToFlush(s, stack, slots).1;
 
     if |stack| as uint64 == 40 {

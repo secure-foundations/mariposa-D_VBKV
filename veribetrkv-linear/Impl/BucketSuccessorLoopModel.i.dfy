@@ -18,7 +18,7 @@ module BucketSuccessorLoopModel {
 
   // A straightforward loop using the generator machinery
 
-  function {:opaque} ProcessGenerator(
+  function ProcessGenerator(
       g: Generator,
       maxToFind: int,
       upTo: Option<Key>,
@@ -50,7 +50,7 @@ module BucketSuccessorLoopModel {
     )
   }
 
-  function {:opaque} GetSuccessorInBucketStack(
+  function GetSuccessorInBucketStack(
       buckets: seq<Bucket>,
       maxToFind: int,
       start: UI.RangeStart,
@@ -111,10 +111,10 @@ module BucketSuccessorLoopModel {
           r.end == (if upTo.Some? then UI.EExclusive(upTo.value) else UI.PositiveInf))
   decreases decreaser(g)
   {
-    reveal_ProcessGenerator();
-    reveal_SortedSeqOfKeyValueMap();
-    reveal_KeyValueMapOfBucket();
-    reveal_ClampEnd();
+    /* reveal_ProcessGenerator(); */
+    /* reveal_SortedSeqOfKeyValueMap(); */
+    /* reveal_KeyValueMapOfBucket(); */
+    /* reveal_ClampEnd(); */
 
     lemmaDecreaserDecreases(g);
 
@@ -213,19 +213,19 @@ module BucketSuccessorLoopModel {
     && (upTo.Some? ==> !MS.UpperBound(upTo.value, r.end))
     && MS.NonEmptyRange(start, r.end)
   {
-    reveal_GetSuccessorInBucketStack();
+    /* reveal_GetSuccessorInBucketStack(); */
     var g := GenFromBucketStackWithLowerBound(buckets, start);
     GenFromBucketStackWithLowerBoundYieldsComposeSeq(buckets, start);
     var bucket := BucketOf(g);
-    reveal_KeyValueMapOfBucket();
-    reveal_SortedSeqOfKeyValueMap();
+    /* reveal_KeyValueMapOfBucket(); */
+    /* reveal_SortedSeqOfKeyValueMap(); */
     ProcessGeneratorResult(bucket, map[], bucket, g, maxToFind, upTo, []);
     var r := ProcessGenerator(g, maxToFind, upTo, []);
     assert r == GetSuccessorInBucketStack(buckets, maxToFind, start, upTo);
 
-    reveal_ClampRange();
-    reveal_ClampStart();
-    reveal_ClampEnd();
+    /* reveal_ClampRange(); */
+    /* reveal_ClampStart(); */
+    /* reveal_ClampEnd(); */
     assert ClampRange(ComposeSeq(MapsOfBucketList(buckets)), start, r.end)
         == ClampEnd(ClampStart(ComposeSeq(MapsOfBucketList(buckets)), start), r.end);
 

@@ -55,7 +55,7 @@ module QueryModel {
   }
 
 
-  function {:opaque} new_lookup(lookup: seq<BT.G.ReadOp>, ref: BT.G.Reference, node: BT.G.Node) : seq<BT.G.ReadOp>
+  function new_lookup(lookup: seq<BT.G.ReadOp>, ref: BT.G.Reference, node: BT.G.Node) : seq<BT.G.ReadOp>
   {
     lookup + [BT.G.ReadOp(ref, node)]
   }
@@ -80,7 +80,7 @@ module QueryModel {
   ensures forall i | 0 <= i < |lookup'| :: MapsTo(cache, lookup'[i].ref, lookup'[i].node)
   ensures forall i | 0 <= i < |lookup'| :: BoundedKey(lookup'[i].node.pivotTable, key)
   {
-    reveal_new_lookup();
+    /* reveal_new_lookup(); */
 
     forall idx | BT.ValidLayerIndex(lookup', idx) && idx < |lookup'| - 1
     ensures BT.LookupFollowsChildRefAtLayer(key, lookup', idx)

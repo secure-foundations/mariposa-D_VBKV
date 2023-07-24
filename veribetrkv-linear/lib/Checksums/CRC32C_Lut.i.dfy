@@ -23,7 +23,7 @@ module CRC32C_Lut {
   import opened LinearSequence_s
   import Math
 
-  function method {:opaque} shift1(p: uint32) : (p' : uint32)
+  function method shift1(p: uint32) : (p' : uint32)
   //requires bits_of_int(n, 32) == pow_mod_crc(p)
   //ensures bits_of_int(n + 1, 32) == pow_mod_crc(p')
   {
@@ -100,7 +100,7 @@ module CRC32C_Lut {
               extend_bits_of_int(p as nat / 2, 31);
             }
             [false] + bits_of_int(p as nat / 2, 32);
-            { reveal_shift1(); }
+            { /* reveal_shift1(); */ }
             [false] + bits_of_int(shift1(p) as nat, 32);
             [false] + reverse(x);
             reverse(x + [false]);
@@ -182,7 +182,7 @@ module CRC32C_Lut {
                   [true] + bits_of_int(0x82F6_3b78, 32)
                 );
                 [false] + xor(bits_of_int(p as nat / 2, 32), bits_of_int(0x82F6_3b78, 32));
-                { reveal_shift1(); }
+                { /* reveal_shift1(); */ }
                 [false] + bits_of_int(shift1(p) as nat, 32);
                 [false] + reverse(x);
                 reverse(x + [false]);
@@ -211,7 +211,7 @@ module CRC32C_Lut {
   {
   }
 
-  function method {:opaque} compute_pow_mod_crc(
+  function method compute_pow_mod_crc(
       n: uint64, p: uint32,
       n': uint64) : (p': uint32)
   requires n >= 33
@@ -228,7 +228,7 @@ module CRC32C_Lut {
     )
   }
 
-  function method {:opaque} compute_all_pow_mod_crc_iter(
+  function method compute_all_pow_mod_crc_iter(
       linear results: seq<uint32>,
       i: uint64) : (linear results': seq<uint32>)
   requires |results| == 512
@@ -249,7 +249,7 @@ module CRC32C_Lut {
     )
   }
 
-  function method {:opaque} compute_all_pow_mod_crc() : (linear results': seq<uint32>)
+  function method compute_all_pow_mod_crc() : (linear results': seq<uint32>)
   ensures |results'| == 512
   ensures forall j:nat | 0 <= j < 512 ::
       bits_of_int(results'[j] as nat, 32) == pow_mod_crc(64*(j+1))
@@ -260,14 +260,14 @@ module CRC32C_Lut {
     compute_all_pow_mod_crc_iter(seq_set(results, 0, first), 1)
   }
 
-  function method {:opaque} combine(a: uint32, b: uint32) : (c: uint64)
+  function method combine(a: uint32, b: uint32) : (c: uint64)
   ensures bits_of_int(c as nat, 64) == bits_of_int(a as nat, 32) + bits_of_int(b as nat, 32)
   {
     lemma_bits_of_int_64_split((b as int) * 0x1_0000_0000 + a as int);
     (b as uint64) * 0x1_0000_0000 + (a as uint64)
   }
 
-  function method {:opaque} compute_lut_iter(
+  function method compute_lut_iter(
       linear pmc: seq<uint32>,
       linear lut: seq<uint64>,
       i: uint64) : (linear lut': seq<uint64>)

@@ -35,7 +35,7 @@ module SuccModel {
 
   // Awkwardly split up for verification time reasons
 
-  function {:opaque} getPathInternal(
+  function getPathInternal(
       s: BBC.Variables,
       io: IO,
       key: Key,
@@ -96,7 +96,7 @@ module SuccModel {
     )
   }
 
-  function {:opaque} getPath(
+  function getPath(
       s: BBC.Variables,
       io: IO,
       key: Key,
@@ -140,7 +140,7 @@ module SuccModel {
     )
   }
 
-  function {:opaque} doSucc(s: BBC.Variables, io: IO, start: UI.RangeStart, maxToFind: int)
+  function doSucc(s: BBC.Variables, io: IO, start: UI.RangeStart, maxToFind: int)
   : (res : (BBC.Variables, IO, Option<UI.SuccResultList>))
   requires BBC.Inv(s)
   requires io.IOInit?
@@ -233,8 +233,8 @@ module SuccModel {
         && (pr.upTo.Some? ==> lt(startKey, pr.upTo.value))
       ) */
   {
-    reveal_getPath();
-    reveal_getPathInternal();
+    /* reveal_getPath(); */
+    /* reveal_getPathInternal(); */
 
     if ref in s.cache {
       var node := s.cache[ref];
@@ -272,7 +272,7 @@ module SuccModel {
 
         assert upTo'.Some? ==> lt(startKey, upTo'.value);
 
-        PBS.reveal_LookupUpperBound();
+       /*  PBS.reveal_LookupUpperBound(); */
 
         if node.children.Some? {
           if counter == 0 {
@@ -316,8 +316,8 @@ module SuccModel {
     && (res.None? ==>
             betree_next_dop(IBlockCache(s), IBlockCache(s'), IDiskOp(diskOp(io')).bdop))
   {
-    reveal_doSucc();
-    PBS.reveal_LookupUpperBound();
+    /* reveal_doSucc(); */
+   /*  PBS.reveal_LookupUpperBound(); */
     var startKey := if start.NegativeInf? then [] else start.key;
     lemmaGetPathResult(s, io, startKey, [], [], start, None, maxToFind, BT.G.Root(), 40);
   }

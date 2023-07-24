@@ -11,7 +11,7 @@ module F2_X_s {
   import opened NativeTypes
   import opened Bits_s
 
-  function {:opaque} reverse(s: Bits) : (s' : Bits)
+  function reverse(s: Bits) : (s' : Bits)
   ensures |s'| == |s|
   ensures forall i | 0 <= i < |s'| :: s'[i] == s[|s| - 1 - i]
   {
@@ -24,7 +24,7 @@ module F2_X_s {
     (a && !b) || (!a && b)
   }
 
-  function {:opaque} xor(p: Bits, q: Bits) : (r : Bits)
+  function xor(p: Bits, q: Bits) : (r : Bits)
   requires |p| == |q|
   ensures |r| == |p|
   ensures forall i | 0 <= i < |r| :: r[i] == bool_xor(p[i], q[i])
@@ -64,7 +64,7 @@ module F2_X_s {
     mul_F2_X_digit_partial(p, q, i, 0)
   }
 
-  function {:opaque} mul_F2_X(p: Bits, q: Bits) : (r : Bits)
+  function mul_F2_X(p: Bits, q: Bits) : (r : Bits)
   ensures |r| == |p| + |q|
   ensures forall i | 0 <= i < |r| :: r[i] == mul_F2_X_digit(p, q, i)
   {

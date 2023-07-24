@@ -65,7 +65,7 @@ module SuccImpl {
     == BGM.GenFromBucketStackWithLowerBound(acc + [bucket], start)
   {
     linear var g2 := cache.NodeBucketGen(ref, r, start);
-    BGM.reveal_GenFromBucketStackWithLowerBound();
+   /*  BGM.reveal_GenFromBucketStackWithLowerBound(); */
     linear match g {
       case lSome(g1) =>
         g' := BGI.Generator.GenCompose(g1, g2);
@@ -111,7 +111,7 @@ module SuccImpl {
        == SuccModel.getPathInternal(old_s.I(), old(IIO(io)), key, old(acc),
       start, upTo, maxToFind as int, ref, counter, s.cache.I()[ref])
   {
-    SuccModel.reveal_getPathInternal();
+   /*  SuccModel.reveal_getPathInternal(); */
 
     var r := Pivots.ComputeRoute(pivots, key);
     ghost var node := s.cache.I()[ref];
@@ -195,7 +195,7 @@ module SuccImpl {
        == SuccModel.getPath(old_s.I(), old(IIO(io)), key, old(acc), start,
         upTo, maxToFind as int, ref, counter)
   {
-    SuccModel.reveal_getPath();
+   /*  SuccModel.reveal_getPath(); */
 
     var incache := s.cache.InCache(ref);
     if incache {
@@ -247,7 +247,7 @@ module SuccImpl {
     && (res.None? ==>
             IOModel.betree_next_dop(old_s.I(), s.I(), IDiskOp(diskOp(IIO(io))).bdop))
   {
-    PBS.reveal_LookupUpperBound();
+   /*  PBS.reveal_LookupUpperBound(); */
     var startKey := if start.NegativeInf? then [] else start.key;
     SuccModel.lemmaGetPathResult(old_s.I(), IIO(io), startKey, [], [], start, None, maxToFind as int, BT.G.Root(), 40);
     res := getPath(inout s, io, startKey, [], lNone, start, None, maxToFind, BT.G.Root(), 40);

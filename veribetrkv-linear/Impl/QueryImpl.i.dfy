@@ -102,7 +102,7 @@ module QueryImpl {
           assert PBS.LookupVisitsWellMarshalledBuckets(newlookup, key) ==> BucketWellMarshalled(bucket);
           assert PBS.LookupVisitsWellMarshalledBuckets(newlookup, key) ==> PBS.LookupVisitsWellMarshalledBuckets(lookup, key)
           by {
-            reveal_new_lookup();
+            /* reveal_new_lookup(); */
           }
 
           if (newmsg.Define?) {

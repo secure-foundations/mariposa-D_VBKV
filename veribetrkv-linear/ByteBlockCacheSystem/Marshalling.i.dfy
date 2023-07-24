@@ -118,7 +118,7 @@ module Marshalling {
   decreases |pivots| - i
   ensures isStrictlySortedPivotsIterate(pivots, i) <==> Pivots.Keyspace.IsStrictlySorted(pivots[i-1..])
   {
-    Pivots.Keyspace.reveal_IsStrictlySorted();
+   /*  Pivots.Keyspace.reveal_IsStrictlySorted(); */
 
     if i == |pivots| then (
       true
@@ -131,10 +131,10 @@ module Marshalling {
     )
   }
 
-  predicate {:opaque} isStrictlySortedPivots(pivots: Pivots.PivotTable)
+  predicate isStrictlySortedPivots(pivots: Pivots.PivotTable)
   ensures isStrictlySortedPivots(pivots) <==> Pivots.Keyspace.IsStrictlySorted(pivots)
   {
-    Pivots.Keyspace.reveal_IsStrictlySorted();
+   /*  Pivots.Keyspace.reveal_IsStrictlySorted(); */
 
     if |pivots| >= 2 then (
       isStrictlySortedPivotsIterate(pivots, 1)
@@ -193,7 +193,7 @@ module Marshalling {
   ensures s.Some? ==> |s.value| == |v.a|
   {
     if |v.a| >= 2 then (
-      Pivots.Keyspace.reveal_IsStrictlySorted();
+     /*  Pivots.Keyspace.reveal_IsStrictlySorted(); */
       valToStrictlySortedPivots(v)
     ) else
       None
@@ -380,7 +380,7 @@ module Marshalling {
 
   /////// Marshalling and de-marshalling
 
-  function {:opaque} parseSector(data: seq<byte>) : (s : Option<Sector>)
+  function parseSector(data: seq<byte>) : (s : Option<Sector>)
   {
     if |data| < 0x1_0000_0000_0000_0000 then (
       match parse_Val(data, SectorGrammar()).0 {
@@ -392,7 +392,7 @@ module Marshalling {
     )
   }
 
-  function {:opaque} parseCheckedSector(data: seq<byte>) : (s : Option<Sector>)
+  function parseCheckedSector(data: seq<byte>) : (s : Option<Sector>)
   {
     if |data| >= 32 && CRC32_C.crc32_c_padded(data[32..]) == data[..32] then
       parseSector(data[32..])
@@ -473,7 +473,7 @@ module Marshalling {
         VUint64Array([])])
     ]));
 
-    reveal_SeqSum();
+    /* reveal_SeqSum(); */
     /*assert SizeOfV(VTuple([
         VUint64(BT.G.Root()),
         VUint64(loc.addr),

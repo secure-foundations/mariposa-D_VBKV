@@ -44,7 +44,7 @@ module BitLemmas {
   requires x <= y
   ensures bits_of_int(n, y) == bits_of_int(n, x) + zeroes(y-x)
   {
-    Math.reveal_power2();
+   /*  Math.reveal_power2(); */
     if y == x {
     } else {
       if x == 0 {
@@ -155,7 +155,7 @@ module BitLemmas {
         int_of_bits(a+b);
         { assert a + b == b; }
         int_of_bits(b);
-        { assert power2(0) == 1 by { reveal_power2(); } }
+        { assert power2(0) == 1 by { /* reveal_power2(); */ } }
         power2(|a|) * int_of_bits(b);
         int_of_bits(a) + power2(|a|) * int_of_bits(b);
       }
@@ -171,7 +171,7 @@ module BitLemmas {
         int_of_bits(a) + 2 * (power2(|a|-1) * int_of_bits(b));
         { NonlinearLemmas.mul_assoc(2, power2(|a|-1), int_of_bits(b)); }
         int_of_bits(a) + (2 * power2(|a|-1)) * int_of_bits(b);
-        { assert power2(|a|) == 2 * power2(|a|-1) by { reveal_power2(); } }
+        { assert power2(|a|) == 2 * power2(|a|-1) by { /* reveal_power2(); */ } }
         int_of_bits(a) + power2(|a|) * int_of_bits(b);
       }
     }
@@ -255,7 +255,7 @@ module BitLemmas {
         byte_of_bits(m[24..32])
       ]) as int;
       {
-        reveal_unpack_LittleEndian_Uint32();
+        /* reveal_unpack_LittleEndian_Uint32(); */
       }
       byte_of_bits(m[0..8]) as int
         + byte_of_bits(m[8..16]) as int * 0x1_00
@@ -301,7 +301,7 @@ module BitLemmas {
   decreases n
   {
     if n == 0 {
-      assert power2(0) == 1 by { reveal_power2(); }
+      assert power2(0) == 1 by { /* reveal_power2(); */ }
       assert s == 0;
     } else {
       calc {
@@ -310,7 +310,7 @@ module BitLemmas {
         int_of_bits([s % 2 == 1] + bits_of_int(s / 2, n-1));
         (if s % 2 == 1 then 1 else 0) + 2 * int_of_bits(bits_of_int(s / 2, n-1));
         {
-          assert power2(n) == power2(n-1) * 2 by { reveal_power2(); }
+          assert power2(n) == power2(n-1) * 2 by { /* reveal_power2(); */ }
           int_of_bits_bits_of_int(s / 2, n-1);
         }
         (if s % 2 == 1 then 1 else 0) + 2 * (s/2);
@@ -334,7 +334,7 @@ module BitLemmas {
       == unpack_LittleEndian_Uint32(t)
   ensures s == t
   {
-    reveal_unpack_LittleEndian_Uint32();
+    /* reveal_unpack_LittleEndian_Uint32(); */
     assert s[0] == t[0];
     assert s[1] == t[1];
     assert s[2] == t[2];
@@ -404,7 +404,7 @@ module BitLemmas {
         bits_of_int(x, a + b);
         bits_of_int(x, b);
         {
-          assert power2(0) == 1 by { reveal_power2(); }
+          assert power2(0) == 1 by { /* reveal_power2(); */ }
           assert x / power2(a) == x;
         }
         bits_of_int(x / power2(a), b);
@@ -423,7 +423,7 @@ module BitLemmas {
         bits_of_int(x, a + b);
         [x % 2 == 1] + bits_of_int(x/2, a + b - 1);
         {
-          assert x / 2 < power2(a - 1 + b) by { reveal_power2(); }
+          assert x / 2 < power2(a - 1 + b) by { /* reveal_power2(); */ }
           lemma_bits_of_int_split(x/2, a - 1, b);
         }
         [x % 2 == 1] + (bits_of_int((x/2) % power2(a-1), a-1) + bits_of_int((x/2) / power2(a-1), b));
@@ -436,7 +436,7 @@ module BitLemmas {
                 { lemma_div_denominator(x, 2, power2(a-1)); }
                 x / (2 * power2(a-1));
                 {
-                  assert power2(a) == 2 * power2(a-1) by { reveal_power2(); }
+                  assert power2(a) == 2 * power2(a-1) by { /* reveal_power2(); */ }
                 }
                 x / power2(a);
               }
@@ -453,7 +453,7 @@ module BitLemmas {
               calc {
                 (x % power2(a)) % 2;
                 {
-                  assert power2(a) == power2(a-1) * 2 by { reveal_power2(); }
+                  assert power2(a) == power2(a-1) * 2 by { /* reveal_power2(); */ }
                 }
                 (x % (power2(a-1) * 2)) % 2;
                 {
@@ -471,7 +471,7 @@ module BitLemmas {
                 }
                 (x % (power2(a-1) * 2)) / 2;
                 {
-                  assert (power2(a-1) * 2) == power2(a) by {reveal_power2();}
+                  assert (power2(a-1) * 2) == power2(a) by {/* reveal_power2(); */}
                 }
                 (x % power2(a)) / 2;
               }
@@ -507,7 +507,7 @@ module BitLemmas {
     calc {
       bits_of_int(x, a + 1);
       {
-        assert x < power2(a + 1) by { reveal_power2(); }
+        assert x < power2(a + 1) by { /* reveal_power2(); */ }
         lemma_bits_of_int_split(x, a, 1);
       }
       bits_of_int(x % power2(a), a) + bits_of_int(x / power2(a), 1);
@@ -585,9 +585,9 @@ module BitLemmas {
        == bits_of_bytes(s);
   {
     lemma_2toX();
-    assert power2(40) == 0x100_0000_0000 by { reveal_power2(); }
-    assert power2(48) == 0x10000_0000_0000 by { reveal_power2(); }
-    assert power2(56) == 0x100_0000_0000_0000 by { reveal_power2(); }
+    assert power2(40) == 0x100_0000_0000 by { /* reveal_power2(); */ }
+    assert power2(48) == 0x10000_0000_0000 by { /* reveal_power2(); */ }
+    assert power2(56) == 0x100_0000_0000_0000 by { /* reveal_power2(); */ }
     calc {
       bits_of_bytes(s);
       bits_of_bytes(s[0..7]) + bits_of_int(s[7] as int, 8);
@@ -636,7 +636,7 @@ module BitLemmas {
         bits_of_int_combine(s[0] as int + 0x100 * s[1] as int + 0x100_00 * s[2] as int + 0x100_00_00 * s[3] as int + 0x100_00_00_00 * s[4] as int + 0x100_00_00_00_00 * s[5] as int + 0x100_00_00_00_00_00 * s[6] as int, 56, s[7] as int, 8);
       }
       bits_of_int(s[0] as int + 0x100 * s[1] as int + 0x100_00 * s[2] as int + 0x100_00_00 * s[3] as int + 0x100_00_00_00 * s[4] as int + 0x100_00_00_00_00 * s[5] as int + 0x100_00_00_00_00_00 * s[6] as int + 0x100_00_00_00_00_00_00 * s[7] as int, 64);
-      { reveal_unpack_LittleEndian_Uint64(); }
+      { /* reveal_unpack_LittleEndian_Uint64(); */ }
       bits_of_int(unpack_LittleEndian_Uint64(s) as int, 64);
     }
   }

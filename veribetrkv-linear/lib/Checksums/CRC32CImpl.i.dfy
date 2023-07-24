@@ -31,7 +31,7 @@ module CRC32_C_Impl {
   import opened BitLemmas
   import NativeArrays
 
-  function method {:opaque} alignment(idx: uint32) : (res : uint32)
+  function method alignment(idx: uint32) : (res : uint32)
   {
     var t := idx % 8;
     if t == 0 then 0 else 8 - t

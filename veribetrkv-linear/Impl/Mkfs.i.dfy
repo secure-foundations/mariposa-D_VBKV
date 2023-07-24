@@ -45,7 +45,7 @@ module MkfsImpl {
     linear var node := Node.EmptyNode();
     // ghost var i:SSM.Sector := SSI.ISector(SSI.SectorNode(node));
     assert BT.WFNode(node.I()) by {
-      reveal_WeightBucketList();
+      /* reveal_WeightBucketList(); */
     }
 
     linear var sector := SSI.SectorNode(node);

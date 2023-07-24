@@ -61,7 +61,7 @@ module BlockAllocatorImpl {
       acc := DebugAccumulator.AccPut(acc, "full", a);
     }
 
-    predicate {:opaque} Inv()
+    predicate Inv()
     {
       && ephemeral.Inv()
       && (frozen.lSome? ==> frozen.value.Inv())
@@ -75,10 +75,10 @@ module BlockAllocatorImpl {
       && BitmapModel.Len(full.I()) == NumBlocks()
     }
 
-    function {:opaque} I() : BlockAllocatorModel.BlockAllocatorModel
+    function I() : BlockAllocatorModel.BlockAllocatorModel
     requires Inv()
     {
-      reveal Inv();
+      /* reveal Inv(); */
 
       BlockAllocatorModel.BlockAllocatorModel(ephemeral.I(),
           (if frozen.lNone? then None else Some(frozen.value.I())),
@@ -106,7 +106,7 @@ module BlockAllocatorImpl {
         ful
       );
 
-      reveal ba.Inv(), ba.I();
+      /* reveal ba.Inv(), ba.I(); */
     }
     
     shared method Alloc() returns (res : Option<uint64>)
@@ -114,8 +114,8 @@ module BlockAllocatorImpl {
     ensures res.Some? <==> BlockAllocatorModel.Alloc(I()).Some?
     ensures res.Some? ==> res.value as int == BlockAllocatorModel.Alloc(I()).value
     {
-      reveal Inv();
-      reveal I();
+      /* reveal Inv(); */
+      /* reveal I(); */
 
       res := full.Alloc();
     }
@@ -127,10 +127,10 @@ module BlockAllocatorImpl {
     ensures self.Inv()
     ensures self.I() == BlockAllocatorModel.MarkUsedEphemeral(old_self.I(), i as int)
     {
-      reveal old_self.Inv(), old_self.I();
+      /* reveal old_self.Inv(), old_self.I(); */
       inout self.ephemeral.Set(i);
       inout self.full.Set(i);
-      reveal self.Inv(), self.I();
+      /* reveal self.Inv(), self.I(); */
     }
 
     //TODO why is the requires for frozen a Option not loption
@@ -143,10 +143,10 @@ module BlockAllocatorImpl {
     ensures self.Inv()
     ensures self.I() == BlockAllocatorModel.MarkUsedFrozen(old_self.I(), i as int)
     {
-      reveal old_self.Inv(), old_self.I();
+      /* reveal old_self.Inv(), old_self.I(); */
       inout self.frozen.value.Set(i);
       inout self.full.Set(i);
-      reveal self.Inv(), self.I();
+      /* reveal self.Inv(), self.I(); */
     }
 
     linear inout method MarkUsedOutstanding(i: uint64)
@@ -156,10 +156,10 @@ module BlockAllocatorImpl {
     ensures self.Inv()
     ensures self.I() == BlockAllocatorModel.MarkUsedOutstanding(old_self.I(), i as int)
     {
-      reveal old_self.Inv(), old_self.I();
+      /* reveal old_self.Inv(), old_self.I(); */
       inout self.outstanding.Set(i);
       inout self.full.Set(i);
-      reveal self.Inv(), self.I();
+      /* reveal self.Inv(), self.I(); */
     }
 
     linear inout method MarkFreeOutstanding(i: uint64)
@@ -169,7 +169,7 @@ module BlockAllocatorImpl {
     ensures self.Inv()
     ensures self.I() == BlockAllocatorModel.MarkFreeOutstanding(old_self.I(), i as int)
     {
-      reveal old_self.Inv(), old_self.I();
+      /* reveal old_self.Inv(), old_self.I(); */
       inout self.outstanding.Unset(i);
 
       var b0 := false;
@@ -186,10 +186,10 @@ module BlockAllocatorImpl {
         }
       }
 
-      BitmapModel.reveal_BitUnset();
-      BitmapModel.reveal_IsSet();
+     /*  BitmapModel.reveal_BitUnset(); */
+     /*  BitmapModel.reveal_IsSet(); */
 
-      reveal self.Inv(), self.I();
+      /* reveal self.Inv(), self.I(); */
       assert self.Inv();
     }
 
@@ -200,7 +200,7 @@ module BlockAllocatorImpl {
     ensures self.Inv()
     ensures self.I() == BlockAllocatorModel.MarkFreeEphemeral(old_self.I(), i as int)
     {
-      reveal old_self.Inv(), old_self.I();
+      /* reveal old_self.Inv(), old_self.I(); */
 
       inout self.ephemeral.Unset(i);
 
@@ -218,13 +218,13 @@ module BlockAllocatorImpl {
         }
       }
 
-      BitmapModel.reveal_BitUnset();
-      BitmapModel.reveal_IsSet();
+     /*  BitmapModel.reveal_BitUnset(); */
+     /*  BitmapModel.reveal_IsSet(); */
 
       assert forall j | 0 <= j < |self.ephemeral.I()| :: j != i as int 
       ==> BitmapModel.IsSet(self.ephemeral.I(), j) == BitmapModel.IsSet(old_self.ephemeral.I(), j);
 
-      reveal self.Inv(), self.I();
+      /* reveal self.Inv(), self.I(); */
       assert self.Inv();
     }
 
@@ -236,7 +236,7 @@ module BlockAllocatorImpl {
     ensures old_self.I().frozen.Some?
     ensures self.I() == BlockAllocatorModel.MoveFrozenToPersistent(old_self.I())
     {
-      reveal old_self.Inv(), old_self.I();
+      /* reveal old_self.Inv(), old_self.I(); */
 
       linear var BlockAllocator(eph, fro, pre, out, full) := self;
 
@@ -253,7 +253,7 @@ module BlockAllocatorImpl {
       full.Free();
       fo.Free();
 
-      reveal self.Inv(), self.I();
+      /* reveal self.Inv(), self.I(); */
     }
 
     linear inout method CopyEphemeralToFrozen()
@@ -262,7 +262,7 @@ module BlockAllocatorImpl {
     ensures self.Inv()
     ensures self.I() == BlockAllocatorModel.CopyEphemeralToFrozen(old_self.I())
     {
-      reveal old_self.Inv(), old_self.I();
+      /* reveal old_self.Inv(), old_self.I(); */
 
       linear var BlockAllocator(eph, fro, pre, out, full) := self;
 
@@ -279,7 +279,7 @@ module BlockAllocatorImpl {
         eph, lSome(fo), pre, out, full
       );
 
-      reveal self.Inv(), self.I();
+      /* reveal self.Inv(), self.I(); */
     }
 
     linear method Free()

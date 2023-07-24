@@ -84,7 +84,7 @@ module IOModel {
     && loc.len == len
   }
 
-  function {:opaque} getFreeLoc(s: ImplVariables, len: uint64)
+  function getFreeLoc(s: ImplVariables, len: uint64)
   : (res : Option<Location>)
   requires s.Ready?
   requires s.WFBCVars()
@@ -98,7 +98,7 @@ module IOModel {
       None
   }
 
-  predicate {:opaque} FindLocationAndRequestWrite(io: IO, s: ImplVariables, sector: Sector,
+  predicate FindLocationAndRequestWrite(io: IO, s: ImplVariables, sector: Sector,
       id: Option<D.ReqId>, loc: Option<DiskLayout.Location>, io': IO)
   requires s.Ready?
   requires s.WFBCVars()
@@ -234,12 +234,12 @@ module IOModel {
       && sector.value.SectorSuperblock?
     ))
   {
-    Marshalling.reveal_parseCheckedSector();
-    Marshalling.reveal_parseSector();
-    reveal_SectorOfBytes();
-    reveal_ValidCheckedBytes();
-    reveal_Parse();
-    D.reveal_ChecksumChecksOut();
+   /*  Marshalling.reveal_parseCheckedSector(); */
+   /*  Marshalling.reveal_parseSector(); */
+    /* reveal_SectorOfBytes(); */
+    /* reveal_ValidCheckedBytes(); */
+    /* reveal_Parse(); */
+   /*  D.reveal_ChecksumChecksOut(); */
   }
 
 
@@ -249,9 +249,9 @@ module IOModel {
   requires id in s.outstandingBlockWrites
   ensures 0 <= s.outstandingBlockWrites[id].loc.addr as int / NodeBlockSize() < NumBlocks()
   {
-    reveal_ConsistentBitmapInteral();
+    /* reveal_ConsistentBitmapInteral(); */
     var i := s.outstandingBlockWrites[id].loc.addr as int / NodeBlockSize();
-    DiskLayout.reveal_ValidNodeAddr();
+   /*  DiskLayout.reveal_ValidNodeAddr(); */
     assert i * NodeBlockSize() == s.outstandingBlockWrites[id].loc.addr as int;
     assert IT.IndirectionTable.IsLocAllocBitmap(s.blockAllocator.I().outstanding, i);
   }
@@ -262,8 +262,8 @@ module IOModel {
   ensures s.frozenIndirectionTable.lSome?
       ==> s.blockAllocator.frozen.lSome?
   {
-    reveal_ConsistentBitmapInteral();
-    reveal s.blockAllocator.Inv();
-    reveal s.blockAllocator.I();
+    /* reveal_ConsistentBitmapInteral(); */
+    /* reveal s.blockAllocator.Inv(); */
+    /* reveal s.blockAllocator.I(); */
   }
 }

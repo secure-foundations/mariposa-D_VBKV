@@ -28,7 +28,7 @@ module JournalistParsingImpl {
   requires |s| < 0xffff_ffff_ffff_ffff
   ensures ar[i..] == JournalRangeOfByteSeq(s[4096*i..])
   {
-    reveal_JournalRangeOfByteSeq();
+    /* reveal_JournalRangeOfByteSeq(); */
     if i == ar.Length {
     } else {
       computeJournalRangeOfByteSeqIter(s, ar, i+1);
@@ -41,7 +41,7 @@ module JournalistParsingImpl {
   requires i as int + 4096 <= |s|
   ensures jb == JournalBlockOfByteSeq(s[i .. i + 4096])
   {
-    reveal_JournalBlockOfByteSeq();
+    /* reveal_JournalBlockOfByteSeq(); */
 
     lemma_seq_slice_slice(s, i as int, (i+4096) as int, 0, 32);
     assert s[i .. i + 32]
@@ -52,7 +52,7 @@ module JournalistParsingImpl {
         == s[i .. i + 4096][32 .. 4096];
 
     var chunk := s[i + 32 .. i + 4096];
-    D.reveal_ChecksumChecksOut();
+   /*  D.reveal_ChecksumChecksOut(); */
     var c := CRC32_C_Impl.compute_crc32c_padded(chunk);
     if c == s[i .. i + 32] {
       jb := Some(chunk);
@@ -78,7 +78,7 @@ module JournalistParsingImpl {
     calc {
       JournalRangeOfByteSeq(s[4096*i..]);
       JournalRangeOfByteSeq([]);
-      { reveal_JournalRangeOfByteSeq(); }
+      { /* reveal_JournalRangeOfByteSeq(); */ }
       Some([]);
       { assert ar[i..] == []; }
       Some(ar[i..]);
@@ -99,19 +99,19 @@ module JournalistParsingImpl {
           == s[4096*i ..][4096..];
       if block.Some? {
         assert |block.value| == 4064
-          by { reveal_JournalBlockOfByteSeq(); }
+          by { /* reveal_JournalBlockOfByteSeq(); */ }
         ar[i] := block.value;
 
         calc {
           JournalRangeOfByteSeq(s[4096*i..]);
-          { reveal_JournalRangeOfByteSeq(); }
+          { /* reveal_JournalRangeOfByteSeq(); */ }
           Some([block.value] + cur);
           { assert ar[i..] == [ar[i]] + cur; }
           Some(ar[i..]);
         }
       } else {
         assert JournalRangeOfByteSeq(s) == None by {
-          reveal_JournalRangeOfByteSeq();
+          /* reveal_JournalRangeOfByteSeq(); */
           if JournalRangeOfByteSeq(s).Some? {
             JournalBytesSplit(s, numBlocks as int, i as int);
             assert false;
@@ -138,7 +138,7 @@ module JournalistParsingImpl {
     calc {
       concatSeq(s[..i]);
       concatSeq([]);
-      { reveal_concatSeq(); }
+      { /* reveal_concatSeq(); */ }
       [];
     }
 
@@ -153,7 +153,7 @@ module JournalistParsingImpl {
         ar[0 .. 4064 * i] + s[i];
         concatSeq(s[..i]) + s[i];
         {
-          reveal_concatSeq();
+          /* reveal_concatSeq(); */
           assert DropLast(s[..i+1]) == s[..i];
           assert Last(s[..i+1]) == s[i];
         }
@@ -173,7 +173,7 @@ module JournalistParsingImpl {
   requires |s| < 0x1_0000_0000_0000_0000
   ensures parseHeader(s) == Header(nentries as int, nblocks as int)
   {
-    reveal_parseHeader();
+    /* reveal_parseHeader(); */
     nentries := Unpack_LittleEndian_Uint32(s, 0);
     nblocks := Unpack_LittleEndian_Uint32(s, 4);
   }

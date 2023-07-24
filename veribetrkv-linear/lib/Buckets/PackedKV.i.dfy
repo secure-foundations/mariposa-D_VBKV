@@ -50,7 +50,7 @@ module PackedKV {
     PSA.I(psa)
   }
 
-  function {:opaque} psaSeq_Messages(psa: PSA.Psa, i: int) : (res : seq<Message>)
+  function psaSeq_Messages(psa: PSA.Psa, i: int) : (res : seq<Message>)
   requires PSA.WF(psa)
   requires 0 <= i <= |psa.offsets|
   ensures |res| == i
@@ -150,7 +150,7 @@ module PackedKV {
   {
     ghost var ikeys := PSA.I(pkv.keys);
     
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
 
     if |pkv.keys.offsets| <= 1 {
       return true;
@@ -341,7 +341,7 @@ module PackedKV {
     if (i == |ikeys| - 1) {
       reveal_BucketMapOfSeq();
     } else {
-      Keyspace.reveal_IsStrictlySorted();
+     /*  Keyspace.reveal_IsStrictlySorted(); */
       reveal_BucketMapOfSeq();
       Imaps(DropLast(pkv), i);
       forall j | 0 <= j < |Sequences.DropLast(IMessages(pkv.messages))|
@@ -396,7 +396,7 @@ module PackedKV {
     //  Bucket(IKeys(pkv.keys)[..idx], IMessages(pkv.messages)[..idx]);
     //  Bucket(I(pkv).keys[..idx], I(pkv).msgs[..idx]);
     //  {
-        reveal_SplitBucketLeft();
+        /* reveal_SplitBucketLeft(); */
     //  }
     //  SplitBucketLeft(I(pkv), pivot);
     //}
@@ -415,13 +415,13 @@ module PackedKV {
       var i := Sequences.IndexOf(ikeys, key);
       Imaps(pkv, i);
       Imaps(result, i);
-      reveal_SplitBucketLeft();
+      /* reveal_SplitBucketLeft(); */
     }
 
     forall key | key in b
       ensures key in a
     {
-      reveal_SplitBucketLeft();
+      /* reveal_SplitBucketLeft(); */
     }
 
     ghost var iresult := I(result);
@@ -438,7 +438,7 @@ module PackedKV {
     result := SubPkv(pkv, idx, NumKVPairs(pkv));
 
     IMessagesSlice(pkv, idx, NumKVPairs(pkv));
-    reveal_SplitBucketRight();
+    /* reveal_SplitBucketRight(); */
 
     /*ghost var ikeys := PSA.I(pkv.keys);
     ghost var subkeys := PSA.I(result.keys);
@@ -454,13 +454,13 @@ module PackedKV {
       var i := Sequences.IndexOf(ikeys, key);
       Imaps(pkv, i);
       Imaps(result, i - idx as int);
-      reveal_SplitBucketRight();
+      /* reveal_SplitBucketRight(); */
     }
 
     forall key | key in b
       ensures key in a
     {
-      reveal_SplitBucketRight();
+      /* reveal_SplitBucketRight(); */
     }
 
     ghost var iresult := I(result);
@@ -942,7 +942,7 @@ module DynamicPkv {
             PSA.I(bot.keys), PKV.IMessages(bot.messages),
             0, [], [],
             slack0 as nat) by {
-          BucketFlushModel.reveal_mergeToOneChild();
+         /*  BucketFlushModel.reveal_mergeToOneChild(); */
         }
         return;
       } else {
@@ -982,7 +982,7 @@ module DynamicPkv {
                   PSA.I(bot.keys), PKV.IMessages(bot.messages),
                   0, [], [],
                   slack0 as nat) by {
-                BucketFlushModel.reveal_mergeToOneChild();
+               /*  BucketFlushModel.reveal_mergeToOneChild(); */
               }
               return;
             } else {
@@ -1000,7 +1000,7 @@ module DynamicPkv {
           var key := topkey;
           var msg := PKV.GetMessage(top, from);
           assert |key| <= 1024 by {
-            BucketFlushModel.reveal_mergeToOneChild();
+           /*  BucketFlushModel.reveal_mergeToOneChild(); */
           }
           var delta := WeightKeyUint64(key) + WeightMessageUint64(msg);
           if delta > slack {
@@ -1019,7 +1019,7 @@ module DynamicPkv {
                 PSA.I(bot.keys), PKV.IMessages(bot.messages),
                 0, [], [],
                 slack0 as nat) by {
-              BucketFlushModel.reveal_mergeToOneChild();
+             /*  BucketFlushModel.reveal_mergeToOneChild(); */
             }
             return;
           } else {
@@ -1035,7 +1035,7 @@ module DynamicPkv {
           var msg := PKV.GetMessage(bot, bot_from);
 
           assert |key| <= 1024 by {
-            BucketFlushModel.reveal_mergeToOneChild();
+           /*  BucketFlushModel.reveal_mergeToOneChild(); */
           }
           PSAPushBackWeight(dresult.toPkv(), key, msg);
           PSAPopFrontWeightSuffix(bot, bot_from);
@@ -1059,7 +1059,7 @@ module DynamicPkv {
             PSA.I(dresult.toPkv().keys),
             PKV.IMessages(dresult.toPkv().messages),
             slack as nat) by {
-        BucketFlushModel.reveal_mergeToOneChild();
+       /*  BucketFlushModel.reveal_mergeToOneChild(); */
       }
     }
   }
@@ -1121,7 +1121,7 @@ module DynamicPkv {
     assert [PKV.I(pkvs[i])] + PKVISeq(pkvs[i+1..])
         == PKVISeq(pkvs[i..]);
     assert WeightBucketList([PKV.I(pkvs[i])]) == WeightBucket(PKV.I(pkvs[i])) by {
-      reveal_WeightBucketList();
+      /* reveal_WeightBucketList(); */
     }
   }
 
@@ -1139,7 +1139,7 @@ module DynamicPkv {
     assert PKVISeq(pkvs[..i]) + [PKV.I(pkvs[i])]
         == PKVISeq(pkvs[..i+1]);
     assert WeightBucketList([PKV.I(pkvs[i])]) == WeightBucket(PKV.I(pkvs[i])) by {
-      reveal_WeightBucketList();
+      /* reveal_WeightBucketList(); */
     }
   }
 
@@ -1297,12 +1297,12 @@ module DynamicPkv {
   ensures result.I() == BucketFlushModel.mergeToChildren(
       PKV.I(top), pivots, PKVISeq(bots), slack as int)
   {
-    BucketFlushModel.reveal_mergeToChildren();
+   /*  BucketFlushModel.reveal_mergeToChildren(); */
     var idxs := computePivotIndexes(top.keys, pivots);
     var tmp := MergeCompleted(PKV.EmptyPkv(), slack);
     var ar := new PKV.Pkv[|bots| as uint64];
 
-    assert WeightBucketList(PKVISeq(ar[..0])) == 0 by { reveal_WeightBucketList(); }
+    assert WeightBucketList(PKVISeq(ar[..0])) == 0 by {/*  reveal_WeightBucketList(); */ }
     assert bots[0..] == bots;
     assert BucketFlushModel.pivotIndexes(PKV.I(top).keys, pivots) == seqInt(idxs);
 
@@ -1343,7 +1343,7 @@ module DynamicPkv {
     var slack := MaxTotalBucketWeightUint64();
     var i := 0;
 
-    assert WeightBucketList(PKVISeq(bots)[..i]) == 0 by { reveal_WeightBucketList(); }
+    assert WeightBucketList(PKVISeq(bots)[..i]) == 0 by {/*  reveal_WeightBucketList(); */ }
 
     while i < |bots| as uint64
     invariant 0 <= i as int <= |bots|
@@ -1354,7 +1354,7 @@ module DynamicPkv {
         {
           assert Seq.DropLast(PKVISeq(bots)[..i+1]) == PKVISeq(bots)[..i];
           assert Seq.Last(PKVISeq(bots)[..i+1]) == PKVISeq(bots)[i];
-          reveal_WeightBucketList();
+          /* reveal_WeightBucketList(); */
         }
         WeightBucketList(PKVISeq(bots)[..i]) + WeightBucket(PKVISeq(bots)[i]);
         {
@@ -1373,7 +1373,7 @@ module DynamicPkv {
     }
     assert PKVISeq(bots)[..i] == PKVISeq(bots);
 
-    BucketFlushModel.reveal_partialFlush();
+   /*  BucketFlushModel.reveal_partialFlush(); */
     var res := MergeToChildren(top, pivots, bots, slack);
     return PartialFlushResult(res.top, res.bots);
   }

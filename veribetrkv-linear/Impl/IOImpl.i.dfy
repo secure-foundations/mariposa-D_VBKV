@@ -47,10 +47,10 @@ module IOImpl {
   ensures loc.Some? ==> IOModel.LocAvailable(s, loc.value, len)
   ensures loc == IOModel.getFreeLoc(s, len)
   {
-    IOModel.reveal_getFreeLoc();
+   /*  IOModel.reveal_getFreeLoc(); */
 
-    reveal_ConsistentBitmapInteral();
-    DiskLayout.reveal_ValidNodeAddr();
+    /* reveal_ConsistentBitmapInteral(); */
+   /*  DiskLayout.reveal_ValidNodeAddr(); */
 
     var i := s.blockAllocator.Alloc();
     if i.Some? {
@@ -103,12 +103,12 @@ module IOImpl {
 
     sector.Free();
 
-    Marshalling.reveal_parseCheckedSector();
-    Marshalling.reveal_parseSector();
-    reveal_SectorOfBytes();
-    reveal_ValidCheckedBytes();
-    reveal_Parse();
-    D.reveal_ChecksumChecksOut();
+   /*  Marshalling.reveal_parseCheckedSector(); */
+   /*  Marshalling.reveal_parseSector(); */
+    /* reveal_SectorOfBytes(); */
+    /* reveal_ValidCheckedBytes(); */
+    /* reveal_Parse(); */
+   /*  D.reveal_ChecksumChecksOut(); */
   }
 
   method FindLocationAndRequestWrite(io: DiskIOHandler, shared s: ImplVariables, shared sector: SSI.Sector)
@@ -132,7 +132,7 @@ module IOImpl {
   ensures id.Some? ==> sector.SectorNode? ==> DiskLayout.ValidNodeLocation(loc.value)
   ensures sector.SectorNode? ==> id.Some? ==> IDiskOp(diskOp(IIO(io))) == BlockJournalDisk.DiskOp(BlockDisk.ReqWriteNodeOp(id.value, BlockDisk.ReqWriteNode(loc.value, sector.node.I())), JournalDisk.NoDiskOp)
   {
-    IOModel.reveal_FindLocationAndRequestWrite();
+   /*  IOModel.reveal_FindLocationAndRequestWrite(); */
     var bytes := MarshallingImpl.MarshallCheckedSector(sector);
     if (bytes == null) {
       id := None;
@@ -148,12 +148,12 @@ module IOImpl {
       }
     }
 
-    Marshalling.reveal_parseCheckedSector();
-    Marshalling.reveal_parseSector();
-    reveal_SectorOfBytes();
-    reveal_ValidCheckedBytes();
-    reveal_Parse();
-    D.reveal_ChecksumChecksOut();
+   /*  Marshalling.reveal_parseCheckedSector(); */
+   /*  Marshalling.reveal_parseSector(); */
+    /* reveal_SectorOfBytes(); */
+    /* reveal_ValidCheckedBytes(); */
+    /* reveal_Parse(); */
+   /*  D.reveal_ChecksumChecksOut(); */
   }
 
   method FindIndirectionTableLocationAndRequestWrite(
@@ -192,12 +192,12 @@ module IOImpl {
       id := Some(i);
     }
 
-    Marshalling.reveal_parseSector();
-    Marshalling.reveal_parseCheckedSector();
-    reveal_SectorOfBytes();
-    reveal_ValidCheckedBytes();
-    reveal_Parse();
-    D.reveal_ChecksumChecksOut();
+   /*  Marshalling.reveal_parseSector(); */
+   /*  Marshalling.reveal_parseCheckedSector(); */
+    /* reveal_SectorOfBytes(); */
+    /* reveal_ValidCheckedBytes(); */
+    /* reveal_Parse(); */
+   /*  D.reveal_ChecksumChecksOut(); */
 
     ghost var dop := diskOp(IIO(io));
     if dop.ReqWriteOp? {
@@ -321,12 +321,12 @@ module IOImpl {
       sector := lNone;
     }
 
-    Marshalling.reveal_parseCheckedSector();
-    Marshalling.reveal_parseSector();
-    reveal_SectorOfBytes();
-    reveal_ValidCheckedBytes();
-    reveal_Parse();
-    D.reveal_ChecksumChecksOut();
+   /*  Marshalling.reveal_parseCheckedSector(); */
+   /*  Marshalling.reveal_parseSector(); */
+    /* reveal_SectorOfBytes(); */
+    /* reveal_ValidCheckedBytes(); */
+    /* reveal_Parse(); */
+   /*  D.reveal_ChecksumChecksOut(); */
   }
 
   method PageInIndirectionTableResp(linear inout s: ImplVariables, io: DiskIOHandler)
@@ -349,9 +349,9 @@ module IOImpl {
 
     IOModel.ReadSectorCorrect(IIO(io));
 
-    Marshalling.reveal_parseSector();
-    reveal_SectorOfBytes();
-    reveal_Parse();
+   /*  Marshalling.reveal_parseSector(); */
+    /* reveal_SectorOfBytes(); */
+    /* reveal_Parse(); */
 
     if (Some(id) == s.indirectionTableRead && sectorOpt.lSome? && sectorOpt.value.SectorIndirectionTable?) {
       linear var lSome(sector: SSI.Sector) := sectorOpt;
@@ -384,7 +384,7 @@ module IOImpl {
         BucketWeights.WeightBucketEmpty();
 
         assert s.ConsistentBitmap() by {
-          reveal ConsistentBitmapInteral();
+          /* reveal ConsistentBitmapInteral(); */
         }
 
         assert s.WFBCVars();
@@ -434,9 +434,9 @@ module IOImpl {
 
     IOModel.ReadSectorCorrect(IIO(io));
 
-    Marshalling.reveal_parseSector();
-    reveal_SectorOfBytes();
-    reveal_Parse();
+   /*  Marshalling.reveal_parseSector(); */
+    /* reveal_SectorOfBytes(); */
+    /* reveal_Parse(); */
 
     // TODO we should probably remove the id from outstandingBlockReads
     // even in the case we don't do anything with it
@@ -518,14 +518,14 @@ module IOImpl {
     inout s.blockAllocator.MarkFreeOutstanding(locIdx);
     inout s.outstandingBlockWrites := ComputeMapRemove1(s.outstandingBlockWrites, id);
 
-    reveal_ConsistentBitmapInteral();
+    /* reveal_ConsistentBitmapInteral(); */
     // var locIdx := s.outstandingBlockWrites[id].loc.addr as int / NodeBlockSize();
 
-    DiskLayout.reveal_ValidNodeAddr();
+   /*  DiskLayout.reveal_ValidNodeAddr(); */
     assert locIdx as int * NodeBlockSize() == old_s.outstandingBlockWrites[id].loc.addr as int;
 
-    BitmapModel.reveal_BitUnset();
-    BitmapModel.reveal_IsSet();
+   /*  BitmapModel.reveal_BitUnset(); */
+   /*  BitmapModel.reveal_IsSet(); */
 
     forall i: int
     | IsLocAllocOutstanding(s.outstandingBlockWrites, i)
@@ -638,7 +638,7 @@ module IOImpl {
     assert old_s.blockAllocator.Inv();
     inout s.blockAllocator.MoveFrozenToPersistent();
 
-    reveal_ConsistentBitmapInteral();
+    /* reveal_ConsistentBitmapInteral(); */
     assert s.WFBCVars();
     assert BC.CleanUp(old_s.I(), s.I(), BlockDisk.NoDiskOp, CleanUpOp);
     assert BC.NextStep(old_s.I(), s.I(), BlockDisk.NoDiskOp,

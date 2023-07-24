@@ -63,13 +63,13 @@ module SyncImpl {
   ensures (forall i: int :: indirectionTable'.I().IsLocAllocIndirectionTable(i)
           <==> IT.IndirectionTable.IsLocAllocBitmap(bm', i))
   {
-    BitmapModel.reveal_BitSet();
-    BitmapModel.reveal_IsSet();
+   /*  BitmapModel.reveal_BitSet(); */
+   /*  BitmapModel.reveal_IsSet(); */
 
     //assert indirectionTable'.contents == indirectionTable.contents[ref := (Some(loc), indirectionTable.contents[ref].1)];
 
     var j := loc.addr as int / NodeBlockSize();
-    reveal_ValidNodeAddr();
+    /* reveal_ValidNodeAddr(); */
     assert j != 0;
     assert j * NodeBlockSize() == loc.addr as int;
 
@@ -129,9 +129,9 @@ module SyncImpl {
       inout s.blockAllocator.MarkUsedEphemeral(loc.addr / NodeBlockSizeUint64());
     }
 
-    reveal_ConsistentBitmapInteral();
-    BitmapModel.reveal_BitSet();
-    BitmapModel.reveal_IsSet();
+    /* reveal_ConsistentBitmapInteral(); */
+   /*  BitmapModel.reveal_BitSet(); */
+   /*  BitmapModel.reveal_IsSet(); */
 
     ghost var j := loc.addr as int / NodeBlockSize();
 
@@ -183,9 +183,9 @@ module SyncImpl {
   ensures var old_gs := old_s.I();
     s.I() == old_gs.(frozenIndirectionTable := Some(BC.assignRefToLocation(old_gs.frozenIndirectionTable.value, ref, loc)))
   {
-    reveal_ConsistentBitmapInteral();
-    BitmapModel.reveal_BitSet();
-    BitmapModel.reveal_IsSet();
+    /* reveal_ConsistentBitmapInteral(); */
+   /*  BitmapModel.reveal_BitSet(); */
+   /*  BitmapModel.reveal_IsSet(); */
 
     ghost var j := loc.addr as int / NodeBlockSize();
 
@@ -219,7 +219,7 @@ module SyncImpl {
         loc);
 
       assert (s.blockAllocator.frozen.lSome? <==> s.blockAllocator.I().frozen.Some?) by {
-        reveal s.blockAllocator.I();
+        /* reveal s.blockAllocator.I(); */
       }
     }
   }
@@ -242,11 +242,11 @@ module SyncImpl {
   ensures var old_gs := old_s.I();
     s.I() == old_gs.(outstandingBlockWrites := old_gs.outstandingBlockWrites[id := BC.OutstandingWrite(ref, loc)])
   {
-    reveal_ConsistentBitmapInteral();
+    /* reveal_ConsistentBitmapInteral(); */
 
-    BitmapModel.reveal_BitUnset();
-    BitmapModel.reveal_BitSet();
-    BitmapModel.reveal_IsSet();
+   /*  BitmapModel.reveal_BitUnset(); */
+   /*  BitmapModel.reveal_BitSet(); */
+   /*  BitmapModel.reveal_IsSet(); */
 
     if id in s.outstandingBlockWrites {
       var numBlocks := s.outstandingBlockWrites[id].loc.addr / NodeBlockSizeUint64();
@@ -258,7 +258,7 @@ module SyncImpl {
     inout s.blockAllocator.MarkUsedOutstanding(loc.addr / NodeBlockSizeUint64());
 
     ghost var j := loc.addr as int / NodeBlockSize();
-    reveal_ValidNodeAddr();
+    /* reveal_ValidNodeAddr(); */
     assert j != 0;
     assert j * NodeBlockSize() == loc.addr as int;
 
@@ -366,7 +366,7 @@ module SyncImpl {
       inout s.blockAllocator.CopyEphemeralToFrozen();
       froze := true;
 
-      reveal ConsistentBitmapInteral();
+      /* reveal ConsistentBitmapInteral(); */
       assert s.WFBCVars();
 
       assert BC.Freeze(old_s.I(), s.I(), IDiskOp(diskOp(IIO(io))).bdop, FreezeOp);
@@ -403,7 +403,7 @@ module SyncImpl {
     assert s.cache.I() == old_s.cache.I();
 
     if (id.Some?) {
-      reveal_ConsistentBitmapInteral();
+      /* reveal_ConsistentBitmapInteral(); */
 
       AssignRefToLocEphemeral(inout s, ref, loc.value);
       AssignIdRefLocOutstanding(inout s, id.value, ref, loc.value);

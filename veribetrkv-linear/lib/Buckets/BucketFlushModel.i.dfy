@@ -76,7 +76,7 @@ module BucketFlushModel {
     }
   }
 
-  function {:opaque} mergeToOneChild(
+  function mergeToOneChild(
       top_keys: seq<Key>,
       top_msgs: seq<Message>,
       from: nat,
@@ -197,7 +197,7 @@ module BucketFlushModel {
     ensures k in b
     ensures a[k] == b[k]
     {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       if k == top_keys[from] {
         MapMapsIndex(top_keys[from..to], top_msgs[from..to], 0);
         assert a[k] == b[k];
@@ -210,7 +210,7 @@ module BucketFlushModel {
     forall k | k in b
     ensures k in a
     {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       var j := GetIndex(top_keys[from..to], top_msgs[from..to], k);
       if (j == 0) {
       } else {
@@ -219,7 +219,7 @@ module BucketFlushModel {
     }
     assert map_of_seqs(top_keys[from+1..to], top_msgs[from+1..to])[top_keys[from] := top_msgs[from]]
         ==  map_of_seqs(top_keys[from..to], top_msgs[from..to]);
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   predicate seq_lt(a: seq<Key>, b: seq<Key>, start: int)
@@ -256,7 +256,7 @@ module BucketFlushModel {
     ensures k in x
     ensures x[k] == y[k]
     {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       var i := GetIndex(acc_keys + bot_keys[from..], acc_msgs + bot_msgs[from..], k);
       if i < |acc_keys| {
         MapMapsIndex(acc_keys, acc_msgs, i);
@@ -275,7 +275,7 @@ module BucketFlushModel {
     forall k | k in x
     ensures k in y
     {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       if k in map_of_seqs(bot_keys[from..], bot_msgs[from..]) {
         var j := GetIndex(bot_keys[from..], bot_msgs[from..], k);
         MapMapsIndex(acc_keys + bot_keys[from..], acc_msgs + bot_msgs[from..], j + |acc_keys|);
@@ -327,7 +327,7 @@ module BucketFlushModel {
         res.flushedMap(top_keys, top_msgs, from, to),
         bot, acc)
   {
-    reveal_mergeToOneChild();
+    /* reveal_mergeToOneChild(); */
     var res := mergeToOneChild(
           top_keys, top_msgs, from, to,
           bot_keys, bot_msgs, bot_from,
@@ -338,8 +338,8 @@ module BucketFlushModel {
           bot_keys[bot_from..], bot_msgs[bot_from..]);
     var acc := map_of_seqs(acc_keys, acc_msgs);
 
-    assert IsStrictlySorted(bot_keys[bot_from..]) by { reveal_IsStrictlySorted(); }
-    assert IsStrictlySorted(top_keys[from..to]) by { reveal_IsStrictlySorted(); }
+    assert IsStrictlySorted(bot_keys[bot_from..]) by {/*  reveal_IsStrictlySorted(); */ }
+    assert IsStrictlySorted(top_keys[from..to]) by {/*  reveal_IsStrictlySorted(); */ }
 
     if from == to {
       var a := res.bucketMap();
@@ -368,7 +368,7 @@ module BucketFlushModel {
       forall k | k in b
       ensures k in a
       {
-        assert IsStrictlySorted(res.keys) by { reveal_IsStrictlySorted(); }
+        assert IsStrictlySorted(res.keys) by {/*  reveal_IsStrictlySorted(); */ }
         if k in res.flushedMap(top_keys, top_msgs, from, to) {
           assert false; // because from == to
         } else if k in acc {
@@ -383,7 +383,7 @@ module BucketFlushModel {
       }
       assert a == b;
       assert IsStrictlySorted(res.keys) by {
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
       }
     /*} else if |bot_keys| == bot_from {
       var a := res.bucketMap();
@@ -472,13 +472,13 @@ module BucketFlushModel {
               bot, acc);
           }
           assert IsStrictlySorted(res.keys) by {
-            reveal_IsStrictlySorted();
+            /* reveal_IsStrictlySorted(); */
           }
         } else {
           calc {
             res.bucketMap();
             {
-              reveal_IsStrictlySorted();
+              /* reveal_IsStrictlySorted(); */
               mergeToOneOneChild_eq_topBotAccMerge(
                   top_keys, top_msgs, from+1, to,
                   bot_keys, bot_msgs, bot_from+1,
@@ -501,7 +501,7 @@ module BucketFlushModel {
               bot, acc);
           }
           assert IsStrictlySorted(res.keys) by {
-            reveal_IsStrictlySorted();
+            /* reveal_IsStrictlySorted(); */
             mergeToOneOneChild_eq_topBotAccMerge(
                 top_keys, top_msgs, from+1, to,
                 bot_keys, bot_msgs, bot_from+1,
@@ -527,14 +527,14 @@ module BucketFlushModel {
             bot, acc);
         }
         assert IsStrictlySorted(res.keys) by {
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
         }
       } else {
         calc {
           res.bucketMap();
           {
             //StrictlySortedAugment(acc_keys, key);
-            reveal_IsStrictlySorted();
+            /* reveal_IsStrictlySorted(); */
             mergeToOneOneChild_eq_topBotAccMerge(
                 top_keys, top_msgs, from+1, to,
                 bot_keys, bot_msgs, bot_from,
@@ -553,7 +553,7 @@ module BucketFlushModel {
             bot, acc);
         }
         assert IsStrictlySorted(res.keys) by {
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
           mergeToOneOneChild_eq_topBotAccMerge(
               top_keys, top_msgs, from+1, to,
               bot_keys, bot_msgs, bot_from,
@@ -568,7 +568,7 @@ module BucketFlushModel {
       calc {
         res.bucketMap();
         {
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
           mergeToOneOneChild_eq_topBotAccMerge(
               top_keys, top_msgs, from, to,
               bot_keys, bot_msgs, bot_from+1,
@@ -590,7 +590,7 @@ module BucketFlushModel {
           acc);
       }
       assert IsStrictlySorted(res.keys) by {
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
         mergeToOneOneChild_eq_topBotAccMerge(
             top_keys, top_msgs, from, to,
             bot_keys, bot_msgs, bot_from+1,
@@ -672,8 +672,8 @@ module BucketFlushModel {
         ensures k in a
         {
           if k in itop {
-            reveal_BucketIntersect();
-            reveal_IsStrictlySorted();
+            /* reveal_BucketIntersect(); */
+            /* reveal_IsStrictlySorted(); */
             RouteIs(pivots, k, r);
           } else {
             var j := GetIndex(bot_keys, bot_msgs, k);
@@ -687,7 +687,7 @@ module BucketFlushModel {
         map_of_seqs(bot_keys, bot_msgs),
         map[]);
       {
-        reveal_BucketIntersect();
+        /* reveal_BucketIntersect(); */
         var x := itop;
         var y := res.flushedMap(top_keys, top_msgs, from, to);
         forall k | k in x
@@ -695,7 +695,7 @@ module BucketFlushModel {
         ensures x[k] == y[k]
         {
           var i := GetIndex(top_keys, top_msgs, k);
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
           MapMapsIndex(top_keys[from..to], top_msgs[from..to], i - from);
         }
         forall k | k in y
@@ -772,7 +772,7 @@ module BucketFlushModel {
        + slack
   decreases |top_keys| + |bot_keys| - from - bot_from
   {
-    reveal_mergeToOneChild();
+    /* reveal_mergeToOneChild(); */
 
     WeightKeyListAdditive(acc_keys, bot_keys[bot_from..]);
     WeightMessageListAdditive(acc_msgs, bot_msgs[bot_from..]);
@@ -867,8 +867,8 @@ module BucketFlushModel {
     && IsStrictlySorted(res.keys)
   decreases |top_keys| + |bot_keys| - from - bot_from
   {
-    reveal_mergeToOneChild();
-    reveal_IsStrictlySorted();
+    /* reveal_mergeToOneChild(); */
+    /* reveal_IsStrictlySorted(); */
 
     if from == to {
     } else if bot_from < |bot_keys| &&
@@ -983,7 +983,7 @@ module BucketFlushModel {
     )
   }
  
-  function {:opaque} mergeToChildren(
+  function mergeToChildren(
       top: Bucket,
       pivots: PivotTable,
       bots: seq<Bucket>,
@@ -1018,8 +1018,8 @@ module BucketFlushModel {
   ensures BucketComplement(top.as_map(), getFlushedKeys(tmp, top))
       == map_of_seqs(top.keys[tmp.end..], top.msgs[tmp.end..])
   {
-    reveal_BucketComplement();
-    reveal_IsStrictlySorted();
+    /* reveal_BucketComplement(); */
+    /* reveal_IsStrictlySorted(); */
 
     var a := BucketComplement(top.as_map(), getFlushedKeys(tmp, top));
     var b := map_of_seqs(top.keys[tmp.end..], top.msgs[tmp.end..]);
@@ -1069,7 +1069,7 @@ module BucketFlushModel {
   ensures BucketListItemFlush(BucketIntersect(top.as_map(), keys1), bot.as_map(), pivots, i)
        == BucketListItemFlush(BucketIntersect(top.as_map(), keys2), bot.as_map(), pivots, i)
   {
-    reveal_BucketIntersect();
+    /* reveal_BucketIntersect(); */
   }
 
   lemma mergeToChildrenIterCorrect(
@@ -1125,7 +1125,7 @@ module BucketFlushModel {
           res.top.as_map();
           map[];
           {
-            reveal_BucketComplement();
+            /* reveal_BucketComplement(); */
             forall key | key in top.as_map()
             ensures key in flushedKeys;
             {
@@ -1144,8 +1144,8 @@ module BucketFlushModel {
         assert from == bucketStartIdx(top.keys, pivots, i);
         assert to == bucketEndIdx(top.keys, pivots, i);
         assert from <= to by {
-          reveal_IsStrictlySorted(); 
-          Keyspace.reveal_IsStrictlySorted(); 
+          /* reveal_IsStrictlySorted(); */ 
+         /*  Keyspace.reveal_IsStrictlySorted(); */ 
         }
 
         var tmp' := mergeToOneChild(
@@ -1162,7 +1162,7 @@ module BucketFlushModel {
         ensures k in getFlushedKeys(tmp', top)
         {
           if tmp'.SlackExhausted? && tmp'.end < |top.keys| {
-            reveal_IsStrictlySorted();
+            /* reveal_IsStrictlySorted(); */
           }
         }
         // show previous results hold up
@@ -1179,7 +1179,7 @@ module BucketFlushModel {
         calc {
           results'[i].as_map();
           {
-            reveal_BucketIntersect();
+            /* reveal_BucketIntersect(); */
             /*WellMarshalledBucketsEq(results'[i],
               BucketListItemFlush(
                 BucketIntersect(
@@ -1207,7 +1207,7 @@ module BucketFlushModel {
               && k in getFlushedKeys(tmp', top)
             ensures k in tmp'.flushedKeys(top.keys, top.msgs, from, to)
             {
-              reveal_IsStrictlySorted();
+              /* reveal_IsStrictlySorted(); */
             }
             forall k | BoundedKey(pivots, k) && Route(pivots, k) == i
               && k in tmp'.flushedKeys(top.keys, top.msgs, from, to)
@@ -1247,12 +1247,12 @@ module BucketFlushModel {
           }
           BucketListItemFlush(map[], bots[i].as_map(), pivots, i);
           {
-            reveal_BucketIntersect();
+            /* reveal_BucketIntersect(); */
             assert BucketIntersect(top.as_map(), {}) == map[];
           }
           BucketListItemFlush(BucketIntersect(top.as_map(), {}), bots[i].as_map(), pivots, i);
           {
-            reveal_IsStrictlySorted();
+            /* reveal_IsStrictlySorted(); */
             BucketListItemFlush_eq(top,
               getFlushedKeys(tmp, top),
               {},
@@ -1264,8 +1264,8 @@ module BucketFlushModel {
         if i+1 < NumBuckets(pivots) {
           assert bucketStartIdx(top.keys, pivots, i) <= bucketStartIdx(top.keys, pivots, i+1)
           by {
-            reveal_IsStrictlySorted();
-            Keyspace.reveal_IsStrictlySorted();
+            /* reveal_IsStrictlySorted(); */
+           /*  Keyspace.reveal_IsStrictlySorted(); */
           }
         }
         flushedKeys := mergeToChildrenIterCorrect(top, pivots, bots, idxs, tmp, i+1, results');
@@ -1315,7 +1315,7 @@ module BucketFlushModel {
       } else {
       }
       assert bots[i..] == [];
-      assert WeightBucketList([]) == 0 by { reveal_WeightBucketList(); }
+      assert WeightBucketList([]) == 0 by { /* reveal_WeightBucketList(); */ }
       //WFBucketMapOfWFMessageSeq(res.top.keys, res.top.msgs);
     } else {
       assert {:split_here} true;
@@ -1324,7 +1324,7 @@ module BucketFlushModel {
         {
           WeightBucketListConcat([bots[i]], bots[i+1..]);
           assert [bots[i]] + bots[i+1..] == bots[i..];
-          assert WeightBucketList([bots[i]]) == WeightBucket(bots[i]) by { reveal_WeightBucketList(); }
+          assert WeightBucketList([bots[i]]) == WeightBucket(bots[i]) by { /* reveal_WeightBucketList(); */ }
         }
         WeightBucketList(bots[i+1..]) + WeightBucket(bots[i]);
         {
@@ -1333,7 +1333,7 @@ module BucketFlushModel {
         WeightBucketList(bots[i+1..]) + WeightKeyList(bots[i].keys) + WeightMessageList(bots[i].msgs);
       }
 
-      assert WeightBucketList([]) == 0 by { reveal_WeightBucketList(); }
+      assert WeightBucketList([]) == 0 by { /* reveal_WeightBucketList(); */ }
 
       if tmp.MergeCompleted? {
         var from := idxs[i];
@@ -1354,7 +1354,7 @@ module BucketFlushModel {
         calc {
           WeightBucketList(results) + WeightKeyList(tmp'.keys) + WeightMessageList(tmp'.msgs);
           {
-            reveal_WeightBucketList();
+            /* reveal_WeightBucketList(); */
             assert DropLast(results') == results;
             assert Last(results') == Bucket(tmp'.keys, tmp'.msgs);
             //WeightBucket_eq_WeightSeqs(results'[i]);
@@ -1375,7 +1375,7 @@ module BucketFlushModel {
         calc {
           WeightBucketList(results) + WeightKeyList(bots[i].keys) + WeightMessageList(bots[i].msgs);
           {
-            reveal_WeightBucketList();
+            /* reveal_WeightBucketList(); */
             //WeightBucket_eq_WeightSeqs(results'[i]);
           }
           WeightBucketList(results');
@@ -1409,7 +1409,7 @@ module BucketFlushModel {
       && IsStrictlySorted(res.top.keys)
       && forall i | 0 <= i < |res.bots| :: IsStrictlySorted(res.bots[i].keys)
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
     var res := mergeToChildrenIter(top, bots, idxs, tmp, i, results);
     if i == |bots| {
       if tmp.SlackExhausted? {
@@ -1473,7 +1473,7 @@ module BucketFlushModel {
     )
   ensures forall k | k in flushedKeys :: k in top.keys
   {
-    reveal_mergeToChildren();
+    /* reveal_mergeToChildren(); */
     var idxs := pivotIndexes(top.keys, pivots);
     var tmp := MergeCompleted([], [], slack);
     flushedKeys :=
@@ -1513,10 +1513,10 @@ module BucketFlushModel {
     && WeightBucket(res.top) <= WeightBucket(top)
     && WeightBucketList(bots) + slack == WeightBucketList(res.bots) + res.slack
   {
-    reveal_mergeToChildren();
+    /* reveal_mergeToChildren(); */
     var idxs := pivotIndexes(top.keys, pivots);
     var tmp := MergeCompleted([], [], slack);
-    assert WeightBucketList([]) == 0 by { reveal_WeightBucketList(); }
+    assert WeightBucketList([]) == 0 by { /* reveal_WeightBucketList(); */ }
     mergeToChildrenIterSlack(top, bots, idxs, tmp, 0, []);
   }
  
@@ -1535,7 +1535,7 @@ module BucketFlushModel {
       && IsStrictlySorted(res.top.keys)
       && forall i | 0 <= i < |res.bots| :: IsStrictlySorted(res.bots[i].keys)
   {
-    reveal_mergeToChildren();
+    /* reveal_mergeToChildren(); */
     var idxs := pivotIndexes(top.keys, pivots);
     var tmp := MergeCompleted([], [], slack);
     mergeToChildrenIterPreservesSorted(top, bots, idxs, tmp, 0, []);
@@ -1543,7 +1543,7 @@ module BucketFlushModel {
 
   datatype partialFlushResult = partialFlushResult(top: Bucket, bots: seq<Bucket>)
 
-  function {:opaque} partialFlush(
+  function partialFlush(
       top: Bucket,
       pivots: PivotTable,
       bots: seq<Bucket>) : (res : partialFlushResult)
@@ -1584,7 +1584,7 @@ module BucketFlushModel {
     )
   ensures forall k | k in flushedKeys :: k in top.keys
   {
-    reveal_partialFlush();
+    /* reveal_partialFlush(); */
     flushedKeys := mergeToChildrenCorrect(
       top, pivots, bots, MaxTotalBucketWeight() - WeightBucketList(bots));
   }
@@ -1605,7 +1605,7 @@ module BucketFlushModel {
       && WeightBucket(res.top) <= WeightBucket(top)
       && WeightBucketList(res.bots) <= MaxTotalBucketWeight()
   {
-    reveal_partialFlush();
+    /* reveal_partialFlush(); */
     mergeToChildrenSlack(
         top, pivots, bots, MaxTotalBucketWeight() - WeightBucketList(bots));
   }
@@ -1625,7 +1625,7 @@ module BucketFlushModel {
       && IsStrictlySorted(res.top.keys)
       && forall i | 0 <= i < |res.bots| :: IsStrictlySorted(res.bots[i].keys)
   {
-    reveal_partialFlush();
+    /* reveal_partialFlush(); */
     mergeToChildrenPreservesSorted(
         top, pivots, bots, MaxTotalBucketWeight() - WeightBucketList(bots));
   }

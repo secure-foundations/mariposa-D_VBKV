@@ -75,7 +75,7 @@ module DeallocImpl {
         if oldLoc.Some?
         then Some(oldLoc.value.addr as int / NodeBlockSize())
         else None);
-      reveal ConsistentBitmapInteral();
+      /* reveal ConsistentBitmapInteral(); */
 
       assert s.WFBCVars();
 

@@ -34,7 +34,7 @@ module InsertModel {
 
   // == insert ==
 
-  function {:opaque} InsertKeyValue(s: BBC.Variables, key: Key, value: Value)
+  function InsertKeyValue(s: BBC.Variables, key: Key, value: Value)
   : (BBC.Variables, bool)
   requires BBC.Inv(s)
   requires s.Ready?
@@ -78,8 +78,8 @@ module InsertModel {
       && (StateBCImpl.WFCache(s'.cache))
       && s.totalCacheSize() == s'.totalCacheSize()
   {
-    reveal_InsertKeyValue();
-    BT.reveal_NodeInsertKeyValue();
+    /* reveal_InsertKeyValue(); */
+   /*  BT.reveal_NodeInsertKeyValue(); */
     if (
       && s.frozenIndirectionTable.Some?
       && s.frozenIndirectionTable.value.hasEmptyLoc(BT.G.Root())
@@ -134,7 +134,7 @@ module InsertModel {
     var s0 := s.(cache := newCache);
     var s' := writeBookkeepingNoSuccsUpdate(s0, BT.G.Root());
 
-    reveal_writeBookkeepingNoSuccsUpdate();
+    /* reveal_writeBookkeepingNoSuccsUpdate(); */
     writeCorrect(s0, BT.G.Root(), newRoot);
 
     var oldroot := root;
@@ -158,7 +158,7 @@ module InsertModel {
   }
 /*
 
-  predicate {:opaque} insert(s: BBC.Variables, io: IO, key: Key, value: Value,
+  predicate insert(s: BBC.Variables, io: IO, key: Key, value: Value,
       s': BBC.Variables, success: bool, io': IO)
   requires io.IOInit?
   requires s.Ready?
@@ -208,7 +208,7 @@ module InsertModel {
   ensures !success ==>
         betree_next_dop(s, s', IDiskOp(diskOp(io')).bdop)
   {
-    reveal_insert();
+    /* reveal_insert(); */
 
     if !(|s.ephemeralIndirectionTable.graph| <= IT.MaxSize() - 3) {
       assert noop(s, s);

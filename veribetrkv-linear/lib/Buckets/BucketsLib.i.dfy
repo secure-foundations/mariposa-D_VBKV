@@ -126,7 +126,7 @@ module BucketsLib {
     requires 0 < |bucket.keys|
     ensures BucketWellMarshalled(BucketDropLast(bucket))
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma BucketMapMapsIndex(bucket: Bucket, i: int)
@@ -186,7 +186,7 @@ module BucketsLib {
         && BoundedBucket(blist[i], pivots))
   }
 
-  function {:opaque} B(m: map<Key, Message>) : (b : Bucket)
+  function B(m: map<Key, Message>) : (b : Bucket)
   ensures PreWFBucket(b)
   ensures IsStrictlySorted(b.keys)
   ensures b.as_map() == m
@@ -276,7 +276,7 @@ module BucketsLib {
     }
   }
 
-  function {:opaque} SplitBucketLeft(bucket: Bucket, pivot: Key) : (res: Bucket)
+  function SplitBucketLeft(bucket: Bucket, pivot: Key) : (res: Bucket)
   requires PreWFBucket(bucket)
   ensures PreWFBucket(res)
   {
@@ -284,7 +284,7 @@ module BucketsLib {
     Bucket(bucket.keys[..i], bucket.msgs[..i])
   }
 
-  function {:opaque} SplitBucketRight(bucket: Bucket, pivot: Key) : (res: Bucket)
+  function SplitBucketRight(bucket: Bucket, pivot: Key) : (res: Bucket)
   requires PreWFBucket(bucket)
   ensures PreWFBucket(res)
   {
@@ -308,7 +308,7 @@ module BucketsLib {
     [SplitBucketRight(blist[cRight], key)] + blist[cRight + 1 ..]
   }
 
-  function {:opaque} SplitBucketInList(blist: BucketList, slot: int, pivot: Key) : BucketList
+  function SplitBucketInList(blist: BucketList, slot: int, pivot: Key) : BucketList
   requires 0 <= slot < |blist|
   requires PreWFBucket(blist[slot])
   {
@@ -318,7 +318,7 @@ module BucketsLib {
         slot)
   }
 
-  function {:opaque} MergeBuckets(left: Bucket, right: Bucket) : (res : Bucket)
+  function MergeBuckets(left: Bucket, right: Bucket) : (res : Bucket)
   requires PreWFBucket(left)
   requires PreWFBucket(right)
   ensures PreWFBucket(res)
@@ -326,7 +326,7 @@ module BucketsLib {
     Bucket(left.keys + right.keys, left.msgs + right.msgs)
   }
 
-  function {:opaque} MergeBucketsInList(blist: BucketList, slot: int) : (blist' : BucketList)
+  function MergeBucketsInList(blist: BucketList, slot: int) : (blist' : BucketList)
     requires 0 <= slot < |blist| - 1
     requires PreWFBucket(blist[slot])
     requires PreWFBucket(blist[slot+1])
@@ -344,7 +344,7 @@ module BucketsLib {
   requires CutoffForLeft(pivots, key) == cLeft
   ensures WFBucketList(SplitBucketListLeft(blist, pivots, cLeft, key), SplitLeft(pivots, key))
   {
-    reveal_SplitBucketLeft();
+    /* reveal_SplitBucketLeft(); */
   }
 
   lemma WFProperSplitBucketListLeft(blist: BucketList, pivots: PivotTable, cLeft: int, key: Key)
@@ -354,7 +354,7 @@ module BucketsLib {
   requires IsStrictlySorted(blist[cLeft].keys)
   ensures WFBucketListProper(SplitBucketListLeft(blist, pivots, cLeft, key), SplitLeft(pivots, key))
   {
-    reveal_SplitBucketLeft();
+    /* reveal_SplitBucketLeft(); */
     var pivots' := SplitLeft(pivots, key);
     var blist' := SplitBucketListLeft(blist, pivots, cLeft, key); 
     BucketListHasWFBucketAtIdenticalSlice(blist, pivots, blist', pivots', 0, cLeft-1, 0);
@@ -365,7 +365,7 @@ module BucketsLib {
 
     //assert WFBucket(blist'[cLeft]);
     assert WFBucketAt(blist'[cLeft], pivots', cLeft) by {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       forall k | k in blist'[cLeft].keys
       ensures BoundedKey(pivots', k)
       ensures Route(pivots', k) == cLeft
@@ -391,7 +391,7 @@ module BucketsLib {
   requires CutoffForRight(pivots, key) == cRight
   ensures WFBucketList(SplitBucketListRight(blist, pivots, cRight, key), SplitRight(pivots, key))
   {
-    reveal_SplitBucketRight();
+    /* reveal_SplitBucketRight(); */
     WFSuffix(pivots, cRight);
   }
 
@@ -402,7 +402,7 @@ module BucketsLib {
   requires IsStrictlySorted(blist[cRight].keys)
   ensures WFBucketListProper(SplitBucketListRight(blist, pivots, cRight, key), SplitRight(pivots, key))
   {
-    reveal_SplitBucketRight();
+    /* reveal_SplitBucketRight(); */
 
     var blist' := SplitBucketListRight(blist, pivots, cRight, key);
     var pivots' := SplitRight(pivots, key);
@@ -411,7 +411,7 @@ module BucketsLib {
     BucketListHasWFBucketAtIdenticalSlice(blist, pivots, blist', pivots', 1, |blist'|-1, 0-cRight);
 
     assert WFBucketAt(blist'[0], pivots', 0) by {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       forall k | k in blist'[0].keys
       ensures BoundedKey(pivots', k)
       ensures Route(pivots', k) == 0
@@ -435,7 +435,7 @@ module BucketsLib {
   ensures WFBucketList(SplitBucketInList(blist, slot-1, pivot), InsertPivot(pivots, slot, pivot))
   {
     WFPivotsInsert(pivots, slot, pivot);    
-    reveal_SplitBucketInList();
+    /* reveal_SplitBucketInList(); */
     var newbuckets := SplitBucketInList(blist, slot-1, pivot);
     forall i | 0 <= i < |newbuckets|
       ensures WFBucket(newbuckets[i])
@@ -443,9 +443,9 @@ module BucketsLib {
       if i < slot-1 {
         assert newbuckets[i] == blist[i];
       } else if i == slot-1 {
-        reveal_SplitBucketLeft();
+        /* reveal_SplitBucketLeft(); */
       } else if i == slot {
-        reveal_SplitBucketRight();
+        /* reveal_SplitBucketRight(); */
       } else {
         assert newbuckets[i] == blist[i-1];
       }
@@ -462,42 +462,42 @@ module BucketsLib {
   ensures WFBucketListProper(SplitBucketInList(blist, slot-1, pivot), InsertPivot(pivots, slot, pivot))
   {
     var blist' := SplitBucketInList(blist, slot-1, pivot);
-    assert |blist'| == |blist|+1 by { reveal_SplitBucketInList(); }
+    assert |blist'| == |blist|+1 by { /* reveal_SplitBucketInList(); */ }
     var pivots' := InsertPivot(pivots, slot, pivot);
     WFPivotsInsert(pivots, slot, pivot);
 
     assert WFBucketAt(blist[slot-1], pivots, slot-1);
     assert WFBucketAt(blist'[slot-1], pivots', slot-1) by {
       assert blist'[slot - 1] == SplitBucketLeft(blist[slot - 1], pivot)
-        by { reveal_SplitBucketInList(); }
-      reveal_SplitBucketLeft();
+        by { /* reveal_SplitBucketInList(); */ }
+      /* reveal_SplitBucketLeft(); */
       assert WFBucket(blist'[slot-1]);
       forall k | k in blist'[slot-1].keys
       ensures BoundedKey(pivots', k)
       ensures Route(pivots', k) == slot - 1
       {
         assert k in blist[slot-1].keys;
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
         assert Keyspace.lte(pivots'[slot - 1], KeyToElement(k));
         assert Keyspace.lte(KeyToElement(k), pivots'[slot]);
       }
     }
     assert WFBucketAt(blist'[slot], pivots', slot) by {
       assert blist'[slot] == SplitBucketRight(blist[slot - 1], pivot)
-        by { reveal_SplitBucketInList(); }
-      reveal_IsStrictlySorted();
-      reveal_SplitBucketRight();
+        by { /* reveal_SplitBucketInList(); */ }
+      /* reveal_IsStrictlySorted(); */
+      /* reveal_SplitBucketRight(); */
       assert WFBucket(blist'[slot]);
       forall k | k in blist'[slot].keys
       ensures BoundedKey(pivots', k)
       ensures Route(pivots', k) == slot
       {
         assert k in blist[slot-1].keys;
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
       }
     }
 
-    reveal_SplitBucketInList();
+    /* reveal_SplitBucketInList(); */
     BucketListHasWFBucketAtIdenticalSlice(blist, pivots, blist', pivots', 0, slot-2, 0);
     BucketListHasWFBucketAtIdenticalSlice(blist, pivots, blist', pivots', slot+1, |blist'|-1, 1);
   }
@@ -509,11 +509,11 @@ module BucketsLib {
   ensures BucketListWellMarshalled(SplitBucketInList(blist, slot, pivot))
   {
     var blist' := SplitBucketInList(blist, slot, pivot);
-    reveal_SplitBucketInList();
+    /* reveal_SplitBucketInList(); */
     assert BucketWellMarshalled(SplitBucketLeft(blist[slot], pivot))
-      by { reveal_SplitBucketLeft(); reveal_IsStrictlySorted(); }
+      by { /* reveal_SplitBucketLeft(); */ reveal_IsStrictlySorted(); }
     assert BucketWellMarshalled(SplitBucketRight(blist[slot], pivot))
-      by { reveal_SplitBucketRight(); reveal_IsStrictlySorted(); }
+      by { /* reveal_SplitBucketRight(); */ reveal_IsStrictlySorted(); }
     forall i | 0 <= i < |blist'|
     ensures BucketWellMarshalled(blist'[i])
     {
@@ -530,9 +530,9 @@ module BucketsLib {
   requires WFBucketList(blist, pivots)
   ensures WFBucketList(MergeBucketsInList(blist, slot), remove(pivots, slot+1))
   {
-    reveal_MergeBucketsInList();
+    /* reveal_MergeBucketsInList(); */
     WFPivotsRemoved(pivots, slot+1);
-    reveal_MergeBuckets();
+    /* reveal_MergeBuckets(); */
   }
 
   lemma WFProperMergeBucketsInList(blist: BucketList, slot: int, pivots: PivotTable)
@@ -540,7 +540,7 @@ module BucketsLib {
   requires WFBucketListProper(blist, pivots)
   ensures WFBucketListProper(MergeBucketsInList(blist, slot), remove(pivots, slot+1))
   {
-    reveal_MergeBucketsInList();
+    /* reveal_MergeBucketsInList(); */
     WFPivotsRemoved(pivots, slot+1);
     var blist' := MergeBucketsInList(blist, slot);
     var pivots' := remove(pivots, slot+1);
@@ -548,8 +548,8 @@ module BucketsLib {
         blist, pivots, blist', pivots', 0, slot-1, 0);
     BucketListHasWFBucketAtIdenticalSlice(
         blist, pivots, blist', pivots', slot+1, |blist'|-1, -1);
-    reveal_MergeBuckets();
-    Keyspace.reveal_IsStrictlySorted();
+    /* reveal_MergeBuckets(); */
+   /*  Keyspace.reveal_IsStrictlySorted(); */
     assert Keyspace.lt(pivots'[slot], pivots'[slot+1]); // observe
   }
 
@@ -561,9 +561,9 @@ module BucketsLib {
   requires WFBucketListProper(blist, pivots)
   ensures BucketListWellMarshalled(MergeBucketsInList(blist, slot))
   {
-    reveal_MergeBuckets();
-    reveal_MergeBucketsInList();
-    reveal_IsStrictlySorted();
+    /* reveal_MergeBuckets(); */
+    /* reveal_MergeBucketsInList(); */
+    /* reveal_IsStrictlySorted(); */
 
     var merged := MergeBucketsInList(blist, slot)[slot];
     var pivot := GetKey(pivots, slot+1);
@@ -588,8 +588,8 @@ module BucketsLib {
   ensures SplitBucketLeft(MergeBucketsInList(blist, slot)[slot], GetKey(pivots, slot+1)) == blist[slot]
   ensures SplitBucketRight(MergeBucketsInList(blist, slot)[slot], GetKey(pivots, slot+1)) == blist[slot+1]
   {
-    reveal_MergeBucketsInList();
-    reveal_MergeBuckets();
+    /* reveal_MergeBucketsInList(); */
+    /* reveal_MergeBuckets(); */
 
     var merged := MergeBucketsInList(blist, slot)[slot];
     var pivot := GetKey(pivots, slot+1);
@@ -604,8 +604,8 @@ module BucketsLib {
         && (i >= |blist[slot].keys| ==> lte(pivot, merged.keys[i]));
     }
 
-    reveal_SplitBucketLeft();
-    reveal_SplitBucketRight();
+    /* reveal_SplitBucketLeft(); */
+    /* reveal_SplitBucketRight(); */
   }
 
   lemma BucketListWellMarshalledSlice(blist: BucketList, i: int, j: int)
@@ -661,7 +661,7 @@ module BucketsLib {
     if |keys| == 0 then
       None
     else
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       var mid := |keys| / 2;
       if lt(key, keys[mid]) then
         binarySearch(keys[..mid], key)
@@ -721,13 +721,13 @@ module BucketsLib {
   requires WFBucket(bucket)
   ensures WFPivots(insert(InitPivotTable(), KeyToElement(getMiddleKey(bucket)), 1))
   {
-    reveal_IsStrictlySorted();
-    SeqComparison.reveal_lte();
+    /* reveal_IsStrictlySorted(); */
+   /*  SeqComparison.reveal_lte(); */
     assert InitPivotTable()[1].Max_Element?; // observe
     WFPivotsInsert(InitPivotTable(), 1, getMiddleKey(bucket));
   }
 
-  function {:opaque} MapsOfBucketList(blist: BucketList) : (res : seq<BucketMap>)
+  function MapsOfBucketList(blist: BucketList) : (res : seq<BucketMap>)
   requires forall i | 0 <= i < |blist| :: PreWFBucket(blist[i])
   ensures |res| == |blist|
   ensures forall i | 0 <= i < |res| :: res[i] == blist[i].as_map()
@@ -740,7 +740,7 @@ module BucketsLib {
   ensures B(map[]) == EmptyBucket();
   {
     MapSeqs.empty_seqs_of_map();
-    reveal_B();
+    /* reveal_B(); */
   }
 
   lemma B_of_as_map_sorted(b: Bucket)

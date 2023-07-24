@@ -88,7 +88,7 @@ module PackedStringArray {
     psa.data[psaStart(psa, i) .. psaEnd(psa, i)]
   }
 
-  function {:opaque} psaSeq(psa: Psa, i: int) : (res : seq<Key>)
+  function psaSeq(psa: Psa, i: int) : (res : seq<Key>)
   requires WF(psa)
   requires 0 <= i <= |psa.offsets|
   ensures |res| == i
@@ -107,7 +107,7 @@ module PackedStringArray {
     ensures WF(result)
     ensures I(result) == []
   {
-    assert Uint32_Order.IsSorted([]) by { Uint32_Order.reveal_IsSorted(); }
+    assert Uint32_Order.IsSorted([]) by {/*  Uint32_Order.reveal_IsSorted(); */ }
     Psa([], [])
   }
   
@@ -128,18 +128,18 @@ module PackedStringArray {
   {
     var i: uint64 := 1;
     if |s| < 2 {
-      assert Uint32_Order.IsSorted(s) by { Uint32_Order.reveal_IsSorted(); }
+      assert Uint32_Order.IsSorted(s) by {/*  Uint32_Order.reveal_IsSorted(); */ }
       return true;
     }
     if 0 < |s| {
-      assert Uint32_Order.IsSorted(s[..1]) by { Uint32_Order.reveal_IsSorted(); }
+      assert Uint32_Order.IsSorted(s[..1]) by {/*  Uint32_Order.reveal_IsSorted(); */ }
     }
     while i < |s| as uint64
       invariant i as int <= |s|
       invariant Uint32_Order.IsSorted(s[..i])
     {
       if s[i-1] > s[i] {
-        assert !Uint32_Order.IsSorted(s) by { Uint32_Order.reveal_IsSorted(); }
+        assert !Uint32_Order.IsSorted(s) by {/*  Uint32_Order.reveal_IsSorted(); */ }
         return false;
       }
       Uint32_Order.SortedAugment(s[..i], s[i]);
@@ -200,7 +200,7 @@ module PackedStringArray {
     if from == 0 then
       suboffsets
     else
-      assert forall i :: 0 <= i < |suboffsets| ==> offsets[from-1] <= suboffsets[i] by { Uint32_Order.reveal_IsSorted(); }
+      assert forall i :: 0 <= i < |suboffsets| ==> offsets[from-1] <= suboffsets[i] by {/*  Uint32_Order.reveal_IsSorted(); */ }
       subtractConstant(suboffsets, offsets[from-1])
   }
 
@@ -213,7 +213,7 @@ module PackedStringArray {
     if from == 0 {
       result := suboffsets;
     } else {
-      assert forall i :: 0 <= i < |suboffsets| ==> offsets[from-1] <= suboffsets[i] by { Uint32_Order.reveal_IsSorted(); }
+      assert forall i :: 0 <= i < |suboffsets| ==> offsets[from-1] <= suboffsets[i] by {/*  Uint32_Order.reveal_IsSorted(); */ }
       result := SubtractConstant(suboffsets, offsets[from-1]);
     }
   }
@@ -238,7 +238,7 @@ module PackedStringArray {
     ensures I(psaSubSeqInternal(psa, from, to)) == I(psa)[from..to]
   {
     var subpsa := psaSubSeqInternal(psa, from, to);
-    assert WF(subpsa) by { Uint32_Order.reveal_IsSorted(); }
+    assert WF(subpsa) by {/*  Uint32_Order.reveal_IsSorted(); */ }
     var isubpsa := I(subpsa);
     var ipsasub := I(psa)[from..to];
     forall i: uint64 | 0 <= i < |isubpsa| as uint64
@@ -368,8 +368,8 @@ module PackedStringArray {
     requires psaCanAppendSeq(psa, [str])
     ensures psaCanAppend(psa, str)
   {
-    reveal_FlattenShape();
-    reveal_FlattenLength();
+    /* reveal_FlattenShape(); */
+    /* reveal_FlattenLength(); */
   }
   
   function psaAppendSeq(psa: Psa, strs: seq<Key>) : (result: Psa)
@@ -388,8 +388,8 @@ module PackedStringArray {
       FlattenLengthAdditive(FlattenShape(DropLast(strs)), FlattenShape([Last(strs)]));
       assert FlattenLength(FlattenShape(DropLast(strs))) <= FlattenLength(FlattenShape(strs));
       assert |Last(strs)| == FlattenLength(FlattenShape([Last(strs)])) by {
-        reveal_FlattenShape();
-        reveal_FlattenLength();
+        /* reveal_FlattenShape(); */
+        /* reveal_FlattenLength(); */
       }
       psaAppendIAppend(psaAppendSeq(psa, DropLast(strs)), Last(strs));
       psaAppend(psaAppendSeq(psa, DropLast(strs)), Last(strs))
@@ -441,8 +441,8 @@ module PackedStringArray {
     if psaNumStrings(psa) == 0 {
     } else if psaNumStrings(psa) == 1 {
       assert psaCanAppendSeq(EmptyPsa(), I(psa)) by {
-        reveal_FlattenShape();
-        reveal_FlattenLength();
+        /* reveal_FlattenShape(); */
+        /* reveal_FlattenLength(); */
       }
     } else {
       var prepsa := psaDropLast(psa);
@@ -451,8 +451,8 @@ module PackedStringArray {
       assert strs == prestrs + [last];
       psaCanAppendI(prepsa);
       assert psaCanAppendSeq(EmptyPsa(), strs) by {
-        reveal_FlattenShape();
-        reveal_FlattenLength();
+        /* reveal_FlattenShape(); */
+        /* reveal_FlattenLength(); */
       }
     }
   }
@@ -526,7 +526,7 @@ module PackedStringArray {
   ensures idx as int
     == UpperLexOrder.binarySearchIndexOfFirstKeyGte(UpperLexOrder.ToElements(I(psa)), key)
   {
-    UpperLexOrder.reveal_binarySearchIndexOfFirstKeyGte();
+   /*  UpperLexOrder.reveal_binarySearchIndexOfFirstKeyGte(); */
     var lo: uint64 := 0;
     var hi: uint64 := psaNumStrings(psa) + 1;
 
@@ -554,7 +554,7 @@ module PackedStringArray {
   ensures idx as int
     == LexOrder.binarySearchIndexOfFirstKeyGte(I(psa), key)
   {
-    LexOrder.reveal_binarySearchIndexOfFirstKeyGte();
+   /*  LexOrder.reveal_binarySearchIndexOfFirstKeyGte(); */
     var lo: uint64 := 0;
     var hi: uint64 := psaNumStrings(psa) + 1;
 
@@ -582,7 +582,7 @@ module PackedStringArray {
   ensures idx as int
     == LexOrder.binarySearchIndexOfFirstKeyGt(I(psa), key)
   {
-    LexOrder.reveal_binarySearchIndexOfFirstKeyGt();
+   /*  LexOrder.reveal_binarySearchIndexOfFirstKeyGt(); */
     var lo: uint64 := 0;
     var hi: uint64 := psaNumStrings(psa) + 1;
 
@@ -794,7 +794,7 @@ module PackedStringArray {
       offsets[nstrings] := start + |str| as uint32;
       CopySeqIntoArray(str, 0, data, start as uint64, |str| as uint64);
       nstrings := nstrings + 1;
-      Uint32_Order.reveal_IsSorted();
+     /*  Uint32_Order.reveal_IsSorted(); */
     }
 
     method realloc_offsets(new_offsets_len: uint64)

@@ -11,7 +11,7 @@ module JournalBytes {
   import opened Sequences
   import D = AsyncDisk
 
-  function {:opaque} JournalBlockOfByteSeq(s: seq<byte>): (res: Option<JournalBlock>)
+  function JournalBlockOfByteSeq(s: seq<byte>): (res: Option<JournalBlock>)
   ensures res.Some? ==> |res.value| == 4064
   {
     if |s| == 4096 && D.ChecksumChecksOut(s) then
@@ -20,7 +20,7 @@ module JournalBytes {
       None
   }
 
-  function {:opaque} JournalRangeOfByteSeq(s: seq<byte>): (res : Option<JournalRange>)
+  function JournalRangeOfByteSeq(s: seq<byte>): (res : Option<JournalRange>)
   ensures res.Some? ==> |res.value| * 4096 == |s|
   ensures res.Some? ==> forall i | 0 <= i < |res.value| :: |res.value[i]| == 4064
   {
@@ -49,7 +49,7 @@ module JournalBytes {
   ensures JournalRangeOfByteSeq(a[4096*i .. 4096*(i+1)]).value
       == JournalBlockGet(JournalRangeOfByteSeq(a).value, i)
   {
-    reveal_JournalRangeOfByteSeq();
+    /* reveal_JournalRangeOfByteSeq(); */
     if i == 0 {
       var c := a[4096*i .. 4096*(i+1)];
       assert JournalRangeOfByteSeq(c[4096..]) == Some([]);
@@ -73,14 +73,14 @@ module JournalBytes {
       == JournalBlockOfByteSeq(a[4096*i..4096*(i+1)]).value
   {
     if i == 0 {
-      reveal_JournalRangeOfByteSeq();
+      /* reveal_JournalRangeOfByteSeq(); */
     } else {
       var a' := a[4096..];
 
       assert JournalRangeOfByteSeq(a').Some?
           && JournalRangeOfByteSeq(a').value[i-1]
               == JournalRangeOfByteSeq(a).value[i] by {
-        reveal_JournalRangeOfByteSeq();
+        /* reveal_JournalRangeOfByteSeq(); */
         var rest := JournalRangeOfByteSeq(a[4096..]);
         var firstblock := JournalBlockOfByteSeq(a[0..4096]).value;
         assert ([firstblock] + rest.value)[i] == rest.value[i-1];
@@ -107,9 +107,9 @@ module JournalBytes {
           JournalBlockOfByteSeq(a[i*4096..(i+1)*4096]).value
   {
     if t == 0 {
-      reveal_JournalRangeOfByteSeq();
+      /* reveal_JournalRangeOfByteSeq(); */
     } else {
-      reveal_JournalRangeOfByteSeq();
+      /* reveal_JournalRangeOfByteSeq(); */
       var a' := a[4096..];
 
       forall i | 0 <= i < t-1 

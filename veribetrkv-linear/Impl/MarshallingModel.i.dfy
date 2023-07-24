@@ -62,7 +62,7 @@ module MarshallingModel {
   decreases |v.a|
   {
     if |buckets| == 0 {
-      reveal_WeightBucketList();
+      /* reveal_WeightBucketList(); */
     } else {
       var prebuckets := DropLast(buckets);
       var prev := VArray(DropLast(v.a));
@@ -78,7 +78,7 @@ module MarshallingModel {
 
       calc <= {
         WeightBucketList(buckets);
-        { reveal_WeightBucketList(); }
+        { /* reveal_WeightBucketList(); */ }
         WeightBucketList(prebuckets) + WeightBucket(lastbucket);
         { WeightBucketListLteSize(prev, prebuckets); }
         SizeOfV(prev) + WeightBucket(lastbucket);
@@ -180,13 +180,13 @@ module MarshallingModel {
   // }
 /*
 
-  function {:opaque} parseSector(data: seq<byte>) : (s : Option<Sector>)
+  function parseSector(data: seq<byte>) : (s : Option<Sector>)
   ensures s.Some? ==> SSM.WFSector(s.value)
   ensures s.Some? ==> Some(SSM.ISector(s.value)) == Marshalling.parseSector(data)
   ensures s.None? ==> Marshalling.parseSector(data).None?
   ensures s.Some? && s.value.SectorIndirectionTable? ==> s.value.indirectionTable.TrackingGarbage()
   {
-    Marshalling.reveal_parseSector();
+   /*  Marshalling.reveal_parseSector(); */
 
     if |data| < 0x1_0000_0000_0000_0000 then (
       match parse_Val(data, Marshalling.SectorGrammar()).0 {
@@ -200,13 +200,13 @@ module MarshallingModel {
 
   /////// Marshalling and de-marshalling with checksums
 
-  function {:opaque} parseCheckedSector(data: seq<byte>) : (s : Option<Sector>)
+  function parseCheckedSector(data: seq<byte>) : (s : Option<Sector>)
   ensures s.Some? ==> SSM.WFSector(s.value)
   ensures s.Some? ==> Some(SSM.ISector(s.value)) == Marshalling.parseCheckedSector(data)
   ensures s.None? ==> Marshalling.parseCheckedSector(data).None?
   ensures s.Some? && s.value.SectorIndirectionTable? ==> s.value.indirectionTable.TrackingGarbage()
   {
-    Marshalling.reveal_parseCheckedSector();
+   /*  Marshalling.reveal_parseCheckedSector(); */
 
     if |data| >= 32 && CRC32_C.crc32_c_padded(data[32..]) == data[..32] then
       parseSector(data[32..])

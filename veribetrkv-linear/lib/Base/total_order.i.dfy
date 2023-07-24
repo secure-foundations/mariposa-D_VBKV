@@ -43,7 +43,7 @@ abstract module Total_Preorder {
   {
   }
 
-  predicate {:opaque} IsSorted(run: seq<Element>)
+  predicate IsSorted(run: seq<Element>)
     ensures |run| == 0 ==> IsSorted(run)
     ensures |run| == 1 ==> IsSorted(run)
   {
@@ -63,10 +63,10 @@ abstract module Total_Preorder {
       ensures lte(run[i], run[j])
     {
     }
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
   }
   
-  predicate {:opaque} IsStrictlySorted(run: seq<Element>)
+  predicate IsStrictlySorted(run: seq<Element>)
     ensures |run| == 0 ==> IsStrictlySorted(run)
     ensures |run| == 1 ==> IsStrictlySorted(run)
     ensures IsStrictlySorted(run) ==> IsSorted(run)
@@ -83,8 +83,8 @@ abstract module Total_Preorder {
     requires IsStrictlySorted(run)
     ensures Seq.NoDupes(run)
   {
-    reveal_IsStrictlySorted();
-    Seq.reveal_NoDupes();
+    /* reveal_IsStrictlySorted(); */
+   /*  Seq.reveal_NoDupes(); */
   }
   
   lemma IsSortedImpliesLte(run: seq<Element>, i: int, j: int)
@@ -92,7 +92,7 @@ abstract module Total_Preorder {
   requires 0 <= i <= j < |run|
   ensures lte(run[i], run[j])
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
   }
 
   lemma IsStrictlySortedImpliesLte(run: seq<Element>, i: int, j: int)
@@ -100,15 +100,15 @@ abstract module Total_Preorder {
   requires 0 <= i <= j < |run|
   ensures lte(run[i], run[j])
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma IsStrictlySortedImpliesIsSorted(run: seq<Element>)
   requires IsStrictlySorted(run);
   ensures IsSorted(run);
   {
-    reveal_IsSorted();
-    reveal_IsStrictlySorted();
+    /* reveal_IsSorted(); */
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma SortedSubsequence(run: seq<Element>, i: int, j: int)
@@ -116,7 +116,7 @@ abstract module Total_Preorder {
     requires 0 <= i <= j <= |run|
     ensures IsSorted(run[i..j])
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
   }
 
   lemma StrictlySortedSubsequence(run: seq<Element>, i: int, j: int)
@@ -124,7 +124,7 @@ abstract module Total_Preorder {
     requires 0 <= i <= j <= |run|
     ensures IsStrictlySorted(run[i..j])
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma SortedAugment(run: seq<Element>, key: Element)
@@ -132,7 +132,7 @@ abstract module Total_Preorder {
   requires |run| > 0 ==> lte(Seq.Last(run), key)
   ensures IsSorted(run + [key])
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
   }
 
   predicate BiggestInSet(e: Element, s: set<Element>)
@@ -171,7 +171,7 @@ abstract module Total_Preorder {
     ensures forall t :: t in s <==> t in SortSet(s)
     ensures IsSorted(SortSet(s))
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     if |s|==0
     then
       []
@@ -212,7 +212,7 @@ abstract module Total_Order refines Total_Preorder {
   requires 0 <= i < j < |run|
   ensures lt(run[i], run[j])
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma IsStrictlySortedImpliesLtIndices(run: seq<Element>, i: int, j: int)
@@ -222,7 +222,7 @@ abstract module Total_Order refines Total_Preorder {
   requires lt(run[i], run[j])
   ensures 0 <= i < j < |run|
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma StrictlySortedEq(run1: seq<Element>, run2: seq<Element>)
@@ -242,20 +242,20 @@ abstract module Total_Order refines Total_Preorder {
       var last2 := Seq.Last(run2);
       assert last1 in Seq.Set(run1);
       assert last1 == maximum(Seq.Set(run1)) by {
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
       }
       assert last2 in Seq.Set(run2);
       assert last2 == maximum(Seq.Set(run2)) by {
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
       }
       assert last1 == last2;
       StrictlySortedSubsequence(run1, 0, |run1|-1);
       StrictlySortedSubsequence(run2, 0, |run2|-1);
       assert Seq.Set(Seq.DropLast(run1)) == Seq.Set(run1) - {last1} by {
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
       }
       assert Seq.Set(Seq.DropLast(run2)) == Seq.Set(run2) - {last2} by {
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
       }
       StrictlySortedEq(Seq.DropLast(run1), Seq.DropLast(run2));
     }
@@ -268,7 +268,7 @@ abstract module Total_Order refines Total_Preorder {
     ensures forall i :: LargestLte(run, needle) < i < |run| ==> lt(needle, run[i]);
     ensures needle in run ==> 0 <= LargestLte(run, needle) && run[LargestLte(run, needle)] == needle;
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     if |run| == 0 || lt(needle, run[0]) then -1
     else 1 + LargestLte(run[1..], needle)
   }
@@ -280,7 +280,7 @@ abstract module Total_Order refines Total_Preorder {
     requires forall i :: pos < i < |run| ==> lt(needle, run[i])
     ensures pos == LargestLte(run, needle)
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     var llte := LargestLte(run, needle);
     if pos < llte {
       assert lt(run[llte], needle);
@@ -319,14 +319,14 @@ abstract module Total_Order refines Total_Preorder {
   requires run[pos] == key;
   ensures pos == LargestLte(run, key);
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma PosEqLargestLteForAllElts(run: seq<Element>)
     requires IsStrictlySorted(run)
     ensures forall elt :: elt in run ==> Seq.IndexOf(run, elt) == LargestLte(run, elt)
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma LargestLteSubsequence(run: seq<Element>, needle: Element, from: int, to: int)
@@ -364,7 +364,7 @@ abstract module Total_Order refines Total_Preorder {
     ensures forall i :: LargestLt(run, needle) < i < |run| ==> lte(needle, run[i]);
     ensures needle in run ==> LargestLt(run, needle) + 1 < |run| && run[LargestLt(run, needle) + 1] == needle;
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     if |run| == 0 || lte(needle, run[0]) then -1
     else 1 + LargestLt(run[1..], needle)
   }
@@ -376,7 +376,7 @@ abstract module Total_Order refines Total_Preorder {
     requires forall i :: pos < i < |run| ==> lte(needle, run[i])
     ensures pos == LargestLt(run, needle)
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     var llt := LargestLt(run, needle);
     if pos < llt {
       assert lt(run[llt], needle);
@@ -395,7 +395,7 @@ abstract module Total_Order refines Total_Preorder {
     ensures forall i | 0 <= i < result :: lt(run[i], needle)
     ensures forall i | result <= i < |run| :: lte(needle, run[i])
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     if |run| == 0 then
       0
     else if lt(Seq.Last(run), needle) then
@@ -412,7 +412,7 @@ abstract module Total_Order refines Total_Preorder {
     requires forall i | idx <= i < |run| :: lte(needle, run[i])
     ensures idx == IndexOfFirstGte(run, needle)
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     if |run| == 0 {
     } else if lt(Seq.Last(run), needle) {
     } else {
@@ -440,7 +440,7 @@ abstract module Total_Order refines Total_Preorder {
     )
   }
 
-  function {:opaque} binarySearchIndexOfFirstKeyGte(s: seq<Element>, key: Element) : (i: int)
+  function binarySearchIndexOfFirstKeyGte(s: seq<Element>, key: Element) : (i: int)
   ensures 0 <= i <= |s|
   ensures i > 0 ==> lt(s[i-1], key)
   ensures i < |s| ==> lte(key, s[i])
@@ -454,7 +454,7 @@ abstract module Total_Order refines Total_Preorder {
     ensures forall i | 0 <= i < result :: lte(run[i], needle)
     ensures forall i | result <= i < |run| :: lt(needle, run[i])
    {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     if |run| == 0 then
       0
     else if lte(Seq.Last(run), needle) then
@@ -471,7 +471,7 @@ abstract module Total_Order refines Total_Preorder {
     requires forall i | idx <= i < |run| :: lt(needle, run[i])
     ensures idx == IndexOfFirstGt(run, needle)
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     if |run| == 0 {
     } else if lte(Seq.Last(run), needle) {
     } else {
@@ -499,7 +499,7 @@ abstract module Total_Order refines Total_Preorder {
     )
   }
 
-  function {:opaque} binarySearchIndexOfFirstKeyGt(s: seq<Element>, key: Element) : (i: int)
+  function binarySearchIndexOfFirstKeyGt(s: seq<Element>, key: Element) : (i: int)
     ensures 0 <= i <= |s|
     ensures i > 0 ==> lte(s[i-1], key)
     ensures i < |s| ==> lt(key, s[i])
@@ -515,9 +515,9 @@ abstract module Total_Order refines Total_Preorder {
   requires pos < 0 || k != l[pos];
   ensures IsStrictlySorted(Seq.insert(l, k, pos+1));
   {
-    Seq.reveal_insert();
+   /*  Seq.reveal_insert(); */
     var l' := l[..pos+1] + [k] + l[pos+1..];
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
 
     forall i, j | 0 <= i < j < |l'|
     ensures lt(l'[i], l'[j])
@@ -532,8 +532,8 @@ abstract module Total_Order refines Total_Preorder {
     requires pos < |l| ==> lt(k, l[pos]);
     ensures IsStrictlySorted(Seq.insert(l, k, pos));
   {
-    Seq.reveal_insert();
-    reveal_IsStrictlySorted();
+   /*  Seq.reveal_insert(); */
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma StrictlySortedAugment(run: seq<Element>, key: Element)
@@ -541,7 +541,7 @@ abstract module Total_Order refines Total_Preorder {
     requires |run| > 0 ==> lt(Seq.Last(run), key)
     ensures IsStrictlySorted(run + [key])
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma StrictlySortedPrepend(key: Element, run: seq<Element>)
@@ -549,7 +549,7 @@ abstract module Total_Order refines Total_Preorder {
   requires 0 < |run| ==> lt(key, run[0])
   ensures IsStrictlySorted([key] + run)
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma FlattenStrictlySorted(seqs: seq<seq<Element>>)
@@ -572,7 +572,7 @@ abstract module Total_Order refines Total_Preorder {
         IsStrictlySortedImpliesLt(seqs[il], io, jo);
       }
     }
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
   
   /*method MergeRuns(run1: seq<Element>, run2: seq<Element>) returns (result: array<Element>)
@@ -582,7 +582,7 @@ abstract module Total_Order refines Total_Preorder {
     ensures multiset(result[..]) == multiset(run1) + multiset(run2);
     ensures IsSorted(result[..]);
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     result := new Element[|run1| + |run2|](_ => run1[0]);
     var i1 := 0;
     var i2 := 0;
@@ -639,7 +639,7 @@ abstract module Total_Order refines Total_Preorder {
     ensures multiset(result[..]) == multiset(run);
     ensures IsSorted(result[..]);
   {
-    reveal_IsSorted();
+    /* reveal_IsSorted(); */
     if |run| == 0 {
       result := new Element[|run|];
     } else if |run| <= 1 {
@@ -671,7 +671,7 @@ abstract module Total_Order refines Total_Preorder {
   {
   }
   
-  predicate {:opaque} NotMinimum(a: Element) {
+  predicate NotMinimum(a: Element) {
     exists b :: lt(b, a)
   }
 
@@ -679,14 +679,14 @@ abstract module Total_Order refines Total_Preorder {
   requires lt(a, b)
   ensures NotMinimum(b)
   {
-    reveal_NotMinimum();
+    /* reveal_NotMinimum(); */
   }
 
   lemma SmallerElement(a: Element) returns (b: Element)
   requires NotMinimum(a)
   ensures lt(b, a)
   {
-    reveal_NotMinimum();
+    /* reveal_NotMinimum(); */
     b :| lt(b, a);
   }
 
@@ -717,14 +717,14 @@ abstract module Total_Order refines Total_Preorder {
     SetSuccessor(set x | x in m, key)
   }
 
-  predicate {:opaque} SortedSeqForMap<V>(s: seq<(Element, V)>, m: map<Element, V>)
+  predicate SortedSeqForMap<V>(s: seq<(Element, V)>, m: map<Element, V>)
   {
     && IsStrictlySorted(Seq.Unzip(s).0)
     && (forall i :: 0 <= i < |s| ==> s[i].0 in m && m[s[i].0] == s[i].1)
     && (forall key :: key in m ==> (exists i :: 0 <= i < |s| && s[i].0 == key && s[i].1 == m[key]))
   }
 
-  function {:opaque} minimum(s: set<Element>) : (x : Element)
+  function minimum(s: set<Element>) : (x : Element)
   requires |s| >= 1
   ensures x in s
   ensures forall y | y in s :: lte(x, y)
@@ -747,7 +747,7 @@ abstract module Total_Order refines Total_Preorder {
     )
   }
 
-  function {:opaque} minimumOpt(s: set<Element>) : (x : Option<Element>)
+  function minimumOpt(s: set<Element>) : (x : Option<Element>)
   ensures x.Some? ==> x.value in s
   ensures x.Some? ==> forall y | y in s :: lte(x.value, y)
   ensures x.None? ==> s == {}
@@ -755,7 +755,7 @@ abstract module Total_Order refines Total_Preorder {
     if s == {} then None else Some(minimum(s))
   }
 
-  function {:opaque} maximum(s: set<Element>) : (x : Element)
+  function maximum(s: set<Element>) : (x : Element)
   requires |s| >= 1
   ensures x in s
   ensures forall y | y in s :: lte(y, x)
@@ -776,7 +776,7 @@ abstract module Total_Order refines Total_Preorder {
     )
   }
 
-  function {:opaque} maximumOpt(s: set<Element>) : (x : Option<Element>)
+  function maximumOpt(s: set<Element>) : (x : Option<Element>)
   ensures x.Some? ==> x.value in s
   ensures x.Some? ==> forall y | y in s :: lte(y, x.value)
   ensures x.None? ==> s == {}
@@ -833,11 +833,11 @@ module Integer_Order refines Total_Order {
   function SomeElement() : Element { 0 }
 
   predicate lte(a: Element, b: Element) {
-    reveal_ltedef();
+    /* reveal_ltedef(); */
     ltedef(a, b)
   }
 
-  predicate {:opaque} ltedef(a: Element, b: Element) {
+  predicate ltedef(a: Element, b: Element) {
     a <= b
   }
 }
@@ -848,11 +848,11 @@ module Nat_Order refines Total_Order {
   function SomeElement() : Element { 0 }
 
   predicate lte(a: Element, b: Element) {
-    reveal_ltedef();
+    /* reveal_ltedef(); */
     ltedef(a, b)
   }
 
-  predicate {:opaque} ltedef(a: Element, b: Element) {
+  predicate ltedef(a: Element, b: Element) {
     a <= b
   }
 }
@@ -863,11 +863,11 @@ module Uint32_Order refines Total_Order {
   function SomeElement() : Element { 0 }
 
   predicate method lte(a: Element, b: Element) {
-    reveal_ltedef();
+    /* reveal_ltedef(); */
     ltedef(a, b)
   }
 
-  predicate method {:opaque} ltedef(a: Element, b: Element) {
+  predicate method ltedef(a: Element, b: Element) {
     a <= b
   }
 }
@@ -878,11 +878,11 @@ module Uint64_Order refines Total_Order {
   function SomeElement() : Element { 0 }
 
   predicate method lte(a: Element, b: Element) {
-    reveal_ltedef();
+    /* reveal_ltedef(); */
     ltedef(a, b)
   }
 
-  predicate method {:opaque} ltedef(a: Element, b: Element) {
+  predicate method ltedef(a: Element, b: Element) {
     a <= b
   }
 }
@@ -907,12 +907,12 @@ module Byte_Order refines Total_Order {
 
   function SomeElement() : Element { 0 }
 
-  predicate method {:opaque} lte(a: Element, b: Element) {
-    reveal_ltedef();
+  predicate method lte(a: Element, b: Element) {
+    /* reveal_ltedef(); */
     a <= b
   }
 
-  predicate method {:opaque} ltedef(a: Element, b: Element) {
+  predicate method ltedef(a: Element, b: Element) {
     a <= b
   }
 }
@@ -943,13 +943,13 @@ module Lexicographic_Byte_Order refines Total_Order {
   lemma {:induction true} totality(a: Element, b: Element)
   ensures SeqComparison.lte(a, b) || SeqComparison.lte(b, a);
   {
-    SeqComparison.reveal_lte();
+   /*  SeqComparison.reveal_lte(); */
   }
 
   lemma antisymm(a: Element, b: Element)
   ensures SeqComparison.lte(a, b) && SeqComparison.lte(b, a) ==> a == b;
   {
-    SeqComparison.reveal_lte();
+   /*  SeqComparison.reveal_lte(); */
     if |a| > 0 && |b| > 0 {
       antisymm(a[1..], b[1..]);
     }
@@ -960,7 +960,7 @@ module Lexicographic_Byte_Order refines Total_Order {
   {
     // We need this due to dafny bug
     // https://github.com/dafny-lang/dafny/issues/287
-    SeqComparison.reveal_lte();
+   /*  SeqComparison.reveal_lte(); */
 
     forall a: Element, b: Element, c: Element | SeqComparison.lte(a, b) && SeqComparison.lte(b, c)
     ensures SeqComparison.lte(a, c)
@@ -972,7 +972,7 @@ module Lexicographic_Byte_Order refines Total_Order {
   lemma transitivity(a: Element, b: Element, c: Element)
   ensures SeqComparison.lte(a, b) && SeqComparison.lte(b, c) ==> SeqComparison.lte(a, c);
   {
-    SeqComparison.reveal_lte();
+   /*  SeqComparison.reveal_lte(); */
     if (|a| > 0 && |b| > 0 && |c| > 0) {
       transitivity(a[1..], b[1..], c[1..]);
     }
@@ -981,7 +981,7 @@ module Lexicographic_Byte_Order refines Total_Order {
   lemma EmptyLte(x: Element)
   ensures lte([], x)
   {
-    SeqComparison.reveal_lte();
+   /*  SeqComparison.reveal_lte(); */
   }
 
   // TODO(robj): Ideally we'd just overload SmallerElement to return
@@ -990,7 +990,7 @@ module Lexicographic_Byte_Order refines Total_Order {
     ensures |b| == 0
     ensures forall a | NotMinimum(a) :: lt(b, a)
   {
-    SeqComparison.reveal_lte();
+   /*  SeqComparison.reveal_lte(); */
     b := [];
     forall a | NotMinimum(a)
       ensures lt(b, a)
@@ -1013,7 +1013,7 @@ module Upperbounded_Lexicographic_Byte_Order refines Upperbounded_Total_Order {
     ensures |b.e| == 0
     ensures forall a | NotMinimum(a) :: lt(b, a)
   {
-    SeqComparison.reveal_lte();
+   /*  SeqComparison.reveal_lte(); */
     b := Element([]);
     forall a | NotMinimum(a)
       ensures lt(b, a)

@@ -60,7 +60,7 @@ module USeq
       linear var dlist := DList.DList<uint64>.Alloc(size + 1);
       linear var ptr_map := LinearMutableMap.Constructor(size);
       useq := USeq(dlist, ptr_map);
-      reveal_NoDupes();
+      /* reveal_NoDupes(); */
       assert useq.I() == []; // observe
     }
 
@@ -77,7 +77,7 @@ module USeq
       ensures self.Inv()
       ensures self.I() == (if x in old_self.I() then old_self.I() else old_self.I() + [x])
     {
-      reveal_NoDupes();
+      /* reveal_NoDupes(); */
       NoDupesSetCardinality(self.I());
 
       var found := LinearMutableMap.Get(self.ptr_map, x);
@@ -99,8 +99,8 @@ module USeq
         var Some(p) := removed;
         inout self.dlist.Remove(p);
       }
-      reveal_NoDupes();
-      reveal_RemoveOneValue();
+      /* reveal_NoDupes(); */
+      /* reveal_RemoveOneValue(); */
     }
 
     shared function method First() : (x:uint64)

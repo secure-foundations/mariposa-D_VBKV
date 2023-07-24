@@ -72,7 +72,7 @@ module FlushPolicyImpl {
   requires FlushPolicyModel.ValidStackSlots(s.I(), stack, slots)
   ensures action == FlushPolicyModel.getActionToSplit(s.I(), stack, slots, i)
   {
-    FlushPolicyModel.reveal_getActionToSplit();
+   /*  FlushPolicyModel.reveal_getActionToSplit(); */
 
     if i == 0 {
       // Can't split root until we grow it.
@@ -110,7 +110,7 @@ module FlushPolicyImpl {
   ensures s.Ready?
   ensures (s.I(), action) == FlushPolicyModel.getActionToFlush(old_s.I(), stack, slots)
   {
-    FlushPolicyModel.reveal_getActionToFlush();
+   /*  FlushPolicyModel.reveal_getActionToFlush(); */
 
     if |stack| as uint64 == 40 {
       action := FlushPolicyModel.ActionFail;

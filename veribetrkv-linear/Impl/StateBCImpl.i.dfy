@@ -45,7 +45,7 @@ module StateBCImpl {
     !(forall id | id in outstanding :: outstanding[id].loc.addr as int != i * NodeBlockSize() as int)
   }
 
-  predicate {:opaque} ConsistentBitmapInteral(
+  predicate ConsistentBitmapInteral(
       ephemeralIndirectionTable: SectorType.IndirectionTable,
       frozenIndirectionTable: lOption<SectorType.IndirectionTable>,
       persistentIndirectionTable: SectorType.IndirectionTable,

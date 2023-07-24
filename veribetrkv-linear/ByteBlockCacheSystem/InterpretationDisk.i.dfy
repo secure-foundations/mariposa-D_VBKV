@@ -406,7 +406,7 @@ module InterpretationDisk {
       None
   }
 
-  function {:opaque} DiskJournalOfContentsI(contents: seq<byte>, reqWrites: map<D.ReqId, D.ReqWrite>, i: int) : (res : seq<Option<JournalBlock>>)
+  function DiskJournalOfContentsI(contents: seq<byte>, reqWrites: map<D.ReqId, D.ReqWrite>, i: int) : (res : seq<Option<JournalBlock>>)
   requires 0 <= i <= NumJournalBlocks() as int
   ensures |res| == i
   ensures forall j | 0 <= j < i :: res[j] == JournalBlockAt(contents, reqWrites, j)
@@ -794,11 +794,11 @@ module InterpretationDisk {
           calc {
             bytes[i*4096..(i+1)*4096];
             atLoc(loc, disk.contents)[i*4096..(i+1)*4096];
-              { reveal_atLoc(); }
+              { /* reveal_atLoc(); */ }
             disk.contents[loc.addr .. loc.addr as int + loc.len as int][i*4096..(i+1)*4096];
             { lemma_seq_slice_slice(disk.contents, loc.addr as int, loc.addr as int + loc.len as int, i*4096, (i+1)*4096); }
             disk.contents[loc.addr as int + i*4096 .. loc.addr as int + (i+1)*4096];
-              { reveal_atLoc(); }
+              { /* reveal_atLoc(); */ }
             atLoc(
                 JournalRangeLocation((interval.start + i) as uint64, 1),
                 disk.contents);
@@ -1369,11 +1369,11 @@ module InterpretationDisk {
           calc {
             bytes[i*4096..(i+1)*4096];
             atLoc(loc, disk.contents)[i*4096..(i+1)*4096];
-              { reveal_atLoc(); }
+              { /* reveal_atLoc(); */ }
             disk.contents[loc.addr .. loc.addr as int + loc.len as int][i*4096..(i+1)*4096];
             { lemma_seq_slice_slice(disk.contents, loc.addr as int, loc.addr as int + loc.len as int, i*4096, (i+1)*4096); }
             disk.contents[loc.addr as int + i*4096 .. loc.addr as int + (i+1)*4096];
-              { reveal_atLoc(); }
+              { /* reveal_atLoc(); */ }
             atLoc(
                 JournalRangeLocation((interval.start + i) as uint64, 1),
                 disk.contents);
@@ -1404,12 +1404,12 @@ module InterpretationDisk {
                     assert D.ChecksumsCheckOutForSlice(realContents, fakeContents, 4096*i, 4096*(i+1));
                     assert D.ChecksumChecksOut(realContents[4096*i..4096*(i+1)])
                       by {
-                        JournalBytes.reveal_JournalBlockOfByteSeq();
+                       /*  JournalBytes.reveal_JournalBlockOfByteSeq(); */
                       }
                     assert D.ChecksumChecksOut(fakeContents[4096*i..4096*(i+1)])
                       by {
                         JournalBytes.JournalBlockOfJournalRange(dop.respRead.bytes, i);
-                        JournalBytes.reveal_JournalBlockOfByteSeq();
+                       /*  JournalBytes.reveal_JournalBlockOfByteSeq(); */
                       }
                   }
                 }
@@ -1447,12 +1447,12 @@ module InterpretationDisk {
           assert D.ChecksumChecksOut(realContents[0..|realContents|])
             by {
               assert realContents[0..|realContents|] == realContents;
-              reveal_ValidCheckedBytes();
+              /* reveal_ValidCheckedBytes(); */
             }
           assert D.ChecksumChecksOut(fakeContents[0..|realContents|])
             by {
               assert fakeContents[0..|realContents|] == fakeContents;
-              reveal_ValidCheckedBytes();
+              /* reveal_ValidCheckedBytes(); */
             }
         }
       }
@@ -1514,7 +1514,7 @@ module InterpretationDisk {
   //ensures IBlockDisk(disk) == IBlockDisk(disk')
   //ensures IJournalDisk(disk) == IJournalDisk(disk')
   {
-    reveal_atLoc();
+    /* reveal_atLoc(); */
   }
 
   lemma {:timeLimitMultiplier 32} RefinesProcessRead_Node_1(disk: D.Variables, disk': D.Variables, id: D.ReqId, fakeContents: seq<byte>)
@@ -1697,7 +1697,7 @@ module InterpretationDisk {
 
     var loc := LocOfReqWrite(disk.reqWrites[id]);
 
-    assert |disk.contents| == |disk'.contents| by { D.reveal_splice(); }
+    assert |disk.contents| == |disk'.contents| by {/*  D.reveal_splice(); */ }
 
     forall l | !overlap(loc, l) && locInBounds(l, disk.contents)
     ensures atLoc(l, disk.contents)
@@ -1709,11 +1709,11 @@ module InterpretationDisk {
       {
         calc {
           a[i];
-          { reveal_atLoc(); }
+          { /* reveal_atLoc(); */ }
           disk.contents[l.addr as int + i];
-          { D.reveal_splice(); }
+          {/*  D.reveal_splice(); */ }
           disk'.contents[l.addr as int + i];
-          { reveal_atLoc(); }
+          { /* reveal_atLoc(); */ }
           b[i];
         }
       }
@@ -1721,8 +1721,8 @@ module InterpretationDisk {
 
     assert locInBounds(loc, disk'.contents);
     assert atLoc(loc, disk'.contents) == disk.reqWrites[id].bytes by {
-      D.reveal_splice();
-      reveal_atLoc();
+     /*  D.reveal_splice(); */
+      /* reveal_atLoc(); */
     }
 
     /*forall id | id in disk'.respReads

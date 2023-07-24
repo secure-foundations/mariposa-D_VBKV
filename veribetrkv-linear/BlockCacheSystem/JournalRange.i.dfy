@@ -85,7 +85,7 @@ module JournalRanges {
 
   datatype Header = Header(ghost nentries: int, ghost nblocks: int)
 
-  function {:opaque} parseHeader(s: JournalBlock) : Header
+  function parseHeader(s: JournalBlock) : Header
   requires |s| >= 8
   {
     Header(
@@ -295,7 +295,7 @@ module JournalRanges {
       SumJournalEntries(DropLast(s)) + WeightJournalEntry(Last(s))
   }
 
-  function {:opaque} WeightJournalEntries(s: seq<JournalEntry>) : int
+  function WeightJournalEntries(s: seq<JournalEntry>) : int
   ensures WeightJournalEntries(s) >= 0
   {
     if |s| == 0 then
@@ -317,7 +317,7 @@ module JournalRanges {
   ensures 8 * |s| <= WeightJournalEntries(s)
   {
     lenTimes8LeSum(s);
-    reveal_WeightJournalEntries();
+    /* reveal_WeightJournalEntries(); */
   }
 
   lemma SumJournalEntriesSum(a: seq<JournalEntry>, b: seq<JournalEntry>)
@@ -356,7 +356,7 @@ module JournalRanges {
   ensures WeightJournalEntries(s + t)
       <= WeightJournalEntries(s) + WeightJournalEntries(t)
   {
-    reveal_WeightJournalEntries();
+    /* reveal_WeightJournalEntries(); */
     SumJournalEntriesSum(s, t);
   }
 

@@ -23,7 +23,7 @@ module LeafModel {
   import IT = IndirectionTable
   import opened NativeTypes
 
-  function {:opaque} repivotLeaf(s: BBC.Variables, ref: BT.G.Reference, node: Node)
+  function repivotLeaf(s: BBC.Variables, ref: BT.G.Reference, node: Node)
   : (s': BBC.Variables)
   requires BBC.Inv(s)
   requires s.Ready?
@@ -72,11 +72,11 @@ module LeafModel {
     && StateBCImpl.WFCache(s'.cache)
     && betree_next(s, s')
   {
-    reveal_SplitBucketLeft();
-    reveal_SplitBucketRight();
+    /* reveal_SplitBucketLeft(); */
+    /* reveal_SplitBucketRight(); */
     var s' := repivotLeaf(s, ref, node);
 
-    reveal_repivotLeaf();
+    /* reveal_repivotLeaf(); */
 
     if (
       && s.frozenIndirectionTable.Some?
@@ -107,7 +107,7 @@ module LeafModel {
 
     var newnode := BT.G.Node(pivots, None, buckets');
     var s1 := writeWithNode(s, ref, newnode);
-    reveal_writeBookkeeping();
+    /* reveal_writeBookkeeping(); */
 
     assert s1 == s';
 

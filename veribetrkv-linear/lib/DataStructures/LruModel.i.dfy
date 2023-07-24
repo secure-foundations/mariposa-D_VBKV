@@ -22,7 +22,7 @@ module LruModel {
   // Index-1: Most recently used
   type LruQueue = seq<uint64>
 
-  predicate {:opaque} distinct(q: seq<uint64>)
+  predicate distinct(q: seq<uint64>)
   {
     forall i, j | 0 <= i < |q| && 0 <= j < |q| && i != j :: q[i] != q[j]
   }
@@ -41,7 +41,7 @@ module LruModel {
   ensures I(q) == {}
   ensures WF(q)
   {
-    reveal_distinct();
+    /* reveal_distinct(); */
     []
   }
 
@@ -71,7 +71,7 @@ module LruModel {
     q[0]
   }
 
-  function {:opaque} NextOpt(q: LruQueue) : (x : Option<uint64>)
+  function NextOpt(q: LruQueue) : (x : Option<uint64>)
   ensures x.Some? ==> x.value in I(q)
   ensures x.None? ==> I(q) == {}
   {
@@ -88,7 +88,7 @@ module LruModel {
     requires WF(q)
     ensures Remove(q, x) == Remove'(q, x)
   {
-    reveal_distinct();
+    /* reveal_distinct(); */
     if |q| > 0 {LruRemove'(DropLast(q), x);}
   }
 
@@ -153,7 +153,7 @@ module LruModel {
     } else {
       LruRemove(DropLast(q), x);
       if q[|q| - 1] != x {
-        reveal_distinct();
+        /* reveal_distinct(); */
         forall i, j | 0 <= i < |Remove(q,x)| && 0 <= j < |Remove(q,x)| && i != j
         ensures Remove(q,x)[i] != Remove(q,x)[j]
         {
@@ -194,7 +194,7 @@ module LruModel {
   ensures I(Use(q, x)) == I(q) + {x}
   {
     LruRemove(q, x);
-    reveal_distinct();
+    /* reveal_distinct(); */
     forall i, j | 0 <= i < |Use(q,x)| && 0 <= j < |Use(q,x)| && i != j
     ensures Use(q,x)[i] != Use(q,x)[j]
     {

@@ -158,7 +158,7 @@ module BoundedPivotsLib {
   ensures BoundedKey(pt, key)
   ensures Route(pt, key) == idx;
   {
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
   }
 
   // utility functions 
@@ -166,7 +166,7 @@ module BoundedPivotsLib {
   ensures WFPivots(pt)
   {
     var pt := [Keyspace.Element([]), Keyspace.Max_Element];
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
     pt
   }
 
@@ -197,7 +197,7 @@ module BoundedPivotsLib {
   requires 0 <= idx < NumBuckets(pt)
   ensures BoundedKey(pt, pt[idx].e)
   {
-    Keyspace.reveal_IsSorted();
+   /*  Keyspace.reveal_IsSorted(); */
     Keyspace.IsStrictlySortedImpliesLt(pt, idx, |pt|-1);
   }
 
@@ -223,7 +223,7 @@ module BoundedPivotsLib {
   requires |pt| > 2
   ensures WFPivots(remove(pt, idx))
   {
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
   }
 
   predicate PivotInsertable(pt: PivotTable, idx: int, key: Key)
@@ -289,8 +289,8 @@ module BoundedPivotsLib {
   ensures WFPivots(InsertPivot(pt, idx, key))
   {
     assert key == KeyToElement(key).e; // observe
-    Keyspace.reveal_IsStrictlySorted();
-    Sequences.reveal_insert();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
+   /*  Sequences.reveal_insert(); */
   }
 
   lemma WFSlice(pt: PivotTable, i: int, j: int)
@@ -299,7 +299,7 @@ module BoundedPivotsLib {
   requires j - i > 1
   ensures WFPivots(pt[i .. j])
   {
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
   }
 
   lemma WFSuffix(pt: PivotTable, i: int)
@@ -319,8 +319,8 @@ module BoundedPivotsLib {
   requires right[0] == KeyToElement(key)
   ensures WFPivots(concat3(left[..|left|-1], KeyToElement(key), right[1..]))
   {
-    Keyspace.reveal_IsStrictlySorted();
-    reveal_concat3();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
+    /* reveal_concat3(); */
     var run := concat3(left[..|left|-1], KeyToElement(key), right[1..]);
 
     forall i, j | 0 <= i < j < |run|
@@ -346,7 +346,7 @@ module BoundedPivotsLib {
     }
   }
 
-  function {:opaque} CutoffForLeft(pt: PivotTable, pivot: Key) : int
+  function CutoffForLeft(pt: PivotTable, pivot: Key) : int
   requires WFPivots(pt)
   requires ValidLeftCutOffKey(pt, pivot)
   ensures 0 <= CutoffForLeft(pt, pivot) < NumBuckets(pt)
@@ -362,7 +362,7 @@ module BoundedPivotsLib {
   requires ValidLeftCutOffKey(pt, pivot)
   ensures i as int == CutoffForLeft(pt, pivot)
   {
-    reveal_CutoffForLeft();
+    /* reveal_CutoffForLeft(); */
     var j := KeyspaceImpl.ComputeLargestLt(pt, Keyspace.Element(pivot)); 
     i := (j) as uint64;
   }
@@ -373,7 +373,7 @@ module BoundedPivotsLib {
   ensures WFPivots(ret)
   {
     var ret := pt[..CutoffForLeft(pt, pivot)+1] + [KeyToElement(pivot)];
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
     ret
   }
 
@@ -385,10 +385,10 @@ module BoundedPivotsLib {
   ensures ret == SplitLeft(pt, pivot)
   {
     ret := pt[..cLeft+1] + [Keyspace.Element(pivot)];
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
   }
 
-  function {:opaque} CutoffForRight(pt: PivotTable, pivot: Key) : int
+  function CutoffForRight(pt: PivotTable, pivot: Key) : int
   requires WFPivots(pt)
   requires BoundedKey(pt, pivot)
   ensures 0 <= CutoffForRight(pt, pivot) < NumBuckets(pt)
@@ -404,7 +404,7 @@ module BoundedPivotsLib {
   requires BoundedKey(pt, pivot)
   ensures i as int == CutoffForRight(pt, pivot)
   {
-    reveal_CutoffForRight();
+    /* reveal_CutoffForRight(); */
     var j := ComputeRoute(pt, pivot);
     i := (j) as uint64;
   }
@@ -415,7 +415,7 @@ module BoundedPivotsLib {
   ensures WFPivots(ret)
   {
     var ret := [KeyToElement(pivot)] + pt[CutoffForRight(pt, pivot)+1..];
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
     ret
   }
 
@@ -427,7 +427,7 @@ module BoundedPivotsLib {
   ensures ret == SplitRight(pt, pivot)
   {
     ret := [Keyspace.Element(pivot)] + pt[cRight+1..];
-    Keyspace.reveal_IsStrictlySorted();
+   /*  Keyspace.reveal_IsStrictlySorted(); */
   } 
 
   function PivotTableBucketKeySet(pt: PivotTable, i: int) : iset<Key>

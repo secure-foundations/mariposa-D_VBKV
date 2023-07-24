@@ -10,7 +10,7 @@ include "Nonlinear.i.dfy"
 module Math {
   import opened NonlinearLemmas
 
-  function {:opaque} power2(exp: nat) : nat
+  function power2(exp: nat) : nat
       ensures power2(exp) > 0;
   {
       if (exp==0) then
@@ -28,14 +28,14 @@ module Math {
       ensures power2(60) == 1152921504606846976;
       ensures power2(64) == 18446744073709551616;
   {
-    reveal_power2();
+    /* reveal_power2(); */
   }
 
   lemma lemma_power2_adds(e1:nat, e2:nat)
       decreases e2;
       ensures power2(e1 + e2) == power2(e1) * power2(e2);
   {
-    reveal_power2();
+    /* reveal_power2(); */
     if (e2 == 0) {
       assert power2(e2) == 1;
     } else {
@@ -81,7 +81,7 @@ module Math {
       ensures power2(31) == 0x80000000;
       ensures power2(32) == 0x100000000;
   {
-    reveal_power2();
+    /* reveal_power2(); */
   }
 
   lemma bounded_mul_eq_0(x: int, m: int)

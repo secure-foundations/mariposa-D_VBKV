@@ -91,7 +91,7 @@ module SplitImpl {
   ensures LruModel.I(s.lru.Queue()) == LruModel.I(old_s.lru.Queue()) + {left_childref, right_childref, parentref};
   ensures s.WriteAllocConditions()
   {
-    SplitModel.reveal_splitBookkeeping();
+   /*  SplitModel.reveal_splitBookkeeping(); */
 
     BookkeepingModel.lemmaChildrenConditionsPreservedWriteBookkeeping(s.I(), left_childref, left_child.children, right_child.children);
     BookkeepingModel.lemmaChildrenConditionsPreservedWriteBookkeeping(s.I(), left_childref, left_child.children, Some(fparent_children));
@@ -136,7 +136,7 @@ module SplitImpl {
   ensures s.lru == old_s.lru
   ensures s.WriteAllocConditions()
   {
-    SplitModel.reveal_splitCacheChanges();
+   /*  SplitModel.reveal_splitCacheChanges(); */
     inout s.cache.Insert(left_childref, left_child);
     inout s.cache.Insert(right_childref, right_child);
     inout s.cache.SplitParent(parentref, slot as uint64, pivot, left_childref, right_childref);
@@ -177,7 +177,7 @@ module SplitImpl {
     var num_children_left := len / 2;
     var pivot := ComputeGetKey(child.pivotTable, num_children_left);
     
-    SplitModel.reveal_splitDoChanges();
+   /*  SplitModel.reveal_splitDoChanges(); */
 
     var insertable := ComputePivotInsertable(fparent_pivots, slot+1, pivot);
     if insertable {
@@ -229,7 +229,7 @@ module SplitImpl {
   ensures LruModel.I(s.lru.Queue()) == s.cache.I().Keys;
   ensures s.I() == SplitModel.splitChild(old_s.I(), parentref, childref, slot as int, lbound, ubound, refUpperBound)
   {
-    SplitModel.reveal_splitChild();
+   /*  SplitModel.reveal_splitChild(); */
 
     linear var child := s.cache.NodeCutOff(childref, lbound, ubound);
     assert child.I() == BT.CutoffNode(s.cache.I()[childref], lbound, ubound);
@@ -289,7 +289,7 @@ module SplitImpl {
   ensures s.WriteAllocConditions()
   ensures LruModel.I(s.lru.Queue()) == s.cache.I().Keys
   {
-    SplitModel.reveal_doSplit();
+   /*  SplitModel.reveal_doSplit(); */
     var b := false;
 
     if s.frozenIndirectionTable.lSome? {

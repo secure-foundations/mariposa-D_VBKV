@@ -72,7 +72,7 @@ module MarshallingImpl {
   requires |pivots| < 0x1_0000_0000_0000_0000
   ensures b == Marshalling.isStrictlySortedPivots(pivots)
   {
-    Marshalling.reveal_isStrictlySortedPivots();
+   /*  Marshalling.reveal_isStrictlySortedPivots(); */
 
     if |pivots| as uint64 < 2 {
       return true;
@@ -378,10 +378,10 @@ module MarshallingImpl {
       if i >= 1 {
         var b := Pivots.Keyspace.SmallestElement();
         assert b == pivots[i];
-        Pivots.Keyspace.reveal_IsStrictlySorted();
+       /*  Pivots.Keyspace.reveal_IsStrictlySorted(); */
         assert Pivots.Keyspace.lt(pivots[i-1], pivots[i]);
         Pivots.Keyspace.IsNotMinimum(pivots[i-1], pivots[i]);
-        Pivots.Keyspace.reveal_NotMinimum();
+       /*  Pivots.Keyspace.reveal_NotMinimum(); */
         assert false;
       }
     }
@@ -401,7 +401,7 @@ module MarshallingImpl {
   {
     var vs: array<V> := new V[|pivots| as uint64];
     assert SeqSum(vs[..0]) == 0 by {
-      reveal_SeqSum();
+      /* reveal_SeqSum(); */
     }
 
     size := 0;
@@ -504,7 +504,7 @@ module MarshallingImpl {
       assert Marshalling.valToBuckets(VArray(pref.a + [bucketVal]).a) 
         == Some(BucketImpl.MutBucket.ILseq(buckets)[..end]); // observe
 
-      reveal_WeightBucketList();
+      /* reveal_WeightBucketList(); */
       BucketImpl.MutBucket.ISeqInduction(lseqs(buckets)[..end]);
       assert WeightBucketList(BucketImpl.MutBucket.ILseq(buckets)[..end])
           == WeightBucketList(BucketImpl.MutBucket.ILseq(buckets)[..end-1]) + WeightBucket(bucket.I());
@@ -643,7 +643,7 @@ module MarshallingImpl {
   ensures s.lSome? && s.value.SectorIndirectionTable? ==> s.value.indirectionTable.TrackingGarbage()
   {
     var success, v, rest_index := ParseVal(data, start, Marshalling.SectorGrammar());
-    Marshalling.reveal_parseSector();
+   /*  Marshalling.reveal_parseSector(); */
 
     if success {
       lemma_SizeOfV_parse_Val(data[start..], Marshalling.SectorGrammar());
@@ -681,7 +681,7 @@ module MarshallingImpl {
   ensures s.lSome? && s.value.SectorNode? ==> BT.WFNode(s.value.node.I())
   ensures s.lSome? && s.value.SectorIndirectionTable? ==> s.value.indirectionTable.TrackingGarbage()
   {
-    Marshalling.reveal_parseCheckedSector();
+   /*  Marshalling.reveal_parseCheckedSector(); */
 
     if |data| as uint64 >= 32 {
       // TODO unnecessary copy here
@@ -729,8 +729,8 @@ module MarshallingImpl {
     } else {
       data := MarshallIntoFixedSize(v, Marshalling.SectorGrammar(), 32, size);
 
-      Marshalling.reveal_parseSector();
-      Marshalling.reveal_parseCheckedSector();
+     /*  Marshalling.reveal_parseSector(); */
+     /*  Marshalling.reveal_parseCheckedSector(); */
 
       var hash := CRC32_C_Array_Impl.compute_crc32c_padded(data, 32, data.Length as uint32 - 32);
 
@@ -773,8 +773,8 @@ module MarshallingImpl {
   ensures sector.SectorIndirectionTable? && Marshalling.IsInitIndirectionTable(sector.indirectionTable.I()) ==> data != null;
   ensures sector.SectorNode? && BucketListWellMarshalled(BucketImpl.MutBucket.ILseq(sector.node.buckets)) ==> data != null
   {
-    Marshalling.reveal_parseSector();
-    Marshalling.reveal_parseCheckedSector();
+   /*  Marshalling.reveal_parseSector(); */
+   /*  Marshalling.reveal_parseCheckedSector(); */
 
     if sector.SectorSuperblock? {
       var v0 := superblockToVal(sector.superblock);

@@ -33,9 +33,9 @@ module SplitModel {
   requires ChildrenConditions(s, node.children)
   ensures ChildrenConditions(s, CutoffNode(node, lbound, ubound).children)
   {
-    reveal_CutoffNode();
-    reveal_CutoffNodeAndKeepLeft();
-    reveal_CutoffNodeAndKeepRight();
+    /* reveal_CutoffNode(); */
+    /* reveal_CutoffNodeAndKeepLeft(); */
+    /* reveal_CutoffNodeAndKeepRight(); */
   }
 
   lemma lemmaChildrenConditionsSplitChild(
@@ -95,7 +95,7 @@ module SplitModel {
     }
   }
 
-  function {:opaque} splitBookkeeping(s: BBC.Variables, left_childref: BT.G.Reference, right_childref: BT.G.Reference, parentref: BT.G.Reference, fused_parent_children: seq<BT.G.Reference>, left_child: Node, right_child: Node, slot: int) : (s': BBC.Variables)
+  function splitBookkeeping(s: BBC.Variables, left_childref: BT.G.Reference, right_childref: BT.G.Reference, parentref: BT.G.Reference, fused_parent_children: seq<BT.G.Reference>, left_child: Node, right_child: Node, slot: int) : (s': BBC.Variables)
   requires 0 <= slot < |fused_parent_children|
   requires s.Ready?
   requires s.WriteAllocConditions()
@@ -126,7 +126,7 @@ module SplitModel {
     s3
   }
 
-  function {:opaque} splitCacheChanges(s: BBC.Variables, left_childref: BT.G.Reference,
+  function splitCacheChanges(s: BBC.Variables, left_childref: BT.G.Reference,
       right_childref: BT.G.Reference, parentref: BT.G.Reference, slot: int, num_children_left: int, pivot: Key, left_child: Node, right_child: Node) : (s': BBC.Variables)
   requires s.Ready?
   requires parentref in s.cache
@@ -143,7 +143,7 @@ module SplitModel {
         [parentref := split_parent])
   }
 
-  function {:opaque} splitDoChanges(s: BBC.Variables, child: Node,
+  function splitDoChanges(s: BBC.Variables, child: Node,
       left_childref: BT.G.Reference, right_childref: BT.G.Reference, parentref: BT.G.Reference,
       fused_parent_children: seq<BT.G.Reference>, slot: int) : (s': BBC.Variables)
   requires s.Ready?
@@ -177,7 +177,7 @@ module SplitModel {
     )
   }
 
-  function {:opaque} splitChild(s: BBC.Variables, parentref: BT.G.Reference, 
+  function splitChild(s: BBC.Variables, parentref: BT.G.Reference, 
     childref: BT.G.Reference, slot: int, lbound: Key, ubound: Option<Key>, refUpperBound: uint64): (s': BBC.Variables)
   requires s.Ready?
   requires BBC.Inv(s)
@@ -219,7 +219,7 @@ module SplitModel {
     )
   }
 
-  function {:opaque} doSplit(s: BBC.Variables, parentref: BT.G.Reference, childref: BT.G.Reference, slot: int, refUpperBound: uint64)
+  function doSplit(s: BBC.Variables, parentref: BT.G.Reference, childref: BT.G.Reference, slot: int, refUpperBound: uint64)
   : (s': BBC.Variables)
   requires s.Ready?
   requires BBC.Inv(s)
@@ -276,7 +276,7 @@ module SplitModel {
     && betree_next(s, s')
   {
     var s' := doSplit(s, parentref, childref, slot, refUpperBound);
-    reveal_doSplit();
+    /* reveal_doSplit(); */
 
     if (
       && s.frozenIndirectionTable.Some?
@@ -309,7 +309,7 @@ module SplitModel {
       return;
     }
 
-    reveal_splitChild();
+    /* reveal_splitChild(); */
     var child := CutoffNode(fused_child, lbound, ubound);
     lemmaChildrenConditionsCutoffNode(s, fused_child, lbound, ubound);
 
@@ -332,7 +332,7 @@ module SplitModel {
       return;
     }
 
-    reveal_splitDoChanges();
+    /* reveal_splitDoChanges(); */
     var num_children_left := |child.buckets| / 2;
     var pivot := GetKey(child.pivotTable, num_children_left);
 
@@ -355,9 +355,9 @@ module SplitModel {
 
     lemmaChildrenConditionsOfReplace1With2(s2, fused_parent.children.value, slot, left_childref.value, right_childref.value);
 
-    reveal_writeBookkeeping();
-    reveal_splitCacheChanges();
-    reveal_splitBookkeeping();
+    /* reveal_writeBookkeeping(); */
+    /* reveal_splitCacheChanges(); */
+    /* reveal_splitBookkeeping(); */
 
     var s3 := writeWithNode(s2, parentref, split_parent);
     assert s' == s3;

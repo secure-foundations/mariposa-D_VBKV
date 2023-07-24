@@ -51,8 +51,8 @@ module BlockAllocatorModel {
       .(ephemeral := BitmapModel.BitSet(bam.ephemeral, i))
       .(full := BitmapModel.BitSet(bam.full, i));
 
-    BitmapModel.reveal_BitSet();
-    BitmapModel.reveal_IsSet();
+   /*  BitmapModel.reveal_BitSet(); */
+   /*  BitmapModel.reveal_IsSet(); */
     assert forall j | 0 <= j < |bam.ephemeral| :: j != i ==> BitmapModel.IsSet(bam'.ephemeral, j) == BitmapModel.IsSet(bam.ephemeral, j);
 
     bam'
@@ -68,8 +68,8 @@ module BlockAllocatorModel {
       .(frozen := Some(BitmapModel.BitSet(bam.frozen.value, i)))
       .(full := BitmapModel.BitSet(bam.full, i));
 
-    BitmapModel.reveal_BitSet();
-    BitmapModel.reveal_IsSet();
+   /*  BitmapModel.reveal_BitSet(); */
+   /*  BitmapModel.reveal_IsSet(); */
     assert forall j | 0 <= j < |bam.ephemeral| :: j != i ==> BitmapModel.IsSet(bam'.ephemeral, j) == BitmapModel.IsSet(bam.ephemeral, j);
 
     bam'
@@ -84,8 +84,8 @@ module BlockAllocatorModel {
       .(outstanding := BitmapModel.BitSet(bam.outstanding, i))
       .(full := BitmapModel.BitSet(bam.full, i));
 
-    BitmapModel.reveal_BitSet();
-    BitmapModel.reveal_IsSet();
+   /*  BitmapModel.reveal_BitSet(); */
+   /*  BitmapModel.reveal_IsSet(); */
     assert forall j | 0 <= j < |bam.ephemeral| :: j != i ==> BitmapModel.IsSet(bam'.ephemeral, j) == BitmapModel.IsSet(bam.ephemeral, j);
 
     bam'
@@ -102,8 +102,8 @@ module BlockAllocatorModel {
   requires 0 <= i < NumBlocks()
   ensures Inv(bam')
   {
-    BitmapModel.reveal_BitUnset();
-    BitmapModel.reveal_IsSet();
+   /*  BitmapModel.reveal_BitUnset(); */
+   /*  BitmapModel.reveal_IsSet(); */
 
     bam.(outstanding := BitmapModel.BitUnset(bam.outstanding, i))
        .(full :=

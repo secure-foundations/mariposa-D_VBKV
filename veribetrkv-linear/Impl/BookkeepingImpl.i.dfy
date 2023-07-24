@@ -43,7 +43,7 @@ module BookkeepingImpl {
     && (forall r | r in s.ephemeralIndirectionTable.graph :: r <= s.ephemeralIndirectionTable.refUpperBound)
     && ref == BookkeepingModel.getFreeRef(s.I(), s.ephemeralIndirectionTable.refUpperBound);
   {
-    BookkeepingModel.reveal_getFreeRef();
+   /*  BookkeepingModel.reveal_getFreeRef(); */
 
     ghost var getable := s.I().ephemeralIndirectionTable;
 
@@ -91,7 +91,7 @@ module BookkeepingImpl {
     && (forall r | r in s.ephemeralIndirectionTable.graph :: r <= s.ephemeralIndirectionTable.refUpperBound)
     && ref == BookkeepingModel.getFreeRef2(s.I(), avoid, s.ephemeralIndirectionTable.refUpperBound);
   {
-    BookkeepingModel.reveal_getFreeRef2();
+   /*  BookkeepingModel.reveal_getFreeRef2(); */
 
     s.ephemeralIndirectionTable.UpperBounded();
 
@@ -135,13 +135,13 @@ module BookkeepingImpl {
     )
   {
     if ref in s.ephemeralIndirectionTable.locs {
-      reveal_ConsistentBitmapInteral();
+      /* reveal_ConsistentBitmapInteral(); */
       var loc := s.ephemeralIndirectionTable.locs[ref];
       var i := loc.addr as int / NodeBlockSize();
       assert s.ephemeralIndirectionTable.I().locs[ref] == loc;
       assert loc in s.ephemeralIndirectionTable.I().locs.Values;
       assert DiskLayout.ValidNodeLocation(loc);
-      DiskLayout.reveal_ValidNodeAddr();
+     /*  DiskLayout.reveal_ValidNodeAddr(); */
       assert i * NodeBlockSize() == loc.addr as int;
       assert IT.IndirectionTable.IsLocAllocBitmap(s.blockAllocator.I().ephemeral, i);
     }
@@ -174,9 +174,9 @@ module BookkeepingImpl {
         loc in s'.ephemeralIndirectionTable.I().locs.Values :: 
           DiskLayout.ValidNodeLocation(loc))
   {
-    reveal_ConsistentBitmapInteral();
-    BitmapModel.reveal_IsSet();
-    BitmapModel.reveal_BitUnset();
+    /* reveal_ConsistentBitmapInteral(); */
+   /*  BitmapModel.reveal_IsSet(); */
+   /*  BitmapModel.reveal_BitUnset(); */
     lemmaIndirectionTableLocIndexValid(s, ref);
 
     forall r1, r2 | r1 in s'.ephemeralIndirectionTable.I().locs && r2 in s'.ephemeralIndirectionTable.I().locs
@@ -196,7 +196,7 @@ module BookkeepingImpl {
     if j.Some? {
       assert DiskLayout.ValidNodeLocation(s.ephemeralIndirectionTable.I().locs[ref]);
       assert j.value >= MinNodeBlockIndex() by {
-        DiskLayout.reveal_ValidNodeAddr();
+       /*  DiskLayout.reveal_ValidNodeAddr(); */
       }
     }
 
@@ -320,13 +320,13 @@ module BookkeepingImpl {
         <= |LruModel.I(old_s.lru.Queue())| + |{ref}|
         == |LruModel.I(old_s.lru.Queue())| + 1;
 
-    reveal BookkeepingModel.writeBookkeeping();
+    /* reveal BookkeepingModel.writeBookkeeping(); */
 
     freeIndirectionTableLocCorrect(old_s, s, ref,
       if oldLoc.Some?
       then Some(oldLoc.value.addr as int / NodeBlockSize())
       else None);
-    reveal_ConsistentBitmapInteral();
+    /* reveal_ConsistentBitmapInteral(); */
     assert s.WriteAllocConditions();
   }
 
@@ -351,7 +351,7 @@ module BookkeepingImpl {
   ensures ref.None? ==> s == old_s
   ensures ref.Some? ==> LruModel.I(s.lru.Queue()) == LruModel.I(old_s.lru.Queue()) + {ref.value}
   {
-    BookkeepingModel.reveal_allocBookkeeping();
+   /*  BookkeepingModel.reveal_allocBookkeeping(); */
     
     ref := getFreeRef(s);
     if (ref.Some?) {
@@ -371,7 +371,7 @@ module BookkeepingImpl {
   ensures |LruModel.I(s.lru.Queue())| <= |LruModel.I(old_s.lru.Queue())| + 1
   ensures LruModel.I(s.lru.Queue()) == LruModel.I(old_s.lru.Queue()) + {ref}
   {
-    BookkeepingModel.reveal_writeBookkeepingNoSuccsUpdate();
+   /*  BookkeepingModel.reveal_writeBookkeepingNoSuccsUpdate(); */
 
     lemmaIndirectionTableLocIndexValid(s, ref);
 
@@ -387,7 +387,7 @@ module BookkeepingImpl {
       if oldLoc.Some?
       then Some(oldLoc.value.addr as int / NodeBlockSize())
       else None);
-    reveal ConsistentBitmapInteral();
+    /* reveal ConsistentBitmapInteral(); */
 
     LruModel.LruUse(old_s.lru.Queue(), ref);
     assert LruModel.I(s.lru.Queue()) == LruModel.I(old_s.lru.Queue()) + {ref};

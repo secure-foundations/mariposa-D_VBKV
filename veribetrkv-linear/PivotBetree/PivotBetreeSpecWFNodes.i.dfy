@@ -70,7 +70,7 @@ module PivotBetreeSpecWFNodes {
     BucketFlushModel.partialFlushPreservesSorted(
         f.parent.buckets[f.slotIndex], f.child.pivotTable, f.child.buckets);
 
-    reveal_BucketIntersect();
+    /* reveal_BucketIntersect(); */
     //WFBucketListFlush(BucketIntersect(f.parent.buckets[f.slotIndex], f.keys), f.child.buckets, f.child.pivotTable);
 
     forall i | 0 <= i < |f.newparent.buckets|
@@ -83,7 +83,7 @@ module PivotBetreeSpecWFNodes {
         ensures Route(f.newparent.pivotTable, f.newparent.buckets[i].keys[j]) == i
         {
           MapSeqs.MapMapsIndex(f.newparent.buckets[i].keys, f.newparent.buckets[i].msgs, j);
-          reveal_BucketComplement();
+          /* reveal_BucketComplement(); */
           var t := MapSeqs.GetIndex(f.parent.buckets[i].keys, f.parent.buckets[i].msgs, 
               f.newparent.buckets[i].keys[j]);
           //RouteIs(f.newparent.pivotTable, f.newparent.buckets[i].keys[i], i);
@@ -107,7 +107,7 @@ module PivotBetreeSpecWFNodes {
       ensures Route(f.newchild.pivotTable, f.newchild.buckets[i].keys[j]) == i
       {
         MapSeqs.MapMapsIndex(f.newchild.buckets[i].keys, f.newchild.buckets[i].msgs, j);
-        reveal_BucketIntersect();
+        /* reveal_BucketIntersect(); */
         //var t := MapSeqs.GetIndex(f.child.buckets[i].keys, f.child.buckets[i].msgs, 
         //    newchild.buckets[i].keys[j]);
       }
@@ -130,14 +130,14 @@ module PivotBetreeSpecWFNodes {
     && WFBucketListProper(node'.buckets, node'.pivotTable)
     && BucketListWellMarshalled(node'.buckets)
   {
-    reveal_CutoffNodeAndKeepLeft();
+    /* reveal_CutoffNodeAndKeepLeft(); */
     var cLeft := CutoffForLeft(node.pivotTable, pivot);
     WFProperSplitBucketListLeft(node.buckets, node.pivotTable, cLeft, pivot);
 
     var node' := CutoffNodeAndKeepLeft(node, pivot);
     assert BucketListWellMarshalled(node'.buckets) by {
-      reveal_SplitBucketLeft();
-      Lexicographic_Byte_Order.reveal_IsStrictlySorted();
+      /* reveal_SplitBucketLeft(); */
+     /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
     }
   }
 
@@ -152,7 +152,7 @@ module PivotBetreeSpecWFNodes {
     var node' := CutoffNodeAndKeepRight(node, pivot);
     WFBucketListProper(node'.buckets, node'.pivotTable)
   {
-    reveal_CutoffNodeAndKeepRight();
+    /* reveal_CutoffNodeAndKeepRight(); */
     var cRight := CutoffForRight(node.pivotTable, pivot);
     assert BucketWellMarshalled(node.buckets[cRight]);
     WFProperSplitBucketListRight(node.buckets, node.pivotTable, cRight, pivot);
@@ -168,7 +168,7 @@ module PivotBetreeSpecWFNodes {
     var node' := CutoffNode(node, lpivot, rpivot);
     WFBucketListProper(node'.buckets, node'.pivotTable)
   {
-    reveal_CutoffNode();
+    /* reveal_CutoffNode(); */
     var node' := CutoffNode(node, lpivot, rpivot);
 
     assert WFBucketListProper(node.buckets, node.pivotTable);
@@ -199,10 +199,10 @@ module PivotBetreeSpecWFNodes {
     var node' := CutoffNodeAndKeepLeft(node, pivot);
     BucketListWellMarshalled(node'.buckets)
   {
-    reveal_CutoffNodeAndKeepLeft();
+    /* reveal_CutoffNodeAndKeepLeft(); */
     var cLeft := CutoffForLeft(node.pivotTable, pivot);
-    reveal_SplitBucketLeft();
-    Lexicographic_Byte_Order.reveal_IsStrictlySorted();
+    /* reveal_SplitBucketLeft(); */
+   /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
   }
 
   lemma BucketListWellMarshalledCutoffNodeAndKeepRight(
@@ -215,10 +215,10 @@ module PivotBetreeSpecWFNodes {
     var node' := CutoffNodeAndKeepRight(node, pivot);
     BucketListWellMarshalled(node'.buckets)
   {
-    reveal_CutoffNodeAndKeepRight();
+    /* reveal_CutoffNodeAndKeepRight(); */
     var cRight := CutoffForRight(node.pivotTable, pivot);
-    reveal_SplitBucketRight();
-    Lexicographic_Byte_Order.reveal_IsStrictlySorted();
+    /* reveal_SplitBucketRight(); */
+   /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
   }
 
   lemma BucketListWellMarshalledCutoffNode(
@@ -231,7 +231,7 @@ module PivotBetreeSpecWFNodes {
     var node' := CutoffNode(node, lpivot, rpivot);
     BucketListWellMarshalled(node'.buckets)
   {
-    reveal_CutoffNode();
+    /* reveal_CutoffNode(); */
     var node' := CutoffNode(node, lpivot, rpivot);
 
     assert BucketListWellMarshalled(node.buckets);
@@ -405,9 +405,9 @@ module PivotBetreeSpecWFNodes {
     assert InvNode(fused_parent) by {
       WFPivotsRemoved(split_parent.pivotTable, slot_idx+1);
       assert forall i | 0 <= i <= slot_idx-1 :: fused_parent.buckets[i] == split_parent.buckets[i]
-        by { reveal_MergeBucketsInList(); }
+        by { /* reveal_MergeBucketsInList(); */ }
       assert forall i | slot_idx + 1 <= i <= |fused_parent.buckets| - 1 :: fused_parent.buckets[i] == split_parent.buckets[i+1]
-        by { reveal_MergeBucketsInList(); }
+        by { /* reveal_MergeBucketsInList(); */ }
 
       BucketListHasWFBucketAtIdenticalSlice(split_parent.buckets, split_parent.pivotTable, fused_parent.buckets, fused_parent.pivotTable, 0, slot_idx-1, 0);
       BucketListHasWFBucketAtIdenticalSlice(split_parent.buckets, split_parent.pivotTable, fused_parent.buckets, fused_parent.pivotTable, slot_idx + 1, |fused_parent.buckets| - 1, -1);
@@ -449,15 +449,15 @@ module PivotBetreeSpecWFNodes {
     JoinBucketsSplitBucketOnPivotsCancel(j,r. pivots);
     WeightJoinBucketList(r.leaf.buckets);
     WeightSplitBucketOnPivots(j, r.pivots);*/
-    reveal_SplitBucketLeft();
-    reveal_SplitBucketRight();
+    /* reveal_SplitBucketLeft(); */
+    /* reveal_SplitBucketRight(); */
     WeightSplitBucketAdditive(r.leaf.buckets[0], r.pivot);
     var leaf'_buckets :=
         [
           SplitBucketLeft(r.leaf.buckets[0], r.pivot),
           SplitBucketRight(r.leaf.buckets[0], r.pivot)
         ];
-    reveal_WeightBucketList();
+    /* reveal_WeightBucketList(); */
     calc {
       WeightBucketList(leaf'_buckets);
       WeightBucketList([ SplitBucketLeft(r.leaf.buckets[0], r.pivot) ])
@@ -533,9 +533,9 @@ module PivotBetreeSpecWFNodes {
     var r := SplitBucketRight(b, key);
     //var i := Lexicographic_Byte_Order.binarySearchIndexOfFirstKeyGte(b.keys, key);
 
-    Lexicographic_Byte_Order.reveal_IsStrictlySorted();
-    reveal_SplitBucketLeft();
-    reveal_SplitBucketRight();
+   /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
+    /* reveal_SplitBucketLeft(); */
+    /* reveal_SplitBucketRight(); */
 
     bucket_keys_equiv(b);
     bucket_keys_equiv(l);
@@ -572,12 +572,12 @@ module PivotBetreeSpecWFNodes {
     SplitMaps(r.leaf.buckets[0], r.pivot);
 
     assert BucketWellMarshalled(leaf'_buckets[0]) by {
-      Lexicographic_Byte_Order.reveal_IsStrictlySorted();
-      reveal_SplitBucketLeft();
+     /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
+      /* reveal_SplitBucketLeft(); */
     }
     assert BucketWellMarshalled(leaf'_buckets[1]) by {
-      Lexicographic_Byte_Order.reveal_IsStrictlySorted();
-      reveal_SplitBucketRight();
+     /*  Lexicographic_Byte_Order.reveal_IsStrictlySorted(); */
+      /* reveal_SplitBucketRight(); */
     }
 
     bucket_keys_equiv(r.leaf.buckets[0]);

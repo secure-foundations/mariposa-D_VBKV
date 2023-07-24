@@ -33,8 +33,8 @@ module BucketSuccessorLoopImpl {
   ensures res == BucketSuccessorLoopModel.GetSuccessorInBucketStack(
       buckets, maxToFind as int, start, upTo)
   {
-    BucketSuccessorLoopModel.reveal_GetSuccessorInBucketStack();
-    BucketSuccessorLoopModel.reveal_ProcessGenerator();
+   /*  BucketSuccessorLoopModel.reveal_GetSuccessorInBucketStack(); */
+   /*  BucketSuccessorLoopModel.reveal_ProcessGenerator(); */
     linear var g := g';
     
     var results := new UI.SuccResult[maxToFind];

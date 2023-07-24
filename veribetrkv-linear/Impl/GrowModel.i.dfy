@@ -23,7 +23,7 @@ module GrowModel {
   import StateBCImpl
 
   /// The root was found to be too big: grow
-  function {:opaque} grow(s: BBC.Variables, refUpperBound: uint64)
+  function grow(s: BBC.Variables, refUpperBound: uint64)
   : (BBC.Variables)
   requires BBC.Inv(s)
   requires s.Ready?
@@ -69,7 +69,7 @@ module GrowModel {
     && StateBCImpl.WFCache(s'.cache)
     && betree_next(s, s')
   {
-    reveal_grow();
+    /* reveal_grow(); */
 
     var s' := grow(s, refUpperBound);
 
@@ -92,8 +92,8 @@ module GrowModel {
     }
 
     var (s1, newref) := allocWithNode(s, oldroot, refUpperBound);
-    reveal_allocBookkeeping();
-    reveal_writeBookkeeping();
+    /* reveal_allocBookkeeping(); */
+    /* reveal_writeBookkeeping(); */
 
     match newref {
       case None => {

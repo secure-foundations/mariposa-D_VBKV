@@ -94,7 +94,7 @@ module MapSeqs {
     var keyOpt := maximumKey(m.Keys);
     match keyOpt {
       case None => {
-        reveal_IsStrictlySorted();
+        /* reveal_IsStrictlySorted(); */
       }
       case Some(key) => {
         var m' := MapRemove1(m, key);
@@ -114,7 +114,7 @@ module MapSeqs {
   {
     if i == |keys| - 1 {
     } else {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       //calc {
       //  msgs[i];
       //  {
@@ -245,7 +245,7 @@ module MapSeqs {
   {
     if keys[|keys| - 1] in map_of_seqs(DropLast(keys), DropLast(msgs)) {
       var i := GetIndex(DropLast(keys), DropLast(msgs), keys[|keys| - 1]);
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
     }
   }
 
@@ -280,14 +280,14 @@ module MapSeqs {
           var maxkey' := Last(keys');
           MapMapsIndex(keys', msgs', |keys'| - 1);
           var j := GetIndex(keys, msgs, maxkey');
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
         }
       }
 
       assert Last(keys) == Last(keys');
 
-      assert IsStrictlySorted(DropLast(keys)) by { reveal_IsStrictlySorted(); }
-      assert IsStrictlySorted(DropLast(keys')) by { reveal_IsStrictlySorted(); }
+      assert IsStrictlySorted(DropLast(keys)) by { /* reveal_IsStrictlySorted(); */ }
+      assert IsStrictlySorted(DropLast(keys')) by { /* reveal_IsStrictlySorted(); */ }
 
       calc {
         map_of_seqs(DropLast(keys), DropLast(msgs));
@@ -326,7 +326,7 @@ module MapSeqs {
   ensures map_of_seqs([], []) == map[]
   ensures IsStrictlySorted([])
   {
-    reveal_IsStrictlySorted();
+    /* reveal_IsStrictlySorted(); */
   }
 
   lemma map_of_seqs_push_back(
@@ -360,7 +360,7 @@ module MapSeqs {
     ensures k in b
     ensures a[k] == b[k]
     {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       if k == keys[i] {
         MapMapsIndex(keys[i..], msgs[i..], 0);
         assert a[k] == b[k];
@@ -373,7 +373,7 @@ module MapSeqs {
     forall k | k in b
     ensures k in a
     {
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       var j := GetIndex(keys[i..], msgs[i..], k);
       if j > 0 {
         MapMapsIndex(keys[i+1..], msgs[i+1..], j-1);
@@ -382,7 +382,7 @@ module MapSeqs {
     }
     if keys[i] in map_of_seqs(keys[i+1..], msgs[i+1..]) {
       var j := GetIndex(keys[i+1..], msgs[i+1..], keys[i]);
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       assert false;
     }
   }
@@ -399,8 +399,8 @@ module MapSeqs {
   ensures MapDisjointUnion(map_of_seqs(keys1, msgs1), map_of_seqs(keys2, msgs2))
       == map_of_seqs(keys1 + keys2, msgs1 + msgs2)
   {
-    assert IsStrictlySorted(keys1) by { reveal_IsStrictlySorted(); assert keys1 == (keys1 + keys2)[..|keys1|]; }
-    assert IsStrictlySorted(keys2) by { reveal_IsStrictlySorted(); assert keys2 == (keys1 + keys2)[|keys1|..]; }
+    assert IsStrictlySorted(keys1) by {/*  reveal_IsStrictlySorted(); */ assert keys1 == (keys1 + keys2)[..|keys1|]; }
+    assert IsStrictlySorted(keys2) by {/*  reveal_IsStrictlySorted(); */ assert keys2 == (keys1 + keys2)[|keys1|..]; }
     key_sets_eq(keys1, msgs1);
     key_sets_eq(keys2, msgs2);
 
@@ -409,7 +409,7 @@ module MapSeqs {
     {
       var i := GetIndex(keys1, msgs1, k);
       var j := GetIndex(keys2, msgs2, k);
-      reveal_IsStrictlySorted();
+      /* reveal_IsStrictlySorted(); */
       assert (keys1 + keys2)[i] == (keys1 + keys2)[|keys1| + j];
     }
 
@@ -534,7 +534,7 @@ module MapSeqs {
         multiset(m.Keys);
         multiset(m'.Keys) + multiset{key};
         {
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
           lemma_multisets_eq(keys', msgs');
         }
         multiset(keys') + multiset{key};
@@ -546,7 +546,7 @@ module MapSeqs {
         { Multisets.ValueMultisetInduct(m', key, msg); }
         Multisets.ValueMultiset(m') + multiset{msg};
         {
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
           lemma_multisets_eq(keys', msgs');
         }
         multiset(msgs') + multiset{msg};
@@ -576,7 +576,7 @@ module MapSeqs {
         multiset(m1.Keys) + multiset{key}; <=
         multiset(m'.Keys) + multiset{key}; <=
         {
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
           lemma_multisets_le(keys', msgs');
         }
         multiset(keys') + multiset{key};
@@ -602,7 +602,7 @@ module MapSeqs {
         }
         Multisets.ValueMultiset(m') + multiset{msg}; <=
         {
-          reveal_IsStrictlySorted();
+          /* reveal_IsStrictlySorted(); */
           lemma_multisets_le(keys', msgs');
         }
         multiset(msgs') + multiset{msg};

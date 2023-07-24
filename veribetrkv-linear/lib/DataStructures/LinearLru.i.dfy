@@ -115,7 +115,7 @@ module LinearLru
       if (p == 0) {
         x := None;
       } else {
-        LruModel.reveal_NextOpt();
+       /*  LruModel.reveal_NextOpt(); */
         x := Some(this.dlist.Get(p));
       }
     }

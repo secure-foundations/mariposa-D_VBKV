@@ -74,7 +74,7 @@ module MkfsModel {
   requires ADM.BlocksWrittenInByteSeq(diskContents, s.disk.contents)
   ensures ADM.Init(s)
   {
-    Marshalling.reveal_parseCheckedSector();
+   /*  Marshalling.reveal_parseCheckedSector(); */
 
     var s1addr := Superblock1Location().addr;
     var s2addr := Superblock1Location().addr;
@@ -97,20 +97,20 @@ module MkfsModel {
     assert ValidNodeBytes(bNode)
         && NodeOfBytes(bNode) == BT.EmptyNode()
       by {
-        reveal_SectorOfBytes();
-        reveal_ValidCheckedBytes();
-        reveal_Parse();
-        D.reveal_ChecksumChecksOut();
+        /* reveal_SectorOfBytes(); */
+        /* reveal_ValidCheckedBytes(); */
+        /* reveal_Parse(); */
+       /*  D.reveal_ChecksumChecksOut(); */
       }
 
     assert ValidSuperblockBytes(bSuperblock)
         && SuperblockOfBytes(bSuperblock)
         == Superblock(0, 0, 0, indirectionTableLoc)
       by {
-        reveal_SectorOfBytes();
-        reveal_ValidCheckedBytes();
-        reveal_Parse();
-        D.reveal_ChecksumChecksOut();
+        /* reveal_SectorOfBytes(); */
+        /* reveal_ValidCheckedBytes(); */
+        /* reveal_Parse(); */
+       /*  D.reveal_ChecksumChecksOut(); */
       }
 
     assert ValidIndirectionTableBytes(bIndirectionTable)
@@ -120,27 +120,27 @@ module MkfsModel {
               map[BT.G.Root() := []]
             )
       by {
-        reveal_SectorOfBytes();
-        reveal_ValidCheckedBytes();
-        reveal_Parse();
-        D.reveal_ChecksumChecksOut();
+        /* reveal_SectorOfBytes(); */
+        /* reveal_ValidCheckedBytes(); */
+        /* reveal_Parse(); */
+       /*  D.reveal_ChecksumChecksOut(); */
       }
 
     assert atLoc(Superblock1Location(), s.disk.contents) == bSuperblock
-      by { reveal_atLoc(); }
+      by { /* reveal_atLoc(); */ }
 
     assert atLoc(Superblock2Location(), s.disk.contents) == bSuperblock
-      by { reveal_atLoc(); }
+      by { /* reveal_atLoc(); */ }
 
     assert atLocWithWrites(nodeLoc, s.disk.contents, s.disk.reqWrites) == bNode
       by {
-        reveal_atLoc();
+        /* reveal_atLoc(); */
         withEmptyWrites(s.disk.contents, nodeLoc);
       }
 
     assert atLocWithWrites(indirectionTableLoc, s.disk.contents, s.disk.reqWrites) == bIndirectionTable
       by {
-        reveal_atLoc();
+        /* reveal_atLoc(); */
         withEmptyWrites(s.disk.contents, indirectionTableLoc);
       }
 

@@ -383,7 +383,7 @@ module PivotBetreeSpecRefinement {
   ensures var r := Route(lookup[idx].node.pivotTable, startKey);
       && Keyspace.lt(KeyToElement(key), lookup[idx].node.pivotTable[r+1])
   {
-    P.reveal_LookupUpperBound();
+   /*  P.reveal_LookupUpperBound(); */
     if idx == |lookup| - 1 {
     } else {
       KeyWithinUpperBoundIsWithinLookup(DropLast(lookup), startKey, key, idx);
@@ -485,8 +485,8 @@ module PivotBetreeSpecRefinement {
   requires forall i | 0 <= i < |buckets| :: PreWFBucket(buckets[i])
   ensures BucketGet(ComposeSeq(MapsOfBucketList(buckets)), key) == InterpretBucketStack(buckets, key);
   {
-    reveal_ComposeSeq();
-    reveal_Compose();
+    /* reveal_ComposeSeq(); */
+    /* reveal_Compose(); */
     if |buckets| == 0 {
     } else {
       calc {
@@ -588,8 +588,8 @@ module PivotBetreeSpecRefinement {
     ensures MS.InRange(start, results[i].key, end)
     {
       SortedSeqOfKeyValueMaps(KeyValueMapOfBucket(ClampRange(ComposeSeq(MapsOfBucketList(buckets)), start, end)), i);
-      reveal_KeyValueMapOfBucket();
-      reveal_ClampRange();
+      /* reveal_KeyValueMapOfBucket(); */
+      /* reveal_ClampRange(); */
 
       //var m := ComposeSeq(buckets)[results[i].key];
       //assert Merge(m, M.DefineDefault()).value == results[i].value;
@@ -606,8 +606,8 @@ module PivotBetreeSpecRefinement {
       P.BufferDefinesEmptyValue(InterpretBucketStack(buckets, key))
     {
       if !P.BufferDefinesEmptyValue(InterpretBucketStack(buckets, key)) {
-        reveal_KeyValueMapOfBucket();
-        reveal_ClampRange();
+        /* reveal_KeyValueMapOfBucket(); */
+        /* reveal_ClampRange(); */
 
         BucketGetComposeSeq(buckets, key);
         //assert BucketGet(ComposeSeq(buckets), key) == InterpretBucketStack(buckets, key);
@@ -697,8 +697,8 @@ module PivotBetreeSpecRefinement {
     var flushedKeys := BucketFlushModel.partialFlushCorrect(
       flush.parent.buckets[flush.slotIndex], flush.child.pivotTable, flush.child.buckets);
 
-    reveal_BucketIntersect();
-    reveal_BucketComplement();
+    /* reveal_BucketIntersect(); */
+    /* reveal_BucketComplement(); */
 
     assert f.newparent.buffer == 
       (imap k : Key :: (if k in f.flushedKeys then IdentityMessage() else f.parent.buffer[k])); // observe
@@ -733,8 +733,8 @@ module PivotBetreeSpecRefinement {
   ensures IBuffer(node)[key] == IBuffer(node')[key]
   ensures IMapsAgreeOnKey(IChildren(node), IChildren(node'), key)
   {
-    reveal_SplitBucketLeft();
-    P.reveal_CutoffNodeAndKeepLeft();
+    /* reveal_SplitBucketLeft(); */
+   /*  P.reveal_CutoffNodeAndKeepLeft(); */
     var i := Route(node'.pivotTable, key);
 
     var cLeft := CutoffForLeft(node.pivotTable, pivot);
@@ -756,8 +756,8 @@ module PivotBetreeSpecRefinement {
   ensures IBuffer(node)[key] == IBuffer(node')[key]
   ensures IMapsAgreeOnKey(IChildren(node), IChildren(node'), key)
   {
-    reveal_SplitBucketRight();
-    P.reveal_CutoffNodeAndKeepRight();
+    /* reveal_SplitBucketRight(); */
+   /*  P.reveal_CutoffNodeAndKeepRight(); */
     var i := Route(node'.pivotTable, key);
     RouteIs(node.pivotTable, key, i + |node.pivotTable| - |node'.pivotTable|);
     var cRight := CutoffForRight(node.pivotTable, pivot);
@@ -775,7 +775,7 @@ module PivotBetreeSpecRefinement {
   ensures IBuffer(node)[key] == IBuffer(node')[key]
   ensures IMapsAgreeOnKey(IChildren(node), IChildren(node'), key)
   {
-    P.reveal_CutoffNode();
+   /*  P.reveal_CutoffNode(); */
     if (r.Some?) {
       var node1 := P.CutoffNodeAndKeepLeft(node, r.value);
       PivotBetreeSpecWFNodes.BucketListWellMarshalledCutoffNodeAndKeepLeft(node, r.value);
@@ -800,7 +800,7 @@ module PivotBetreeSpecRefinement {
       l.buckets + r.buckets
     )
   {
-    reveal_concat3();
+    /* reveal_concat3(); */
     assert child.pivotTable == concat3(l.pivotTable[..|l.pivotTable|-1], KeyToElement(pivot), r.pivotTable[1..]);
     if (child.children.Some?) {
       assert child.children.value == child.children.value[..num_children_left] + child.children.value[num_children_left..];
@@ -893,8 +893,8 @@ module PivotBetreeSpecRefinement {
   ensures forall key:Key | key !in PivotTableBucketKeySet(node.pivotTable, idx) && BoundedKey(node.pivotTable, key) ::
       IChildren(node)[key] == IChildren(node')[key]
   {
-    reveal_SplitBucketLeft();
-    reveal_SplitBucketRight();
+    /* reveal_SplitBucketLeft(); */
+    /* reveal_SplitBucketRight(); */
 
     forall key:Key | BoundedKey(node.pivotTable, key)
     ensures IBuffer(node)[key] == IBuffer(node')[key]
@@ -1039,7 +1039,7 @@ module PivotBetreeSpecRefinement {
       }
     }
 
-    reveal_MergeBucketsInList();
+    /* reveal_MergeBucketsInList(); */
     SplitOfMergeBucketsInList(f.split_parent.buckets, f.slot_idx, f.split_parent.pivotTable);
     SplitMergeBuffersChildrenEq(f.fused_parent, f.split_parent, f.slot_idx);
 
@@ -1094,8 +1094,8 @@ module PivotBetreeSpecRefinement {
       MergedNodeAndLeftAgree(f.left_child, f.right_child, ch, f.pivot, key);
     } else {
       if ubound.None? {
-        P.reveal_CutoffNode();
-        P.reveal_CutoffNodeAndKeepRight();
+       /*  P.reveal_CutoffNode(); */
+       /*  P.reveal_CutoffNodeAndKeepRight(); */
         assert BoundedKey(f.right_child.pivotTable, key);
       }
       assert f.split_parent.pivotTable[f.slot_idx+1] == KeyToElement(f.pivot);
@@ -1169,7 +1169,7 @@ module PivotBetreeSpecRefinement {
       assert IMapRestrict(r.old_parent.children, r.keys)[key] == ref;
     }
 
-    reveal_SplitBucketInList();
+    /* reveal_SplitBucketInList(); */
     SplitMergeBuffersChildrenEq(f.fused_parent, f.split_parent, f.slot_idx);
 
     forall childref, ref | childref in r.new_children && ref in r.new_children[childref].children.Values
@@ -1232,8 +1232,8 @@ module PivotBetreeSpecRefinement {
   ensures B.ValidBetreeStep(IStep(betreeStep))
   ensures IReadOps(P.BetreeStepReads(betreeStep)) == B.BetreeStepReads(IStep(betreeStep))
   {
-    B.reveal_RedirectReads();
-    B.reveal_RedirectOps();
+   /*  B.reveal_RedirectReads(); */
+   /*  B.reveal_RedirectOps(); */
     RefinesValidBetreeStep(betreeStep);
   }
 
@@ -1365,8 +1365,8 @@ module PivotBetreeSpecRefinement {
       P.InvNode(P.SplitOps(f)[i].node)
   ensures IOps(P.SplitOps(f)) == B.RedirectOps(ISplit(f))
   {
-    B.reveal_RedirectReads();
-    B.reveal_RedirectOps();
+   /*  B.reveal_RedirectReads(); */
+   /*  B.reveal_RedirectOps(); */
 
     PivotBetreeSpecWFNodes.ValidSplitWritesInvNodes(f);
     assert IOp(P.G.AllocOp(f.left_childref, f.left_child)) == B.RedirectOps(ISplit(f))[0];
@@ -1405,8 +1405,8 @@ module PivotBetreeSpecRefinement {
       P.InvNode(P.MergeOps(f)[i].node)
   ensures IOps(P.MergeOps(f)) == B.RedirectOps(IMerge(f))
   {
-    B.reveal_RedirectReads();
-    B.reveal_RedirectOps();
+   /*  B.reveal_RedirectReads(); */
+   /*  B.reveal_RedirectOps(); */
 
     PivotBetreeSpecWFNodes.ValidMergeWritesInvNodes(f);
   }

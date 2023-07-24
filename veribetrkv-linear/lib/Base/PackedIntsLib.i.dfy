@@ -7,7 +7,7 @@ module PackedIntsLib {
   import opened NativePackedInts
   import opened NativeTypes
 
-  function method {:opaque} pack_LittleEndian_Uint32(i: uint32)
+  function method pack_LittleEndian_Uint32(i: uint32)
       : (s : seq<byte>)
   ensures |s| == 4
   ensures unpack_LittleEndian_Uint32(s) == i
@@ -19,7 +19,7 @@ module PackedIntsLib {
     var d2 := i2 % 256;
     var i3 := (i2 - d2) / 256;
     var d3 := i3 % 256;
-    reveal_unpack_LittleEndian_Uint32();
+    /* reveal_unpack_LittleEndian_Uint32(); */
     /*assert i == d0
         + (d1 * 0x1_00)
         + (d2 * 0x1_00_00)

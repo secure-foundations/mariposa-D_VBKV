@@ -142,7 +142,7 @@ module FlushModel {
 
         var newchild := child.(buckets := newbuckets);
         var (s2, newchildref) := allocWithNode(s, newchild, refUpperBound);
-        reveal_allocBookkeeping();
+        /* reveal_allocBookkeeping(); */
         if newchildref.None? {
           assert noop(s, s2);
         } else {
@@ -153,7 +153,7 @@ module FlushModel {
           );
 
           var s3 := writeWithNode(s2, parentref, newparent);
-          reveal_writeBookkeeping();
+          /* reveal_writeBookkeeping(); */
           assert s3 == s';
 
           forall ref | ref in BT.G.Successors(newparent) ensures ref in s2.ephemeralIndirectionTable.graph {

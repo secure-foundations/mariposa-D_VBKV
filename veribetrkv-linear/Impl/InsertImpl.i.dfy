@@ -55,7 +55,7 @@ module InsertImpl {
   ensures (s.I(), success) == InsertModel.InsertKeyValue(old_s.I(), key, value)
   ensures LruModel.I(s.lru.Queue()) == s.cache.I().Keys;
   {
-    reveal InsertModel.InsertKeyValue();
+    /* reveal InsertModel.InsertKeyValue(); */
     BookkeepingModel.lemmaChildrenConditionsOfNode(s.I(), BT.G.Root());
     success := true;
 

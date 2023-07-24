@@ -53,7 +53,7 @@ module LKMBPKVOps {
     calc {
       LKMB.Model.ToSeq(node).1;
       LKMB.Model.ToSeq(inode).1;
-      { LKMB.Model.reveal_ToSeq(); }
+      {/*  LKMB.Model.reveal_ToSeq(); */ }
       Flatten(cs);
     }
 
@@ -116,17 +116,17 @@ module LKMBPKVOps {
     var nkeys := seq_length(keys);
     
     assert LKMB.Model.ToSeq(node).0 == keys[..nkeys] by {
-      LKMB.Model.reveal_ToSeq();
+     /*  LKMB.Model.reveal_ToSeq(); */
     }
 
     assert LKMB.Model.ToSeq(node).1 == values[..nkeys] by {
-      LKMB.Model.reveal_ToSeq();
+     /*  LKMB.Model.reveal_ToSeq(); */
     }        
 
     forall i | 0 <= i < nkeys
       ensures keys[i] in LKMB.Interpretation(node)
     {
-      LKMB.Model.reveal_Interpretation();
+     /*  LKMB.Model.reveal_Interpretation(); */
     }
     
     linear var messages := ValueMessage.MessageSeq_to_bytestringSeq(values, nkeys);
@@ -156,7 +156,7 @@ module LKMBPKVOps {
       PKV.PSA.psaCanAppendSeq(pkv.keys, Flatten(keyseqs[..1]))
         && PKV.PSA.psaCanAppendSeq(PKV.PSA.psaAppendSeq(pkv.keys, Flatten(keyseqs[..1])), Flatten(keyseqs[1..]));
       {
-        reveal_Flatten();
+        /* reveal_Flatten(); */
         assert keyseqs[0] == Last(keyseqs[..1]);
         assert |DropLast(keyseqs[..1])| == 0;
         assert [] + keyseqs[0] == keyseqs[0];
@@ -223,17 +223,17 @@ module LKMBPKVOps {
 
     ghost var childSeqs := LKMB.Model.ToSeqChildren(children);
     assert forall i | 0 <= i < |childSeqs.0| :: childSeqs.0[i] == LKMB.Model.ToSeq(children[i]).0 by {
-      LKMB.Model.reveal_ToSeq();
+     /*  LKMB.Model.reveal_ToSeq(); */
     }
     assert forall i | 0 <= i < |childSeqs.1| :: childSeqs.1[i] == LKMB.Model.ToSeq(children[i]).1 by {
-      LKMB.Model.reveal_ToSeq();
+     /*  LKMB.Model.reveal_ToSeq(); */
     }
 
     assert Flatten(childSeqs.0) == LKMB.Model.ToSeq(node).0 by {
-      LKMB.Model.reveal_ToSeq();
+     /*  LKMB.Model.reveal_ToSeq(); */
     }
     assert Flatten(childSeqs.1) == LKMB.Model.ToSeq(node).1 by {
-      LKMB.Model.reveal_ToSeq();
+     /*  LKMB.Model.reveal_ToSeq(); */
     }
     LKMTreeEncodableToSeq(node);
     assert ValueMessage.EncodableMessageSeq(Flatten(childSeqs.1));
@@ -389,7 +389,7 @@ module LKMBPKVOps {
     var interp := LKMB.Interpretation(node);
     LKMB.Model.ToSeqIsStrictlySorted(node);
     assert LKMB.Model.Keys.IsStrictlySorted(keys) by {
-      LKMB.Model.Keys.reveal_IsStrictlySorted();
+     /*  LKMB.Model.Keys.reveal_IsStrictlySorted(); */
     }
     calc {
       BucketsLib.Bucket(byteSeqSeqToKeySeq(LKMB.Model.ToSeq(node).0), LKMB.Model.ToSeq(node).1).as_map();

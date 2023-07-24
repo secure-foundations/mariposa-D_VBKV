@@ -115,7 +115,7 @@ module LinearMutableMap {
     }
   }
 
-  function {:opaque} getEmptyWitness<V>(self: FixedSizeLinearHashMap<V>, i: uint64) : (res : uint64)
+  function getEmptyWitness<V>(self: FixedSizeLinearHashMap<V>, i: uint64) : (res : uint64)
   requires FixedSizeInv(self)
   requires 0 <= i as int <= |self.storage|
   requires forall j | 0 <= j < i :: !self.storage[j].Empty?
@@ -183,7 +183,7 @@ module LinearMutableMap {
 
       if seq_get(self.storage, slotIdx).Empty? || (seq_get(self.storage, slotIdx).Tombstone? && seq_get(self.storage, slotIdx).key == key) {
         assert key in self.contents ==> SlotExplainsKey(self.storage, skips as nat, key) by {
-          reveal_SomeSkipCountExplainsKey();
+          /* reveal_SomeSkipCountExplainsKey(); */
         }
         return;
       } else if seq_get(self.storage, slotIdx).key == key {
@@ -253,7 +253,7 @@ module LinearMutableMap {
       if key == explainedKey {
         assert SlotExplainsKey(self.storage, probeSkips as nat, key); // observe
       } else {
-        reveal_SomeSkipCountExplainsKey();
+        /* reveal_SomeSkipCountExplainsKey(); */
         var oldSkips :| SlotExplainsKey(old_self.storage, oldSkips, explainedKey);
         assert SlotExplainsKey(self.storage, oldSkips, explainedKey); // observe
       }
@@ -286,7 +286,7 @@ module LinearMutableMap {
       }
     }
     assert SeqMatchesContentKeys(self.storage, self.contents) by {
-      reveal_SomeSkipCountExplainsKey();
+      /* reveal_SomeSkipCountExplainsKey(); */
     }
   }
 
@@ -317,7 +317,7 @@ module LinearMutableMap {
     forall explainedKey | explainedKey in self.contents
     ensures exists skips :: SlotExplainsKey(self.storage, skips, explainedKey)
     {
-      reveal_SomeSkipCountExplainsKey();
+      /* reveal_SomeSkipCountExplainsKey(); */
       var oldSkips :| SlotExplainsKey(old_self.storage, oldSkips, explainedKey);
       assert SlotExplainsKey(self.storage, oldSkips, explainedKey); // observe
     }
@@ -346,7 +346,7 @@ module LinearMutableMap {
       }
     }
 
-    reveal_SomeSkipCountExplainsKey();
+    /* reveal_SomeSkipCountExplainsKey(); */
   }
 
   method FixedSizeGet<V>(shared self: FixedSizeLinearHashMap<V>, key: uint64)
@@ -398,7 +398,7 @@ module LinearMutableMap {
         if key == explainedKey {
           assert SlotExplainsKey(self.storage, probeSkips as nat, key);
         } else {
-          reveal_SomeSkipCountExplainsKey();
+          /* reveal_SomeSkipCountExplainsKey(); */
           var oldSkips :| SlotExplainsKey(old_self.storage, oldSkips, explainedKey);
           assert SlotExplainsKey(self.storage, oldSkips, explainedKey);
         }
@@ -418,7 +418,7 @@ module LinearMutableMap {
         }
       }
       assert SeqMatchesContentKeys(self.storage, self.contents) by {
-        reveal_SomeSkipCountExplainsKey();
+        /* reveal_SomeSkipCountExplainsKey(); */
       }
     } else {
     }
@@ -559,7 +559,7 @@ module LinearMutableMap {
     CantEquivocateMapFromStorageKey(underlying);
     MapFromStorageProperties(underlying.storage, mapFromStorage);
     assert MapFromStorage(underlying.storage) == contents by {
-      reveal_SomeSkipCountExplainsKey();
+      /* reveal_SomeSkipCountExplainsKey(); */
     }
   }
 
@@ -590,7 +590,7 @@ module LinearMutableMap {
   {
   }
 
-  function method {:opaque} Constructor<V>(size: uint64) : (linear self: LinearHashMap<V>)
+  function method Constructor<V>(size: uint64) : (linear self: LinearHashMap<V>)
   requires 128 <= size
   ensures Inv(self)
   ensures self.contents == map[]
@@ -604,7 +604,7 @@ module LinearMutableMap {
     self
   }
 
-  method {:opaque} Destructor<V>(linear self: LinearHashMap<V>)
+  method Destructor<V>(linear self: LinearHashMap<V>)
   {
     linear var LinearHashMap(underlying, _, _) := self;
     linear var FixedSizeLinearHashMap(storage, _, _) := underlying;
@@ -1060,7 +1060,7 @@ module LinearMutableMap {
 
     LemmaIterNextNotInS(self, it');
 
-    reveal_SomeSkipCountExplainsKey();
+    /* reveal_SomeSkipCountExplainsKey(); */
   }
 
   method SimpleIterStart<V>(shared self: LinearHashMap<V>) returns (it' : SimpleIterator)
@@ -1074,7 +1074,7 @@ module LinearMutableMap {
     LemmaIterNextNotInS(self,
       Iterator(it'.i, it'.s, it'.decreaser, indexOutput(self, it'.i)));
 
-    reveal_SomeSkipCountExplainsKey();
+    /* reveal_SomeSkipCountExplainsKey(); */
   }
 
   method IterInc<V>(shared self: LinearHashMap<V>, it: Iterator) returns (it' : Iterator)
@@ -1095,7 +1095,7 @@ module LinearMutableMap {
     LemmaIterNextNotInS(self, it');
 
     assert (it'.next.Done? ==> it'.s == self.contents.Keys) by {
-      reveal_SomeSkipCountExplainsKey();
+      /* reveal_SomeSkipCountExplainsKey(); */
     }
   }
 
@@ -1117,7 +1117,7 @@ module LinearMutableMap {
       Iterator(it'.i, it'.s, it'.decreaser, indexOutput(self, it'.i)));
 
     assert (it'.i as int == |self.underlying.storage| ==> (it'.s == self.contents.Keys)) by {
-      reveal_SomeSkipCountExplainsKey();
+      /* reveal_SomeSkipCountExplainsKey(); */
     }
   }
 

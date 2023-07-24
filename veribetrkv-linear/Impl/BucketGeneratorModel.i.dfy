@@ -66,7 +66,7 @@ module BucketGeneratorModel {
     }
   }
 
-  function {:opaque} BasicGenPop(g: Generator) : (g' : Generator)
+  function BasicGenPop(g: Generator) : (g' : Generator)
   requires WF(g)
   requires GenLeft(g).Next?
   requires g.BasicGenerator?
@@ -78,7 +78,7 @@ module BucketGeneratorModel {
       IterInc(g.bucket, g.it))
   }
 
-  function {:opaque} MergeGenPop(g: Generator) : (g' : Generator)
+  function MergeGenPop(g: Generator) : (g' : Generator)
   requires WF(g)
   requires GenLeft(g).Next?
   requires g.ComposeGenerator?
@@ -113,7 +113,7 @@ module BucketGeneratorModel {
     )
   }
 
-  function {:opaque} GenPop(g: Generator) : (g' : Generator)
+  function GenPop(g: Generator) : (g' : Generator)
   requires WF(g)
   requires GenLeft(g).Next?
   decreases g, 1
@@ -129,7 +129,7 @@ module BucketGeneratorModel {
     }
   }
 
-  function {:opaque} GenCompose(top: Generator, bot: Generator) : (g' : Generator)
+  function GenCompose(top: Generator, bot: Generator) : (g' : Generator)
   requires WF(top)
   requires WF(bot)
   ensures WF(g')
@@ -163,7 +163,7 @@ module BucketGeneratorModel {
     )
   }
 
-  function {:opaque} GenFromBucketWithLowerBound(bucket: Bucket, start: UI.RangeStart) : (g : Generator)
+  function GenFromBucketWithLowerBound(bucket: Bucket, start: UI.RangeStart) : (g : Generator)
   requires WFBucket(bucket)
   ensures WF(g)
   {
@@ -175,7 +175,7 @@ module BucketGeneratorModel {
     BasicGenerator(bucket, it)
   }
 
-  function {:opaque} GenFromBucketStackWithLowerBound(buckets: seq<Bucket>, start: UI.RangeStart) : (g : Generator)
+  function GenFromBucketStackWithLowerBound(buckets: seq<Bucket>, start: UI.RangeStart) : (g : Generator)
   requires |buckets| >= 1
   requires forall i | 0 <= i < |buckets| :: WFBucket(buckets[i])
   decreases |buckets|
@@ -193,7 +193,7 @@ module BucketGeneratorModel {
 
   // Characterizing what the generators return
 
-  predicate {:opaque} Monotonic(g: Generator)
+  predicate Monotonic(g: Generator)
   {
     g.ComposeGenerator? ==> (
       && (g.next.Next? && GenLeft(g.top).Next? ==> lt(g.next.key, GenLeft(g.top).key))
@@ -205,7 +205,7 @@ module BucketGeneratorModel {
     )
   }
 
-  function {:opaque} BucketOf(g: Generator) : BucketMap
+  function BucketOf(g: Generator) : BucketMap
   requires WF(g)
   {
     match g {
@@ -225,7 +225,7 @@ module BucketGeneratorModel {
   ensures g.ComposeGenerator? && g.next.Next? ==> BucketOf(g) ==
         Compose(BucketOf(g.top), BucketOf(g.bot))[g.next.key := g.next.msg]
   {
-    reveal_BucketOf();
+    /* reveal_BucketOf(); */
   }
 
   predicate YieldsSortedBucket(g: Generator, b: BucketMap)
@@ -255,17 +255,17 @@ module BucketGeneratorModel {
   ensures GenLeft(g).Next? ==> minimumKey(BucketOf(g).Keys) == Some(GenLeft(g).key)
   ensures GenLeft(g).Next? ==> BucketOf(g)[GenLeft(g).key] == GenLeft(g).msg
   {
-    reveal_BucketOf();
+    /* reveal_BucketOf(); */
     if GenLeft(g).Next? {
       if g.ComposeGenerator? {
-        reveal_Compose();
-        assert Monotonic(g.top) by { reveal_Monotonic(); }
-        assert Monotonic(g.bot) by { reveal_Monotonic(); }
+        /* reveal_Compose(); */
+        assert Monotonic(g.top) by {/*  reveal_Monotonic(); */ }
+        assert Monotonic(g.bot) by {/*  reveal_Monotonic(); */ }
         GenLeftIsMinimum(g.top);
         GenLeftIsMinimum(g.bot);
         assert GenLeft(g).key in BucketOf(g);
         assert forall k | k in BucketOf(g) :: lte(GenLeft(g).key, k) by {
-          reveal_Monotonic();
+          /* reveal_Monotonic(); */
         }
         assert minimumKey(BucketOf(g).Keys) == Some(GenLeft(g).key);
       } else {
@@ -285,14 +285,14 @@ module BucketGeneratorModel {
   ensures YieldsSortedBucket(GenPop(g),
       MapRemove1(BucketOf(g), Keyspace.minimum(BucketOf(g).Keys)))
   {
-    reveal_BucketOf();
+    /* reveal_BucketOf(); */
     var g' := GenPop(g);
 
     GenLeftIsMinimum(g);
-    reveal_GenPop();
+    /* reveal_GenPop(); */
 
     if g.BasicGenerator? {
-      reveal_BasicGenPop();
+      /* reveal_BasicGenPop(); */
       IterIncKeyGreater(g.bucket, g.it);
 
       var b1 := BucketOf(g');
@@ -306,14 +306,14 @@ module BucketGeneratorModel {
       }
       assert b1 == b2;
 
-      assert Monotonic(GenPop(g)) by { reveal_Monotonic(); }
+      assert Monotonic(GenPop(g)) by { /* reveal_Monotonic(); */ }
     } else {
       assert g.ComposeGenerator?;
-      reveal_Compose();
-      reveal_MergeGenPop();
+      /* reveal_Compose(); */
+      /* reveal_MergeGenPop(); */
 
-      assert Monotonic(g.top) by { reveal_Monotonic(); }
-      assert Monotonic(g.bot) by { reveal_Monotonic(); }
+      assert Monotonic(g.top) by {/*  reveal_Monotonic(); */ }
+      assert Monotonic(g.bot) by {/*  reveal_Monotonic(); */ }
       GenLeftIsMinimum(g.top);
       GenLeftIsMinimum(g.bot);
 
@@ -327,7 +327,7 @@ module BucketGeneratorModel {
       }
 
       assert Monotonic(GenPop(g)) by {
-        reveal_Monotonic();
+        /* reveal_Monotonic(); */
       }
 
       assert GenPop(g).ComposeGenerator?;
@@ -337,7 +337,7 @@ module BucketGeneratorModel {
           assert
             && (g.next.Next? && GenLeft(g.top).Next? ==> lt(g.next.key, GenLeft(g.top).key))
             && (g.next.Next? && GenLeft(g.bot).Next? ==> lt(g.next.key, GenLeft(g.bot).key)) by {
-            reveal_Monotonic();
+            /* reveal_Monotonic(); */
           }
         }
         MapRemove1(BucketOf(g), minimum(BucketOf(g).Keys));
@@ -358,9 +358,9 @@ module BucketGeneratorModel {
   {
     GenLeftIsMinimum(top);
     GenLeftIsMinimum(bot);
-    reveal_BucketOf();
+    /* reveal_BucketOf(); */
 
-    reveal_GenCompose();
+    /* reveal_GenCompose(); */
     if (GenLeft(top).Next?) {
       GenPopIsRemove(top);
       assert GenLeft(top).key in BucketOf(top).Keys;
@@ -370,7 +370,7 @@ module BucketGeneratorModel {
       assert GenLeft(bot).key in BucketOf(bot).Keys;
     }
     assert Monotonic(GenCompose(top, bot)) by {
-      reveal_Monotonic();
+      /* reveal_Monotonic(); */
     }
   }
 
@@ -386,8 +386,8 @@ module BucketGeneratorModel {
     var g := GenCompose(top, bot);
 
     GenComposeIsMonotonic(top, bot);
-    reveal_Compose();
-    reveal_GenCompose();
+    /* reveal_Compose(); */
+    /* reveal_GenCompose(); */
 
     GenLeftIsMinimum(top);
     GenLeftIsMinimum(bot);
@@ -432,9 +432,9 @@ module BucketGeneratorModel {
   ensures var g := GenFromBucketWithLowerBound(bucket, start);
       YieldsSortedBucket(g, ClampStart(bucket.as_map(), start))
   {
-    reveal_GenFromBucketWithLowerBound();
-    reveal_ClampStart();
-    reveal_BucketOf();
+    /* reveal_GenFromBucketWithLowerBound(); */
+    /* reveal_ClampStart(); */
+    /* reveal_BucketOf(); */
 
     var g := GenFromBucketWithLowerBound(bucket, start);
     var b1 := BucketOf(g);
@@ -456,7 +456,7 @@ module BucketGeneratorModel {
     }
 
     assert YieldsSortedBucket(g, ClampStart(bucket.as_map(), start)) by {
-      reveal_Monotonic();
+      /* reveal_Monotonic(); */
     }
   }
 
@@ -469,19 +469,19 @@ module BucketGeneratorModel {
       && YieldsSortedBucket(g, ClampStart(ComposeSeq(MapsOfBucketList(buckets)), start))
   decreases |buckets|
   {
-    reveal_GenFromBucketStackWithLowerBound();
+    /* reveal_GenFromBucketStackWithLowerBound(); */
     var g := GenFromBucketStackWithLowerBound(buckets, start);
     if |buckets| == 1 {
       assert BucketWellMarshalled(buckets[0]);
-      reveal_GenFromBucketWithLowerBound();
+      /* reveal_GenFromBucketWithLowerBound(); */
       assert WM(g);
 
       ComposeSeq1(buckets[0].as_map());
       assert [buckets[0]] == buckets;
       assert WFBucket(buckets[0]);
       /*assert WFBucket(ComposeSeq([buckets[0].as_map()])) by {
-        reveal_ComposeSeq();
-        reveal_Compose();
+        /* reveal_ComposeSeq(); */
+        /* reveal_Compose(); */
       }*/
       GenFromBucketWithLowerBoundYieldsClampStart(buckets[0], start);
       //WellMarshalledBucketsEq(ComposeSeq([buckets[0]]), buckets[0]);
@@ -500,7 +500,7 @@ module BucketGeneratorModel {
           {
             GenFromBucketStackWithLowerBoundYieldsComposeSeq(DropLast(buckets), start);
             GenFromBucketStackWithLowerBoundYieldsComposeSeq([Last(buckets)], start);
-            reveal_Compose();
+            /* reveal_Compose(); */
           }
         Compose(
           ClampStart(ComposeSeq(MapsOfBucketList(DropLast(buckets))), start), 
@@ -513,13 +513,13 @@ module BucketGeneratorModel {
           ClampStart(ComposeSeq(DropLast(bucketMaps)), start), 
           ClampStart(ComposeSeq([Last(bucketMaps)]), start));
           {
-            reveal_Compose();
-            reveal_ClampStart();
+            /* reveal_Compose(); */
+            /* reveal_ClampStart(); */
           }
         ClampStart(Compose(ComposeSeq(DropLast(bucketMaps)), ComposeSeq([Last(bucketMaps)])), start);
           {
             ComposeSeqAdditive(DropLast(bucketMaps), [Last(bucketMaps)]);
-            reveal_ClampStart();
+            /* reveal_ClampStart(); */
           }
         ClampStart(ComposeSeq(DropLast(bucketMaps) + [Last(bucketMaps)]), start);
           { assert DropLast(bucketMaps) + [Last(bucketMaps)] == bucketMaps; }
@@ -530,7 +530,7 @@ module BucketGeneratorModel {
 
   ////// For termination
 
-  function {:opaque} decreaser(g: Generator) : nat
+  function decreaser(g: Generator) : nat
   requires WF(g)
   {
     match g {
@@ -547,10 +547,10 @@ module BucketGeneratorModel {
   requires WF(g)
   ensures GenLeft(g).Next? ==> decreaser(GenPop(g)) < decreaser(g)
   {
-    reveal_GenPop();
-    reveal_MergeGenPop();
-    reveal_BasicGenPop();
-    reveal_decreaser();
+    /* reveal_GenPop(); */
+    /* reveal_MergeGenPop(); */
+    /* reveal_BasicGenPop(); */
+    /* reveal_decreaser(); */
     if g.ComposeGenerator? {
       lemmaDecreaserDecreases(g.top);
       lemmaDecreaserDecreases(g.bot);

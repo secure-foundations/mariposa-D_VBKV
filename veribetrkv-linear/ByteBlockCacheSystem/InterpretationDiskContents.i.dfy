@@ -18,7 +18,7 @@ module InterpretationDiskContents {
     && loc.addr as int + loc.len as int <= |contents|
   }
 
-  function {:opaque} atLoc(loc: DiskLayout.Location, contents: seq<byte>) : (res : seq<byte>)
+  function atLoc(loc: DiskLayout.Location, contents: seq<byte>) : (res : seq<byte>)
   requires locInBounds(loc, contents)
   ensures |res| == loc.len as int
   {
@@ -68,7 +68,7 @@ module InterpretationDiskContents {
       0
   }
 
-  function {:opaque} withWritesI(s: seq<byte>, reqs: map<ReqId, ReqWrite>, a: int, len: int)
+  function withWritesI(s: seq<byte>, reqs: map<ReqId, ReqWrite>, a: int, len: int)
     : (res: seq<byte>)
   requires len >= 0
   ensures |res| == len
@@ -78,7 +78,7 @@ module InterpretationDiskContents {
       withWritesI(s, reqs, a, len-1) + [byteWithWrites(s, reqs, a+len-1)]
   }
 
-  function {:opaque} withWrites(s: seq<byte>, reqs: map<ReqId, ReqWrite>, a: int, len: int)
+  function withWrites(s: seq<byte>, reqs: map<ReqId, ReqWrite>, a: int, len: int)
     : (res: seq<byte>)
   requires len >= 0
   ensures |res| == len
@@ -99,7 +99,7 @@ module InterpretationDiskContents {
   ensures withWrites(s, reqs, reqs[id].addr as int, |reqs[id].bytes|)
       == reqs[id].bytes
   {
-    reveal withWrites();
+    /* reveal withWrites(); */
   }
 
   lemma getReqWriteSelfSub(s: seq<byte>, reqs: map<ReqId, ReqWrite>, id: ReqId, offset: int, len: int)
@@ -110,7 +110,7 @@ module InterpretationDiskContents {
   ensures withWrites(s, reqs, reqs[id].addr as int + offset, len)
       == reqs[id].bytes[offset .. offset + len]
   {
-    reveal withWrites();
+    /* reveal withWrites(); */
   }
 
 
@@ -127,7 +127,7 @@ module InterpretationDiskContents {
   ensures withWrites(s, reqs, a, len)
       == withWrites(s, reqs[id := req], a, len)
   {
-    reveal withWrites();
+    /* reveal withWrites(); */
     var x := withWrites(s, reqs, a, len);
     var y := withWrites(s, reqs[id := req], a, len);
     assert |x| == |y|;
@@ -166,8 +166,8 @@ module InterpretationDiskContents {
   ensures atLoc(loc, contents)
       == atLocWithWrites(loc, contents, reqWrites);
   {
-    reveal withWrites();
-    reveal_atLoc();
+    /* reveal withWrites(); */
+    /* reveal_atLoc(); */
   }
 
   lemma onApplyWrite(contents: seq<byte>,
@@ -185,12 +185,12 @@ module InterpretationDiskContents {
           MapRemove1(reqWrites, id),
           start, len)
   {
-    reveal withWrites();
+    /* reveal withWrites(); */
 
     var contents' := splice(contents,
             reqWrites[id].addr as int,
             reqWrites[id].bytes);
-    assert |contents| == |contents'| by { reveal_splice(); }
+    assert |contents| == |contents'| by { /* reveal_splice(); */ }
     var reqWrites' := MapRemove1(reqWrites, id);
     var a := withWrites(contents, reqWrites, start, len);
     var b := withWrites(contents', reqWrites', start, len);
@@ -204,13 +204,13 @@ module InterpretationDiskContents {
           a[i];
           byteWithWrites(contents, reqWrites, start + i);
           reqWrites[id].bytes[start+i - reqWrites[id].addr as int];
-          { reveal_splice(); }
+          { /* reveal_splice(); */ }
           contents'[start+i];
           b[i];
         }
       } else {
         if 0 <= start+i < |contents| {
-          assert contents[start+i] == contents'[start+i] by { reveal_splice(); }
+          assert contents[start+i] == contents'[start+i] by { /* reveal_splice(); */ }
           calc {
             a[i];
             b[i];
@@ -231,7 +231,7 @@ module InterpretationDiskContents {
   ensures withWrites(contents, reqs, start, len)
       == withWrites(contents, map[], start, len)
   {
-    reveal withWrites();
+    /* reveal withWrites(); */
   }
 
   lemma withEmptyWrites(contents: seq<byte>, loc: DiskLayout.Location)
@@ -239,7 +239,7 @@ module InterpretationDiskContents {
   ensures atLocWithWrites(loc, contents, map[])
       == atLoc(loc, contents)
   {
-    reveal withWrites();
-    reveal_atLoc();
+    /* reveal withWrites(); */
+    /* reveal_atLoc(); */
   }
 }

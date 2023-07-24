@@ -38,7 +38,7 @@ abstract module BtreeModel {
 
   // Returns a set of all the keys within and below a specific node.
   // Includes key-value keys and pivot keys
-  function {:opaque} AllKeys(node: Node) : set<Key>
+  function AllKeys(node: Node) : set<Key>
     ensures node.Leaf? && 0 < |node.keys| ==> AllKeys(node) != {}
     ensures node.Index? && 0 < |node.pivots| ==> AllKeys(node) != {}
   {
@@ -94,7 +94,7 @@ abstract module BtreeModel {
   }
 
   // Takes in a btree node and returns the key value map abstraction,
-  function {:opaque} Interpretation(node: Node) : map<Key, Value>
+  function Interpretation(node: Node) : map<Key, Value>
     requires WF(node)
     decreases node
   {
@@ -114,7 +114,7 @@ abstract module BtreeModel {
     requires key in Interpretation(node)
     ensures MapsTo(Interpretation(node.children[Keys.LargestLte(node.pivots, key)+1]), key, Interpretation(node)[key])
   {
-    reveal_Interpretation();
+    /* reveal_Interpretation(); */
   }
 
   lemma InterpretationDelegation(node: Node, key: Key)
@@ -123,8 +123,8 @@ abstract module BtreeModel {
     requires key in Interpretation(node.children[Keys.LargestLte(node.pivots, key)+1])
     ensures MapsTo(Interpretation(node), key, Interpretation(node.children[Keys.LargestLte(node.pivots, key)+1])[key])
   {
-    reveal_Interpretation();
-    reveal_AllKeys();
+    /* reveal_Interpretation(); */
+    /* reveal_AllKeys(); */
     var interp := Interpretation(node);
     assert key in AllKeys(node.children[Keys.LargestLte(node.pivots, key)+1]);
     assert key in AllKeys(node);
@@ -137,8 +137,8 @@ abstract module BtreeModel {
     ensures key in AllKeys(node)
     ensures node.Index? ==> WF(node) && key in AllKeys(node.children[Keys.LargestLte(node.pivots, key) + 1])
   {
-    reveal_Interpretation();
-    reveal_AllKeys();
+    /* reveal_Interpretation(); */
+    /* reveal_AllKeys(); */
     if node.Index? {
       assert key in Interpretation(node.children[Keys.LargestLte(node.pivots, key) + 1]);
     }
@@ -172,8 +172,8 @@ abstract module BtreeModel {
   {
     var child := node.children[0];
     if child.Leaf? {
-      reveal_Interpretation();
-      reveal_AllKeys();
+      /* reveal_Interpretation(); */
+      /* reveal_AllKeys(); */
       assert 0 < |child.keys|;
       var key := child.keys[0];
       assert key  in Interpretation(child);
@@ -208,8 +208,8 @@ abstract module BtreeModel {
   {
     var child := node.children[i];
     if child.Leaf? {
-      reveal_Interpretation();
-      reveal_AllKeys();
+      /* reveal_Interpretation(); */
+      /* reveal_AllKeys(); */
       assert 0 < |child.keys|;
       var key := child.keys[0];
       assert key  in Interpretation(child);      
@@ -224,7 +224,7 @@ abstract module BtreeModel {
   {
     if node.Leaf? then (
       assert |node.keys| == 0 ==> Interpretation(node) == map[] by {
-        reveal_Interpretation();
+        /* reveal_Interpretation(); */
       }
       node.keys[0]
     ) else (
@@ -241,7 +241,7 @@ abstract module BtreeModel {
   {
     var result := MinKey(node);
     if node.Leaf? {
-      reveal_Interpretation();
+      /* reveal_Interpretation(); */
     } else {
       var child := node.children[0];
       ChildOfIndexNonempty(node, 0);
@@ -275,7 +275,7 @@ abstract module BtreeModel {
   {
     if node.Leaf? then (
       assert |node.keys| == 0 ==> Interpretation(node) == map[] by {
-        reveal_Interpretation();
+        /* reveal_Interpretation(); */
       }
       Last(node.keys)
     ) else (
@@ -292,7 +292,7 @@ abstract module BtreeModel {
   {
     var result := MaxKey(node);
     if node.Leaf? {
-      reveal_Interpretation();
+      /* reveal_Interpretation(); */
     } else {
       var child := Last(lseqs(node.children));
       ChildOfIndexNonempty(node, |node.children|-1);
@@ -352,7 +352,7 @@ abstract module BtreeModel {
     requires WF(rightleaf)
     ensures Interpretation(oldleaf) == Keys.MapPivotedUnion(Interpretation(leftleaf), pivot, Interpretation(rightleaf))
   {
-    reveal_Interpretation();
+    /* reveal_Interpretation(); */
     var oldint := Interpretation(oldleaf);
     var leftint := Interpretation(leftleaf);
     var rightint := Interpretation(rightleaf);
@@ -512,7 +512,7 @@ abstract module BtreeModel {
     ensures Interpretation(oldindex) ==
             Keys.MapPivotedUnion(Interpretation(leftindex), pivot, Interpretation(rightindex))
   {
-    reveal_Interpretation();
+    /* reveal_Interpretation(); */
     SplitIndexInterpretation1(oldindex, leftindex, rightindex, pivot);
     SplitIndexInterpretation2(oldindex, leftindex, rightindex, pivot);
   }
@@ -561,7 +561,7 @@ abstract module BtreeModel {
     ensures forall key :: key in AllKeys(leftnode) <==> (Keys.lt(key, pivot) && key in AllKeys(oldnode))
     ensures forall key :: key in AllKeys(rightnode) <==> (Keys.lte(pivot, key) && key in AllKeys(oldnode))
   {
-    reveal_AllKeys();
+    /* reveal_AllKeys(); */
     assert leftnode.keys[0] in AllKeys(leftnode);
     assert rightnode.keys[0] in AllKeys(rightnode);
     forall key | key in AllKeys(leftnode)
@@ -589,7 +589,7 @@ abstract module BtreeModel {
     ensures forall key :: key in AllKeys(leftnode) <==> (Keys.lt(key, pivot) && key in AllKeys(oldnode))
     ensures forall key :: key in (AllKeys(rightnode) + {pivot}) <==> (Keys.lte(pivot, key) && key in AllKeys(oldnode))
   {
-    reveal_AllKeys();
+    /* reveal_AllKeys(); */
     var x :| x in AllKeys(leftnode.children[0]);
     assert x in AllKeys(leftnode);
     forall key | key in AllKeys(leftnode)
@@ -652,7 +652,7 @@ abstract module BtreeModel {
   }
 
   // opaqued this term to kill timeout in SplitChildOfIndexPreservesAllKeys
-  predicate {:opaque} OpaquePartOfSplitChildOfIndex(oldindex: Node, newindex: Node, childidx: int)
+  predicate OpaquePartOfSplitChildOfIndex(oldindex: Node, newindex: Node, childidx: int)
     requires TransparentPartOfSplitChildOfIndex(oldindex, newindex, childidx)
   {
     && lseqs(newindex.children) == Seq.replace1with2(lseqs(oldindex.children), newindex.children[childidx], newindex.children[childidx+1], childidx)
@@ -669,7 +669,7 @@ abstract module BtreeModel {
     requires SplitChildOfIndex(oldindex, newindex, childidx)
     ensures WF(newindex)
   {
-    reveal_OpaquePartOfSplitChildOfIndex();
+    /* reveal_OpaquePartOfSplitChildOfIndex(); */
     var pivot := newindex.pivots[childidx];
     var oldchild := oldindex.children[childidx];
     var leftchild := newindex.children[childidx];
@@ -680,7 +680,7 @@ abstract module BtreeModel {
     assert 0 < childidx ==> AllKeysAboveBound(oldindex, childidx);
     assert childidx < |oldindex.pivots| ==> AllKeysBelowBound(oldindex, childidx);
     if childidx < |oldindex.pivots| {
-      assert Keys.lt(pivot, oldindex.pivots[childidx]) by { reveal_AllKeys(); }
+      assert Keys.lt(pivot, oldindex.pivots[childidx]) by {/*  reveal_AllKeys(); */ }
     }
     Keys.strictlySortedInsert2(oldindex.pivots, pivot, childidx);
 
@@ -734,11 +734,11 @@ abstract module BtreeModel {
     requires childidx + 1 < i
     ensures key in AllKeys(oldindex) + {newindex.pivots[childidx]}
   {
-    reveal_AllKeys();
+    /* reveal_AllKeys(); */
     SplitChildOfIndexPreservesWF(oldindex, newindex, childidx);
     SplitNodeAllKeys(oldindex.children[childidx], newindex.children[childidx], newindex.children[childidx+1], newindex.pivots[childidx]);
     assert newindex.children[i] == oldindex.children[i-1]
-      by { reveal_OpaquePartOfSplitChildOfIndex(); }
+      by { /* reveal_OpaquePartOfSplitChildOfIndex(); */ }
   }
 
   lemma SplitChildOfIndexPreservesAllKeys(oldindex: Node, newindex: Node, childidx: int)
@@ -747,7 +747,7 @@ abstract module BtreeModel {
     requires SplitChildOfIndex(oldindex, newindex, childidx)
     ensures AllKeys(newindex) == AllKeys(oldindex) + {newindex.pivots[childidx]}
   {
-    reveal_AllKeys();
+    /* reveal_AllKeys(); */
     SplitChildOfIndexPreservesWF(oldindex, newindex, childidx);
     SplitNodeAllKeys(oldindex.children[childidx], newindex.children[childidx], newindex.children[childidx+1], newindex.pivots[childidx]);
     
@@ -773,10 +773,10 @@ abstract module BtreeModel {
         }
       }
       assert key in AllKeys(oldindex) + {newindex.pivots[childidx]}
-        by { reveal_OpaquePartOfSplitChildOfIndex(); }
+        by { /* reveal_OpaquePartOfSplitChildOfIndex(); */ }
     }
     assert AllKeys(newindex) == AllKeys(oldindex) + {newindex.pivots[childidx]}
-      by { reveal_OpaquePartOfSplitChildOfIndex(); }
+      by { /* reveal_OpaquePartOfSplitChildOfIndex(); */ }
   }
 
   lemma SplitChildOfIndexPreservesInterpretationA(oldindex: Node, newindex: Node, childidx: int)
@@ -785,7 +785,7 @@ abstract module BtreeModel {
     requires SplitChildOfIndex(oldindex, newindex, childidx)
     ensures forall key :: key in Interpretation(oldindex) ==> MapsTo(Interpretation(newindex), key, Interpretation(oldindex)[key])
   {
-    reveal_OpaquePartOfSplitChildOfIndex();
+    /* reveal_OpaquePartOfSplitChildOfIndex(); */
     var newint := Interpretation(newindex);
     var oldint := Interpretation(oldindex);
     
@@ -831,7 +831,7 @@ abstract module BtreeModel {
     ensures forall key :: key in Interpretation(newindex) ==> key in Interpretation(oldindex)
       //ensures Interpretation(newindex) == Interpretation(oldindex)
   {
-    reveal_OpaquePartOfSplitChildOfIndex();
+    /* reveal_OpaquePartOfSplitChildOfIndex(); */
     var newint := Interpretation(newindex);
     var oldint := Interpretation(oldindex);
 
@@ -865,7 +865,7 @@ abstract module BtreeModel {
     requires SplitChildOfIndex(oldindex, newindex, childidx)
     ensures Interpretation(newindex) == Interpretation(oldindex)
   {
-    reveal_Interpretation();
+    /* reveal_Interpretation(); */
     SplitChildOfIndexPreservesInterpretationA(oldindex, newindex, childidx);
     SplitChildOfIndexPreservesInterpretationB(oldindex, newindex, childidx);
   }
@@ -890,14 +890,14 @@ abstract module BtreeModel {
     ensures Interpretation(InsertLeaf(leaf, key, value)) == Interpretation(leaf)[key := value]
     ensures AllKeys(InsertLeaf(leaf, key, value)) == AllKeys(leaf) + {key}
   {
-    reveal_AllKeys();
-    reveal_Interpretation();
+    /* reveal_AllKeys(); */
+    /* reveal_Interpretation(); */
     var result := InsertLeaf(leaf, key, value);
     var llte := Keys.LargestLte(leaf.keys, key);
     if 0 <= llte && leaf.keys[llte] == key {
       assert Interpretation(result) == Interpretation(leaf)[key := value];
     } else {
-      Keys.reveal_IsStrictlySorted();
+     /*  Keys.reveal_IsStrictlySorted(); */
       forall k | k in Interpretation(result).Keys
         ensures k in Interpretation(leaf).Keys + {key}
       {
@@ -987,7 +987,7 @@ abstract module BtreeModel {
     forall key' | key' in AllKeys(newnode)
       ensures key' in AllKeys(node) + {key}
     {
-      reveal_AllKeys();
+      /* reveal_AllKeys(); */
     }
     SubSetExtensionality(AllKeys(newnode), AllKeys(node) + {key});
   }
@@ -1003,7 +1003,7 @@ abstract module BtreeModel {
     ensures WF(Grow(node))
   {
     assert Keys.IsStrictlySorted([]) by {
-      Keys.reveal_IsStrictlySorted();
+     /*  Keys.reveal_IsStrictlySorted(); */
     }
   }
 
@@ -1011,7 +1011,7 @@ abstract module BtreeModel {
     requires WF(node)
     ensures AllKeys(Grow(node)) == AllKeys(node)
   {
-    reveal_AllKeys();
+    /* reveal_AllKeys(); */
     assert forall key :: key in AllKeys(node) ==> key in AllKeys(Grow(node).children[0]);
   }
   
@@ -1021,7 +1021,7 @@ abstract module BtreeModel {
     ensures WF(Grow(node))
     ensures Interpretation(Grow(node)) == Interpretation(node)
   {
-    reveal_Interpretation();
+    /* reveal_Interpretation(); */
     var interp := Interpretation(node);
     GrowPreservesWF(node);
     var ginterp := Interpretation(Grow(node));
@@ -1144,7 +1144,7 @@ abstract module BtreeModel {
     var parent := Index(pivots, nodes);
     if |nodes| == 1 {
       assert AllKeys(parent) == AllKeys(nodes[0]) by {
-        reveal_AllKeys();
+        /* reveal_AllKeys(); */
       }
       forall key | key in Interpretation(parent)
         ensures MapsTo(Interpretation(nodes[0]), key, Interpretation(parent)[key])
@@ -1190,11 +1190,11 @@ abstract module BtreeModel {
     decreases node
   {
     var interp := Interpretation(node);
-    reveal_Interpretation();
+    /* reveal_Interpretation(); */
     if node.Leaf? {
       assert NoDupes(node.keys) by {
-        reveal_NoDupes();
-        Keys.reveal_IsStrictlySorted();
+        /* reveal_NoDupes(); */
+       /*  Keys.reveal_IsStrictlySorted(); */
       }
       NoDupesSetCardinality(node.keys);
       assert interp.Keys == Set(node.keys);
@@ -1211,7 +1211,7 @@ abstract module BtreeModel {
     forall child | 0 <= child < |node.children|
       ensures 0 < NumElements(node.children[child])
     {
-      reveal_AllKeys();
+      /* reveal_AllKeys(); */
       if node.children[child].Leaf? {
       } else {
         NumElementsOfChildrenNotZero(node.children[child]);
@@ -1245,7 +1245,7 @@ abstract module BtreeModel {
       (kv1.0 + [kv2.0], kv1.1 + [kv2.1])
   }
     
-  function {:opaque} ToSeq(node: Node) : (kvlists : (seq<Key>, seq<Value>))
+  function ToSeq(node: Node) : (kvlists : (seq<Key>, seq<Value>))
     requires WF(node)
     ensures |kvlists.0| == |kvlists.1|
   {
@@ -1261,7 +1261,7 @@ abstract module BtreeModel {
     ensures Flatten(ToSeqChildren(nodes).0) == Flatten(ToSeqChildren(DropLast(nodes)).0) + ToSeq(Last(nodes)).0
     ensures Flatten(ToSeqChildren(nodes).1) == Flatten(ToSeqChildren(DropLast(nodes)).1) + ToSeq(Last(nodes)).1
   {
-    reveal_Flatten();
+    /* reveal_Flatten(); */
   }
 
   lemma ToSeqChildrenAdditive(nodes1: seq<Node>, nodes2: seq<Node>)
@@ -1282,7 +1282,7 @@ abstract module BtreeModel {
     requires forall i :: 0 <= i < |nodes| ==> WF(nodes[i])
     ensures |Flatten(ToSeqChildren(nodes).0)| == NumElementsOfChildren(nodes)
   {
-    reveal_Flatten();
+    /* reveal_Flatten(); */
     if |nodes| == 0 {
     } else {
       ToSeqChildrenLength(DropLast(nodes));
@@ -1294,7 +1294,7 @@ abstract module BtreeModel {
     requires WF(node)
     ensures |ToSeq(node).0| == NumElements(node)
   {
-    reveal_ToSeq();
+    /* reveal_ToSeq(); */
     if node.Leaf? {
     } else {
       ToSeqChildrenLength(lseqs(node.children));
@@ -1306,8 +1306,8 @@ abstract module BtreeModel {
     ensures forall key :: key in ToSeq(node).0 ==> key in AllKeys(node)
   {
     var (keys, values) := ToSeq(node);
-    reveal_ToSeq();
-    reveal_AllKeys();
+    /* reveal_ToSeq(); */
+    /* reveal_AllKeys(); */
     
     if node.Index? {
       var (childkeys, chilvalues) := ToSeqChildren(lseqs(node.children));
@@ -1330,7 +1330,7 @@ abstract module BtreeModel {
   {
     var (keys, values) := ToSeq(node);
 
-    reveal_ToSeq();
+    /* reveal_ToSeq(); */
     
     if node.Index? {
       var (keylists, valuelists) := ToSeqChildren(lseqs(node.children));
@@ -1368,8 +1368,8 @@ abstract module BtreeModel {
       forall i | 0 <= i < |keys|
         ensures MapsTo(interp, keys[i], values[i])
         {
-          reveal_Interpretation();
-          reveal_ToSeq();
+          /* reveal_Interpretation(); */
+          /* reveal_ToSeq(); */
           Keys.PosEqLargestLte(keys, keys[i], i);
           assert(keys[i] in interp);
           assert(interp[keys[i]] == values[i]);
@@ -1381,12 +1381,12 @@ abstract module BtreeModel {
       forall i | 0 <= i < |keys|
         ensures MapsTo(Interpretation(node), keys[i], values[i])
       {
-        assert i < FlattenLength(shape) by {reveal_ToSeq();}
+        assert i < FlattenLength(shape) by {/* reveal_ToSeq(); */}
         var (child, offset) := UnflattenIndex(shape, i);
         UnflattenIndexIsCorrect(keylists, i);
         UnflattenIndexIsCorrect(valuelists, i);
         ToSeqInInterpretation(node.children[child]);
-        reveal_ToSeq();
+        /* reveal_ToSeq(); */
         AllKeysIsConsistentWithInterpretation(node.children[child], keys[i]);
         if 0 < child {
           assert AllKeysAboveBound(node, child);
@@ -1404,11 +1404,11 @@ abstract module BtreeModel {
     requires WF(node)
     ensures forall key :: key in Interpretation(node) ==> key in ToSeq(node).0
   {
-    reveal_Interpretation();
+    /* reveal_Interpretation(); */
     var (keys, values) := ToSeq(node);
     var interp := Interpretation(node);
     
-    reveal_ToSeq();
+    /* reveal_ToSeq(); */
     
     if node.Index? {
       var (keylists, valuelists) := ToSeqChildren(lseqs(node.children));

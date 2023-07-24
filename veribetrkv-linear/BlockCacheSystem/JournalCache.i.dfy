@@ -626,7 +626,7 @@ module JournalCache {
   {
     match js {
       case JSReplay(entries) =>
-        reveal_IsPrefix(); 
+        /* reveal_IsPrefix(); */ 
         s.(replayJournal := s.replayJournal[|entries|..])
       case JSNew(entries) =>
         s.(inMemoryJournal := s.inMemoryJournal + entries)

@@ -42,7 +42,7 @@ module GrowImpl {
   ensures s.WriteAllocConditions()
   ensures LruModel.I(s.lru.Queue()) == s.cache.I().Keys;
   {
-    GrowModel.reveal_grow();
+   /*  GrowModel.reveal_grow(); */
 
     var root := BT.G.Root();
     BookkeepingModel.lemmaChildrenConditionsOfNode(s.I(), root);

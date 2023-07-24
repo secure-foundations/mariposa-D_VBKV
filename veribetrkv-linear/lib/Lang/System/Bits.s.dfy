@@ -20,14 +20,14 @@ module Bits_s {
       [n % 2 == 1] + bits_of_int(n / 2, len-1)
   }
 
-  function {:opaque} zeroes(l: nat) : (p: Bits)
+  function zeroes(l: nat) : (p: Bits)
   ensures |p| == l
   ensures forall i | 0 <= i < |p| :: !p[i]
   {
     if l == 0 then [] else zeroes(l-1) + [false]
   }
 
-  function {:opaque} ones(l: nat) : (p: Bits)
+  function ones(l: nat) : (p: Bits)
   ensures |p| == l
   ensures forall i | 0 <= i < |p| :: p[i]
   {

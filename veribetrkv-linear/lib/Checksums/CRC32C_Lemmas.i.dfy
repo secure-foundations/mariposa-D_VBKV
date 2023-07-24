@@ -17,7 +17,7 @@ module CRC32C_Lemmas {
   import opened F2_X_Lemmas
   import BitLemmas
 
-  function {:opaque} advance(acc: Bits, data: Bits) : (acc': Bits)
+  function advance(acc: Bits, data: Bits) : (acc': Bits)
   requires |acc| == 32
   ensures |acc'| == 32
   {
@@ -128,7 +128,7 @@ module CRC32C_Lemmas {
   ensures advance(advance(acc, data1), data2)
       == advance(acc, data1 + data2)
   {
-    reveal_advance();
+    /* reveal_advance(); */
     calc {
       advance(advance(acc, data1), data2);
       reverse(mod_F2_X(
@@ -215,7 +215,7 @@ module CRC32C_Lemmas {
     }
   }
 
-  predicate {:opaque} advances_bytes(s: seq<byte>, i1: int, acc1: uint32, i2: int, acc2: uint32)
+  predicate advances_bytes(s: seq<byte>, i1: int, acc1: uint32, i2: int, acc2: uint32)
   requires 0 <= i1 <= i2 <= |s|
   {
     advance(bits_of_int(acc1 as int, 32), bits_of_bytes(s[i1..i2]))
@@ -231,14 +231,14 @@ module CRC32C_Lemmas {
       advance(b, bits_of_bytes(s[i..i]));
       advance(b, []);
       {
-        reveal_advance();
+        /* reveal_advance(); */
       }
       reverse(mod_F2_X(xor(zeroes(32), reverse(b)), poly()));
       reverse(mod_F2_X(reverse(b), poly()));
       reverse(reverse(b));
       b;
     }
-    reveal_advances_bytes();
+    /* reveal_advances_bytes(); */
   }
 
   lemma bits_of_bytes_additive(s: seq<byte>, t: seq<byte>)
@@ -315,7 +315,7 @@ module CRC32C_Lemmas {
     var b1 := bits_of_int(acc1 as int, 32);
     //var b2 := bits_of_int(acc2 as int, 32);
     //var b3 := bits_of_int(acc3 as int, 32);
-    reveal_advances_bytes();
+    /* reveal_advances_bytes(); */
     advance_assoc(b1, bits_of_bytes(s[i1..i2]), bits_of_bytes(s[i2..i3]));
 
     assert bits_of_bytes(s[i1..i2]) + bits_of_bytes(s[i2..i3])
@@ -339,12 +339,12 @@ module CRC32C_Lemmas {
     calc {
       advance(bits_of_int(acc as int, 32), bits_of_bytes(s[i..i+1]));
       {
-        reveal_advance();
+        /* reveal_advance(); */
       }
       bits_of_int(acc' as int, 32);
     }
 
-    reveal_advances_bytes();
+    /* reveal_advances_bytes(); */
   }
 
   lemma advances_bytes_u64(s: seq<byte>, i: int, acc: uint32, acc': uint32)
@@ -364,12 +364,12 @@ module CRC32C_Lemmas {
     calc {
       advance(bits_of_int(acc as int, 32), bits_of_bytes(s[i..i+8]));
       {
-        reveal_advance();
+        /* reveal_advance(); */
       }
       bits_of_int(acc' as int, 32);
     }
 
-    reveal_advances_bytes();
+    /* reveal_advances_bytes(); */
   }
 
   /*lemma combine3(n: int, prev: Bits, r: Bits, s: Bits, t: Bits, u: Bits)
@@ -1081,7 +1081,7 @@ module CRC32C_Lemmas {
   requires advances_bytes(data, i-8*n, 0, i-8, c)
   ensures advances_bytes(data, start, p, i, q)
   {
-    reveal_advances_bytes();
+    /* reveal_advances_bytes(); */
 
     var r := bits_of_bytes(data[start .. i - 16 * n]);
     var s := bits_of_bytes(data[i - 16 * n .. i - 8 * n]);
@@ -1116,7 +1116,7 @@ module CRC32C_Lemmas {
         )
       );
       {
-        reveal_advance();
+        /* reveal_advance(); */
         BitLemmas.bits_of_int_0(32);
         assert bits_of_int(c as int, 32)
          == reverse(mod(
@@ -1220,7 +1220,7 @@ module CRC32C_Lemmas {
       {
         bits_of_bytes_additive4_slice(data, start, i - 16 * n, i - 8 * n, i - 8, i);
         assert r+s+t+u == bits_of_bytes(data[start..i]);
-        reveal_advance();
+        /* reveal_advance(); */
       }
       advance(prev, bits_of_bytes(data[start..i]));
     }
@@ -1247,7 +1247,7 @@ module CRC32C_Lemmas {
 
     calc {
       crc32_c(data[i..j]);
-      { reveal_crc32_c(); }
+      { /* reveal_crc32_c(); */ }
       [
         byte_of_bits(m1[0..8]),
         byte_of_bits(m1[8..16]),
@@ -1285,12 +1285,12 @@ module CRC32C_Lemmas {
                   zeroes(|bits_of_bytes(d)|) + reverse(ones(32))
               )));
               {
-                reveal_advance();
+                /* reveal_advance(); */
                 bits_of_int_ffffffff();
               }
               advance(bits_of_int(0xffffffff, 32), bits_of_bytes(d));
               {
-                reveal_advances_bytes();
+                /* reveal_advances_bytes(); */
               }
               bits_of_int(s as int, 32);
             }

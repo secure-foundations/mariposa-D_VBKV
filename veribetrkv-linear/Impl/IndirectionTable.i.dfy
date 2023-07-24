@@ -75,7 +75,7 @@ module IndirectionTable {
     map ref | ref in t.contents :: t.contents[ref].succs
   }
 
-  function {:opaque} PredCounts(t: HashMap) : (m: map<BT.G.Reference, int>)
+  function PredCounts(t: HashMap) : (m: map<BT.G.Reference, int>)
   {
     map ref | ref in t.contents :: t.contents[ref].predCount as int
   }
@@ -163,7 +163,7 @@ module IndirectionTable {
       SectorType.IndirectionTable(this.locs, this.graph)
     }
 
-    predicate {:opaque} Inv()
+    predicate Inv()
     ensures Inv() ==> this.locs.Keys <= this.graph.Keys
     {
       && LinearMutableMap.Inv(this.t)
@@ -194,7 +194,7 @@ module IndirectionTable {
     requires Inv()
     ensures (forall ref | ref in this.graph :: ref <= this.refUpperBound)
     {
-      reveal Inv();
+      /* reveal Inv(); */
     }
 
     static method Alloc(loc: Location) returns (linear r: IndirectionTable)
@@ -216,8 +216,8 @@ module IndirectionTable {
         /* r.predCounts */ PredCounts(hashMap));
 
       assert r.Inv() by { 
-        reveal r.Inv();
-        reveal_PredCounts();
+        /* reveal r.Inv(); */
+        /* reveal_PredCounts(); */
       }
     }
 
@@ -241,8 +241,8 @@ module IndirectionTable {
         /* r.predCounts */ PredCounts(hashMap));
 
       assert r.Inv() by {
-        reveal r.Inv();
-        reveal_PredCounts();
+        /* reveal r.Inv(); */
+        /* reveal_PredCounts(); */
       }
     }
 
@@ -265,7 +265,7 @@ module IndirectionTable {
     ensures cloned.locs == this.locs
     ensures cloned.I() == this.I()
     {
-      reveal Inv();
+      /* reveal Inv(); */
       shared var IndirectionTable(
         t, garbageQueue, refUpperBound, findLoclessIterator, locs, graph, predCounts) := this;
       linear var t' := LinearMutableMap.Clone(t);
@@ -281,7 +281,7 @@ module IndirectionTable {
         ref in this.locs && this.locs[ref] == e.value.loc.value
     ensures ref in this.locs ==> e.Some? && e.value.loc.Some?
     {
-      reveal Inv();
+      /* reveal Inv(); */
       e := LinearMutableMap.Get(this.t, ref);
     }
 
@@ -289,7 +289,7 @@ module IndirectionTable {
     requires this.Inv()
     ensures b == (ref in this.graph && ref !in this.locs)
     {
-      reveal Inv();
+      /* reveal Inv(); */
       var entry := LinearMutableMap.Get(this.t, ref);
       b := entry.Some? && entry.value.loc.None?;
     }
@@ -319,7 +319,7 @@ module IndirectionTable {
     ensures (oldLoc.None? ==> ref !in old_self.locs)
     ensures (oldLoc.Some? ==> ref in old_self.locs && old_self.locs[ref] == oldLoc.value)
     {
-      reveal old_self.Inv();
+      /* reveal old_self.Inv(); */
       var it := LinearMutableMap.FindSimpleIter(self.t, ref);
       var oldEntry := LinearMutableMap.SimpleIterOutput(self.t, it);
        
@@ -332,7 +332,7 @@ module IndirectionTable {
 
       oldLoc := oldEntry.value.loc;
 
-      assert PredCounts(self.t) == PredCounts(old_self.t) by { reveal_PredCounts(); }
+      assert PredCounts(self.t) == PredCounts(old_self.t) by {/*  reveal_PredCounts(); */ }
       assert Graph(self.t) == Graph(old_self.t);
     }
 
@@ -347,7 +347,7 @@ module IndirectionTable {
     ensures (!added ==> self.locs == old_self.locs)
     ensures (old_self.TrackingGarbage() ==> self.TrackingGarbage())
     {
-      reveal old_self.Inv();
+      /* reveal old_self.Inv(); */
 
       var it := LinearMutableMap.FindSimpleIter(self.t, ref);
       var oldEntry := LinearMutableMap.SimpleIterOutput(self.t, it);
@@ -361,8 +361,8 @@ module IndirectionTable {
       assert Graph(self.t) == Graph(old_self.t);
 
       assert self.Inv() by {
-        reveal self.Inv();
-        reveal_PredCounts();
+        /* reveal self.Inv(); */
+        /* reveal_PredCounts(); */
       }
     }
 
@@ -489,7 +489,7 @@ module IndirectionTable {
     ensures (ref !in old_self.locs ==> oldLoc == None)
     ensures self.refUpperBound == old_self.refUpperBound
     {
-      reveal old_self.Inv();
+      /* reveal old_self.Inv(); */
       TCountEqGraphSize(self.t);
 
       // == mutation ==
@@ -515,7 +515,7 @@ module IndirectionTable {
             - SeqCount(succs1, r, 0)
             + SeqCount(succs0, r, 0)
       {
-        reveal_PredCounts();
+        /* reveal_PredCounts(); */
 
         SeqCountPlusPredecessorSetExcept(graph0, r, ref);
         SeqCountPlusPredecessorSetExcept(graph1, r, ref);
@@ -564,7 +564,7 @@ module IndirectionTable {
       // ==============
 
       assert self.graph == MapRemove1(old_self.graph, ref); // observe
-      reveal self.Inv();
+      /* reveal self.Inv(); */
     }
 
     static predicate UnchangedExceptTAndGarbageQueue(old_self: IndirectionTable, self: IndirectionTable) {
@@ -797,7 +797,7 @@ module IndirectionTable {
         assert self.t.contents[ref].predCount as int
           == |PredecessorSet(graph, ref)| + IsRoot(ref)
             - SeqCount(newSuccs, ref, idx as nat)
-            + SeqCount(oldSuccs, ref, 0) by { reveal_PredCounts(); }
+            + SeqCount(oldSuccs, ref, 0) by { /* reveal_PredCounts(); */ }
 
         SeqCountInc(newSuccs, ref, idx as nat);
         assert SeqCount(newSuccs, ref, idx as nat + 1)
@@ -824,7 +824,7 @@ module IndirectionTable {
             - SeqCount(newSuccs, r, idx as nat + 1)
             + SeqCount(oldSuccs, r, 0)
         {
-          reveal_PredCounts();
+          /* reveal_PredCounts(); */
 
           if r == ref {
           } else {
@@ -867,7 +867,7 @@ module IndirectionTable {
           == |PredecessorSet(graph, ref)| + IsRoot(ref)
             - SeqCount(newSuccs, ref, |newSuccs|)
             + SeqCount(oldSuccs, ref, idx2 as nat) by {
-          reveal_PredCounts();
+          /* reveal_PredCounts(); */
         }
 
         if changingRef in graph {
@@ -889,7 +889,7 @@ module IndirectionTable {
         // ==============
 
         if self_before.t.contents[ref].predCount == 1 {
-          assert NoDupes([ref]) by { reveal_NoDupes(); }
+          assert NoDupes([ref]) by { /* reveal_NoDupes(); */ }
           // (doc) assert self.t.contents[ref].predCount == 0;
           DisjointConcatenation(self_before.garbageQueue.value.I(), [ref]);
         }
@@ -902,7 +902,7 @@ module IndirectionTable {
             - SeqCount(newSuccs, r, |newSuccs| as nat)
             + SeqCount(oldSuccs, r, idx2 as nat + 1)
         {
-          reveal_PredCounts();
+          /* reveal_PredCounts(); */
           if r == ref {
           } else {
             SeqCountIncOther(oldSuccs, r, idx2 as nat);
@@ -926,7 +926,7 @@ module IndirectionTable {
     ensures this.garbageQueue.lSome? ==>
         |this.garbageQueue.value.I()| <= 0x1_0000_0000;
     {
-      reveal this.Inv();
+      /* reveal this.Inv(); */
 
       if this.garbageQueue.lSome? {
         NoDupesSetCardinality(this.garbageQueue.value.I());
@@ -953,7 +953,7 @@ module IndirectionTable {
     ensures (oldLoc.None? ==> ref !in old_self.locs)
     ensures (oldLoc.Some? ==> ref in old_self.locs && old_self.locs[ref] == oldLoc.value)
     {
-      reveal old_self.Inv();
+      /* reveal old_self.Inv(); */
 
       self.QueueSizeBound();
       TCountEqGraphSize(self.t);
@@ -985,7 +985,7 @@ module IndirectionTable {
             - SeqCount(succs, r, 0)
             + SeqCount(oldSuccs, r, 0)
       {
-        reveal_PredCounts();
+        /* reveal_PredCounts(); */
 
         SeqCountPlusPredecessorSetExcept(graph0, r, ref);
         SeqCountPlusPredecessorSetExcept(graph, r, ref);
@@ -1028,7 +1028,7 @@ module IndirectionTable {
       inout self.findLoclessIterator := None;
       inout self.UpdateGhost();
       // ==============
-      reveal self.Inv();
+      /* reveal self.Inv(); */
     }
 
     static predicate ValIsHashMap(a: seq<V>, s: Option<HashMap>)
@@ -1167,10 +1167,10 @@ module IndirectionTable {
     ensures forall ref | ref in tbl.contents :: ref in tbl'.contents
     ensures forall ref | ref in tbl'.contents :: ref in tbl.contents
     {
-      reveal_ComputeRefCountsSharedInv();
+      /* reveal_ComputeRefCountsSharedInv(); */
     }
 
-    static predicate {:opaque} ComputeRefCountsSharedInv(tbl': HashMap, tbl: HashMap)
+    static predicate ComputeRefCountsSharedInv(tbl': HashMap, tbl: HashMap)
     ensures ComputeRefCountsSharedInv(tbl', tbl) ==> tbl'.count as int <= MaxSize()
     {
       && (tbl'.count as int <= MaxSize())
@@ -1181,7 +1181,7 @@ module IndirectionTable {
       && (forall ref | ref in tbl.contents :: |tbl.contents[ref].succs| <= MaxNumChildren())
     }
 
-    static predicate {:opaque} ComputeRefCountsOuterLoopInv0(tbl': HashMap, tbl: HashMap, it: LinearMutableMap.Iterator<Entry>)
+    static predicate ComputeRefCountsOuterLoopInv0(tbl': HashMap, tbl: HashMap, it: LinearMutableMap.Iterator<Entry>)
     requires (forall ref | ref in tbl.contents :: ref in tbl'.contents)
     {
       && (forall ref | ref in tbl'.contents :: tbl'.contents[ref].predCount as int <= 0x1_0000_0000_0000) // ???
@@ -1202,7 +1202,7 @@ module IndirectionTable {
       && (tbl'.count == tbl.count)
     }
 
-    static predicate {:opaque} ComputeRefCountsInnerLoopInv0(tbl': HashMap, tbl: HashMap, it: LinearMutableMap.Iterator<Entry>, succs: seq<BT.G.Reference>, i: uint64)
+    static predicate ComputeRefCountsInnerLoopInv0(tbl': HashMap, tbl: HashMap, it: LinearMutableMap.Iterator<Entry>, succs: seq<BT.G.Reference>, i: uint64)
     requires it.next.Next?
     requires ComputeRefCountsSharedInv(tbl', tbl)
     {
@@ -1236,9 +1236,9 @@ module IndirectionTable {
     requires ComputeRefCountsOuterLoopInv(tbl', tbl, it)
     ensures ComputeRefCountsInnerLoopInv(tbl', tbl, it, succs, 0)
     {
-      reveal_ComputeRefCountsSharedInv();
-      reveal_ComputeRefCountsInnerLoopInv0();
-      reveal_ComputeRefCountsOuterLoopInv0();
+      /* reveal_ComputeRefCountsSharedInv(); */
+      /* reveal_ComputeRefCountsInnerLoopInv0(); */
+      /* reveal_ComputeRefCountsOuterLoopInv0(); */
 
       forall ref | ref in tbl'.contents
       ensures  tbl'.contents[ref].predCount as int == |PredecessorSetRestrictedPartial(Graph(tbl), ref, it.s, it.next.key, 0)| + IsRoot(ref) {
@@ -1267,17 +1267,17 @@ module IndirectionTable {
       RevealComputeRefCountsSharedDomainInv(tbl', tbl);
       forall ref | ref in tbl.contents
       ensures tbl'.contents[ref].predCount as int == |PredecessorSetRestricted(Graph(tbl), ref, it'.s)| + IsRoot(ref) {
-        reveal_ComputeRefCountsInnerLoopInv0();
+        /* reveal_ComputeRefCountsInnerLoopInv0(); */
         assert PredecessorSetRestricted(Graph(tbl), ref, it.s + {it.next.key}) == PredecessorSetRestrictedPartial(Graph(tbl), ref, it.s, it.next.key, i as int);
       }
       assert ComputeRefCountsOuterLoopInv0(tbl', tbl, it') by {
-        reveal_ComputeRefCountsOuterLoopInv0();
+        /* reveal_ComputeRefCountsOuterLoopInv0(); */
 
         forall ref | ref in tbl'.contents
         ensures tbl'.contents[ref].predCount as int <= 0x1_0000_0000_0000 {
           lemma_count_eq_graph_size(tbl);
           assert forall ref | ref in Graph(tbl) :: |Graph(tbl)[ref]| <= MaxNumChildren() by {
-            reveal_ComputeRefCountsSharedInv();
+            /* reveal_ComputeRefCountsSharedInv(); */
           }
           PredecessorSetRestrictedSizeBound(Graph(tbl), ref, it'.s);
         }
@@ -1324,7 +1324,7 @@ module IndirectionTable {
       var i: uint64 := 0;
 
       assert |succs| <= MaxNumChildren() by {
-        reveal_ComputeRefCountsSharedInv();
+        /* reveal_ComputeRefCountsSharedInv(); */
       }
       ComputeRefCountsOuterLoopInvImpliesInnerLoopInv(tbl', tbl, it, succs);
 
@@ -1344,7 +1344,7 @@ module IndirectionTable {
             RevealComputeRefCountsSharedDomainInv(tbl', tbl);
           }
 
-          reveal_ComputeRefCountsInnerLoopInv0();
+          /* reveal_ComputeRefCountsInnerLoopInv0(); */
           var newEntry := oldEntry.value.(predCount := oldEntry.value.predCount + 1);
           LinearMutableMap.Insert(inout tbl', ref, newEntry);
 
@@ -1362,13 +1362,13 @@ module IndirectionTable {
 
           assert ComputeRefCountsInnerLoopInv(tbl', tbl, it, succs, i) by {
             assert ComputeRefCountsSharedInv(tbl', tbl) by {
-              reveal_ComputeRefCountsSharedInv();
+              /* reveal_ComputeRefCountsSharedInv(); */
             }
             assert ComputeRefCountsInnerLoopInv0(tbl', tbl, it, succs, i);
           }
         } else {
           assert tbl'.contents.Keys == tbl.contents.Keys by {
-            reveal_ComputeRefCountsSharedInv();
+            /* reveal_ComputeRefCountsSharedInv(); */
           }
           assert ref in Graph(tbl)[it.next.key];
           // (doc) assert !BC.GraphClosed(Graph(tbl));
@@ -1416,8 +1416,8 @@ module IndirectionTable {
         {
           assert PredecessorSetRestricted(Graph(t1), ref, it.s) == {};
         }
-        reveal_ComputeRefCountsSharedInv();
-        reveal_ComputeRefCountsOuterLoopInv0();
+        /* reveal_ComputeRefCountsSharedInv(); */
+        /* reveal_ComputeRefCountsOuterLoopInv0(); */
       }
 
       var success := true;
@@ -1440,12 +1440,12 @@ module IndirectionTable {
           && Graph(tbl) == Graph(tbl'.value)
           && Locs(tbl) == Locs(tbl'.value)
         ) by {
-          reveal_ComputeRefCountsSharedInv();
+          /* reveal_ComputeRefCountsSharedInv(); */
         }
         assert ValidPredCounts(PredCounts(tbl'.value), Graph(tbl'.value)) by {
-          reveal_ComputeRefCountsSharedInv();
-          reveal_ComputeRefCountsOuterLoopInv0();
-          reveal_PredCounts();
+          /* reveal_ComputeRefCountsSharedInv(); */
+          /* reveal_ComputeRefCountsOuterLoopInv0(); */
+          /* reveal_PredCounts(); */
           forall ref | ref in PredCounts(tbl'.value)
           ensures PredCounts(tbl'.value)[ref] == |PredecessorSet(Graph(tbl'.value), ref)| + IsRoot(ref)
           {
@@ -1545,7 +1545,7 @@ module IndirectionTable {
                     /* r.predCounts */ PredCounts(t1)));
 
                   assert s.lSome? ==> s.value.Inv() by {
-                    reveal s.value.Inv();
+                    /* reveal s.value.Inv(); */
                   }
                 }
                 case lNone => {
@@ -1588,7 +1588,7 @@ module IndirectionTable {
     static lemma lemma_SeqSum_empty()
     ensures SeqSum([]) == 0;
     {
-      reveal_SeqSum();
+      /* reveal_SeqSum(); */
     }
 
     static function IMapAsIndirectionTable(m: map<uint64, Entry>) : SectorType.IndirectionTable
@@ -1621,7 +1621,7 @@ module IndirectionTable {
     ensures SizeOfV(v) <= MaxIndirectionTableByteSize()
     ensures SizeOfV(v) == size as int
     {
-      reveal Inv();
+      /* reveal Inv(); */
       assert this.t.count <= MaxSizeUint64();
       lemma_SeqSum_empty();
       var count := this.t.count as uint64;
@@ -1800,8 +1800,8 @@ module IndirectionTable {
         inout bm.Set(i);
         i := i + 1;
 
-        BitmapModel.reveal_BitSet();
-        BitmapModel.reveal_IsSet();
+       /*  BitmapModel.reveal_BitSet(); */
+       /*  BitmapModel.reveal_IsSet(); */
       }
     }
 
@@ -1826,7 +1826,7 @@ module IndirectionTable {
       && BC.AllLocationsForDifferentRefsDontOverlap(I())
     )
     {
-      reveal this.Inv();
+      /* reveal this.Inv(); */
       bm := BitmapImpl.Bitmap.Constructor(NumBlocksUint64());
       assert BitmapModel.Len(bm.I()) == NumBlocks();
 
@@ -1895,7 +1895,7 @@ module IndirectionTable {
           NonlinearLemmas.div_denom_ge_1(loc as nat, NodeBlockSize());
         }
         assert loc as int % NodeBlockSize() == 0 by {
-          reveal_ValidNodeAddr();
+          /* reveal_ValidNodeAddr(); */
           assert ValidNodeLocation(it.next.value.loc.value);
         }
         var locIndex: uint64 := loc / NodeBlockSizeUint64();
@@ -1912,8 +1912,8 @@ module IndirectionTable {
 
             forall i: nat | IsLocAllocIndirectionTablePartial(i, it.s) 
             ensures IsLocAllocBitmap(bm.I(), i) {
-              BitmapModel.reveal_BitSet();
-              BitmapModel.reveal_IsSet();
+             /*  BitmapModel.reveal_BitSet(); */
+             /*  BitmapModel.reveal_IsSet(); */
 
               if i == locIndex as nat {
                 assert IsLocAllocBitmap(bm.I(), i);
@@ -1945,8 +1945,8 @@ module IndirectionTable {
 
             forall i: nat | IsLocAllocBitmap(bm.I(), i)
             ensures IsLocAllocIndirectionTablePartial(i, it.s)  {
-              BitmapModel.reveal_BitSet();
-              BitmapModel.reveal_IsSet();
+             /*  BitmapModel.reveal_BitSet(); */
+             /*  BitmapModel.reveal_IsSet(); */
 
               if IsLocAllocBitmap(bm0.I(), i) { }
               if IsLocAllocIndirectionTablePartial(i, it0.s) { }
@@ -1976,7 +1976,7 @@ module IndirectionTable {
                 if r1 in it0.s && r2 in it0.s {
                   assert BC.LocationsForDifferentRefsDontOverlap(this.I(), r1, r2);
                 } else {
-                  reveal_ValidNodeAddr();
+                  /* reveal_ValidNodeAddr(); */
                   if this.I().locs[r1].addr == this.I().locs[r2].addr {
                     assert ValidNodeLocation(this.t.contents[r1].loc.value);
                     assert ValidNodeAddr(this.t.contents[r1].loc.value.addr);
@@ -2031,7 +2031,7 @@ module IndirectionTable {
     ensures ref.Some? ==> this.deallocable(ref.value)
     ensures ref.None? ==> forall r | r in this.I().graph :: !this.deallocable(r)
     {
-      reveal this.Inv();
+      /* reveal this.Inv(); */
 
       ref := this.garbageQueue.value.FirstOpt();
       if ref.None? {
@@ -2041,12 +2041,12 @@ module IndirectionTable {
           if r == BT.G.Root() {
             assert !this.deallocable(r);
           } else {
-            reveal_PredCounts();
+            /* reveal_PredCounts(); */
             var y : PredecessorEdge :| y in PredecessorSet(this.graph, r); // observe
           }
         }
       } else {
-        reveal_PredCounts();
+        /* reveal_PredCounts(); */
         assert this.predCounts[ref.value] == |PredecessorSet(this.graph, ref.value)| + IsRoot(ref.value);
         forall r | r in this.I().graph ensures ref.value !in this.I().graph[r]
         {
@@ -2062,7 +2062,7 @@ module IndirectionTable {
     requires this.Inv()
     ensures size as int == |this.I().graph|
     {
-      reveal this.Inv();
+      /* reveal this.Inv(); */
       lemma_count_eq_graph_size(this.t);
       this.t.count
     }
@@ -2075,7 +2075,7 @@ module IndirectionTable {
     ensures ref.Some? ==> ref.value !in old_self.locs
     ensures ref.None? ==> forall r | r in old_self.graph :: r in old_self.locs
     {
-      reveal old_self.Inv();
+      /* reveal old_self.Inv(); */
       var findLoclessIterator := self.findLoclessIterator;
       var it;
       if findLoclessIterator.Some? {
@@ -2106,14 +2106,14 @@ module IndirectionTable {
           break;
         }
       }
-      reveal self.Inv();
+      /* reveal self.Inv(); */
     }
 
-    function {:opaque} getRefUpperBound() : (r: uint64)
+    function getRefUpperBound() : (r: uint64)
     requires Inv()
     ensures forall ref | ref in this.graph :: ref <= r
     {
-      reveal Inv();
+      /* reveal Inv(); */
       this.refUpperBound
     }
 
@@ -2121,7 +2121,7 @@ module IndirectionTable {
     requires this.Inv()
     ensures r == this.getRefUpperBound()
     {
-      reveal_getRefUpperBound();
+      /* reveal_getRefUpperBound(); */
       r := this.refUpperBound;
     }
   }

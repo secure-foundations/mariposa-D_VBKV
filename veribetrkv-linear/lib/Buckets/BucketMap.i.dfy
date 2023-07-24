@@ -55,29 +55,29 @@ module BucketMaps {
     BucketListFlushPartial(parent, children, pivots, |children|)
   }
 
-  function {:opaque} BucketIntersect(bucket: BucketMap, keys: set<Key>) : (res : BucketMap)
+  function BucketIntersect(bucket: BucketMap, keys: set<Key>) : (res : BucketMap)
   {
     map key | key in bucket && key in keys :: bucket[key]
   }
 
-  function {:opaque} BucketComplement(bucket: BucketMap, keys: set<Key>) : (res : BucketMap)
+  function BucketComplement(bucket: BucketMap, keys: set<Key>) : (res : BucketMap)
   {
     map key | key in bucket && key !in keys :: bucket[key]
   }
 
   ////// Clamping based on RangeStart and RangeEnd
 
-  function {:opaque} ClampRange(bucket: BucketMap, start: UI.RangeStart, end: UI.RangeEnd) : (res : BucketMap)
+  function ClampRange(bucket: BucketMap, start: UI.RangeStart, end: UI.RangeEnd) : (res : BucketMap)
   {
     map key | key in bucket && MS.InRange(start, key, end) :: bucket[key]
   }
 
-  function {:opaque} ClampStart(bucket: BucketMap, start: UI.RangeStart) : (res : BucketMap)
+  function ClampStart(bucket: BucketMap, start: UI.RangeStart) : (res : BucketMap)
   {
     map key | key in bucket && MS.LowerBound(start, key) :: bucket[key]
   }
 
-  function {:opaque} ClampEnd(bucket: BucketMap, end: UI.RangeEnd) : (res : BucketMap)
+  function ClampEnd(bucket: BucketMap, end: UI.RangeEnd) : (res : BucketMap)
   {
     map key | key in bucket && MS.UpperBound(key, end) :: bucket[key]
   }
@@ -86,14 +86,14 @@ module BucketMaps {
  
   // Note: does NOT necessarily return a WFBucket!
   // It might contain NoOp messages
-  function {:opaque} Compose(top: BucketMap, bot: BucketMap) : (res : BucketMap)
+  function Compose(top: BucketMap, bot: BucketMap) : (res : BucketMap)
   {
     map key
     | key in top.Keys + bot.Keys
     :: Merge(BucketGet(top, key), BucketGet(bot, key))
   }
   
-  function {:opaque} ComposeSeq(buckets: seq<BucketMap>) : (res : BucketMap)
+  function ComposeSeq(buckets: seq<BucketMap>) : (res : BucketMap)
   {
     if |buckets| == 0 then map[] else Compose(ComposeSeq(DropLast(buckets)), Last(buckets))
   }
@@ -103,12 +103,12 @@ module BucketMaps {
   {
     calc {
       ComposeSeq([b]);
-        { reveal_ComposeSeq(); }
+        { /* reveal_ComposeSeq(); */ }
       Compose(ComposeSeq([]), b);
-        { reveal_ComposeSeq(); }
+        { /* reveal_ComposeSeq(); */ }
       Compose(map[], b);
         {
-          reveal_Compose();
+          /* reveal_Compose(); */
         }
       b;
     }
@@ -117,7 +117,7 @@ module BucketMaps {
   lemma ComposeAssoc(a: BucketMap, b: BucketMap, c: BucketMap)
   ensures Compose(Compose(a, b), c) == Compose(a, Compose(b, c))
   {
-    reveal_Compose();
+    /* reveal_Compose(); */
     var ab_c := Compose(Compose(a, b), c);
     var a_bc := Compose(a, Compose(b, c));
 
@@ -134,8 +134,8 @@ module BucketMaps {
   lemma ComposeSeqAdditive(a: seq<BucketMap>, b: seq<BucketMap>)
   ensures ComposeSeq(a + b) == Compose(ComposeSeq(a), ComposeSeq(b))
   {
-    reveal_ComposeSeq();
-    reveal_Compose();
+    /* reveal_ComposeSeq(); */
+    /* reveal_Compose(); */
     if |b| == 0 {
       assert b == [];
       assert a + b == a;
@@ -159,13 +159,13 @@ module BucketMaps {
 
   ///// KeyValueMapOfBucket
 
-  function {:opaque} KeyValueMapOfBucket(bucket: BucketMap) : map<Key, Value>
+  function KeyValueMapOfBucket(bucket: BucketMap) : map<Key, Value>
   {
     map key | key in bucket && Merge(bucket[key], DefineDefault()).value != DefaultValue()
       :: Merge(bucket[key], DefineDefault()).value
   }
 
-  function {:opaque} SortedSeqOfKeyValueMap(m: map<Key, Value>) : seq<UI.SuccResult>
+  function SortedSeqOfKeyValueMap(m: map<Key, Value>) : seq<UI.SuccResult>
   {
     var max := UnboundedKeyspace.maximumOpt(m.Keys);
     if max.None? then
@@ -180,7 +180,7 @@ module BucketMaps {
   ensures var s := SortedSeqOfKeyValueMap(m);
       exists i :: 0 <= i < |s| && s[i].key == key
   {
-    reveal_SortedSeqOfKeyValueMap();
+    /* reveal_SortedSeqOfKeyValueMap(); */
     var max := UnboundedKeyspace.maximumOpt(m.Keys);
     if max.Some? {
       if key != max.value {
@@ -198,7 +198,7 @@ module BucketMaps {
   requires 0 <= i < |SortedSeqOfKeyValueMap(m)|
   ensures MapsTo(m, SortedSeqOfKeyValueMap(m)[i].key, SortedSeqOfKeyValueMap(m)[i].value)
   {
-    reveal_SortedSeqOfKeyValueMap();
+    /* reveal_SortedSeqOfKeyValueMap(); */
     var max := UnboundedKeyspace.maximumOpt(m.Keys);
     if max.Some? && i != |SortedSeqOfKeyValueMap(m)| - 1 {
       SortedSeqOfKeyValueMaps(MapRemove1(m, max.value), i);
@@ -210,7 +210,7 @@ module BucketMaps {
       forall i, j | 0 <= i < j < |s| :: UnboundedKeyspace.lt(s[i].key, s[j].key)
   {
     var s := SortedSeqOfKeyValueMap(m);
-    reveal_SortedSeqOfKeyValueMap();
+    /* reveal_SortedSeqOfKeyValueMap(); */
     var max := UnboundedKeyspace.maximumOpt(m.Keys);
     if max.Some? {
       SortedSeqOfKeyValueMapHasSortedKeys(MapRemove1(m, max.value));
@@ -230,12 +230,12 @@ module BucketMaps {
   ///// Splitting stuff
 
   // NB(jonh): These definitions are timeout monsters.
-  /*function {:opaque} SplitBucketMapLeft(bucket: BucketMap, pivot: Key) : (res : BucketMap)
+  /*function SplitBucketMapLeft(bucket: BucketMap, pivot: Key) : (res : BucketMap)
   {
     map key | key in bucket && Keyspace.lt(KeyToElement(key), KeyToElement(pivot)) :: bucket[key]
   }
 
-  function {:opaque} SplitBucketMapRight(bucket: BucketMap, pivot: Key) : (res : BucketMap)
+  function SplitBucketMapRight(bucket: BucketMap, pivot: Key) : (res : BucketMap)
   {
     map key | key in bucket && Keyspace.lte(KeyToElement(pivot), KeyToElement(key)) :: bucket[key]
   }*/

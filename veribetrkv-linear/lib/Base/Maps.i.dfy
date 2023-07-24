@@ -36,7 +36,7 @@ module Maps {
     && (forall key :: key in sub.Keys ==> MapsAgreeOnKey(sub, sup, key))
   }
 
-  function {:opaque} MapRemove<K,V>(m:map<K,V>, ks:set<K>) : (m':map<K,V>)
+  function MapRemove<K,V>(m:map<K,V>, ks:set<K>) : (m':map<K,V>)
     ensures forall k :: k in m && k !in ks ==> k in m'
     ensures forall k :: k in m' ==> k in m && k !in ks
     ensures forall j :: j in m' ==> m'[j] == m[j]
@@ -48,13 +48,13 @@ module Maps {
     m'
   }
   
-  function {:opaque} MapRemoveStrong<K,V>(m:map<K,V>, ks:set<K>) : (m':map<K,V>)
+  function MapRemoveStrong<K,V>(m:map<K,V>, ks:set<K>) : (m':map<K,V>)
     ensures m'.Keys == m.Keys - ks
     ensures forall j :: j in m' ==> m'[j] == m[j]
     ensures |m'.Keys| <= |m.Keys|
     ensures |m'| <= |m|
   {
-    reveal_MapRemove();
+    /* reveal_MapRemove(); */
     MapRemove(m, ks)
   }
  
@@ -69,24 +69,24 @@ module Maps {
     MapRemove_s.MapRemove1(m, k)
   }
 
-  function {:opaque} MapRemove1Strong<K,V>(m:map<K,V>, k:K) : (m':map<K,V>)
+  function MapRemove1Strong<K,V>(m:map<K,V>, k:K) : (m':map<K,V>)
     ensures m'.Keys == m.Keys - {k}
     ensures forall j :: j in m' ==> m'[j] == m[j]
     ensures |m'.Keys| <= |m.Keys|
     ensures |m'| <= |m|
   {
-    MapRemove_s.reveal_MapRemove1();
+   /*  MapRemove_s.reveal_MapRemove1(); */
     MapRemove1(m, k)
   }
   
-  function {:opaque} IMapRemove<K,V>(m:imap<K,V>, ks:iset<K>) : (m':imap<K,V>)
+  function IMapRemove<K,V>(m:imap<K,V>, ks:iset<K>) : (m':imap<K,V>)
     ensures m'.Keys == m.Keys - ks
     ensures forall j :: j in m' ==> m'[j] == m[j]
   {
     imap j | j in m && j !in ks :: m[j]
   }
  
-  function {:opaque} IMapRemove1<K,V>(m:imap<K,V>, k:K) : (m':imap<K,V>)
+  function IMapRemove1<K,V>(m:imap<K,V>, k:K) : (m':imap<K,V>)
     ensures m'.Keys == m.Keys - iset{k}
     ensures forall j :: j in m' ==> m'[j] == m[j]
   {
@@ -106,7 +106,7 @@ module Maps {
   }
   
 	// Requires disjoint domains and delivers predictable result.
-	function {:opaque} MapDisjointUnion<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc: map<U,T>)
+	function MapDisjointUnion<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc: map<U,T>)
 		requires mapa.Keys !! mapb.Keys;
 		ensures mapc.Keys == mapa.Keys + mapb.Keys;
 		ensures forall k :: k in mapa.Keys ==> mapa[k] == mapc[k];
@@ -117,7 +117,7 @@ module Maps {
 
 	// Doesn't require disjoint domains, but guarantees to take A's
 	// definition.
-	function {:opaque} MapUnionPreferA<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc:map<U,T>)
+	function MapUnionPreferA<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc:map<U,T>)
 		ensures mapc.Keys == mapa.Keys + mapb.Keys;
     ensures forall k :: k in mapa.Keys ==> mapc[k] == mapa[k];
     ensures forall k :: k in mapb.Keys - mapa.Keys ==> mapc[k] == mapb[k];
@@ -126,7 +126,7 @@ module Maps {
 		map x : U | (x in mapa.Keys + mapb.Keys) :: if x in mapa then mapa[x] else mapb[x]
 	}
 
-  function {:opaque} MapUnionPreferB<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc:map<U,T>)
+  function MapUnionPreferB<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc:map<U,T>)
     ensures mapc.Keys == mapa.Keys + mapb.Keys;
     ensures forall k :: k in mapb.Keys ==> mapc[k] == mapb[k];
     ensures forall k :: k in mapa.Keys - mapb.Keys ==> mapc[k] == mapa[k];
@@ -137,7 +137,7 @@ module Maps {
   
 	// Doesn't require disjoint domains, and makes no promises about
 	// which it chooses on the intersection.
-	function {:opaque} MapUnion<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc: map<U,T>)
+	function MapUnion<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc: map<U,T>)
 		ensures mapc.Keys == mapa.Keys + mapb.Keys;
 		ensures forall k :: k in mapa.Keys -mapb.Keys ==> mapa[k] == mapc[k];
 		ensures forall k :: k in mapb.Keys - mapa.Keys ==> mapb[k] == mapc[k];
@@ -146,7 +146,7 @@ module Maps {
 		MapUnionPreferA(mapa, mapb)
 	}
 
-  function {:opaque} IMapUnionPreferA<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc:imap<U,T>)
+  function IMapUnionPreferA<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc:imap<U,T>)
     ensures mapc.Keys == mapa.Keys + mapb.Keys;
     ensures forall k :: k in mapa.Keys ==> mapc[k] == mapa[k];
     ensures forall k :: k in mapb.Keys - mapa.Keys ==> mapc[k] == mapb[k];
@@ -155,7 +155,7 @@ module Maps {
     imap x : U | (x in mapa.Keys + mapb.Keys) :: if x in mapa then mapa[x] else mapb[x]
   }
 
-  function {:opaque} IMapUnionPreferB<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc:imap<U,T>)
+  function IMapUnionPreferB<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc:imap<U,T>)
     ensures mapc.Keys == mapa.Keys + mapb.Keys;
     ensures forall k :: k in mapb.Keys ==> mapc[k] == mapb[k];
     ensures forall k :: k in mapa.Keys - mapb.Keys ==> mapc[k] == mapa[k];
@@ -166,7 +166,7 @@ module Maps {
 
 	// Doesn't require disjoint domains, and makes no promises about
 	// which it chooses on the intersection.
-	function {:opaque} IMapUnion<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc: imap<U,T>)
+	function IMapUnion<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc: imap<U,T>)
 		ensures mapc.Keys == mapa.Keys + mapb.Keys;
 		ensures forall k :: k in mapa.Keys -mapb.Keys ==> mapa[k] == mapc[k];
 		ensures forall k :: k in mapb.Keys - mapa.Keys ==> mapb[k] == mapc[k];
@@ -176,7 +176,7 @@ module Maps {
 	}
 
 	// Requires disjoint domains and delivers predictable result.
-	function {:opaque} MapDisjointUnion3<U,T>(mapa: map<U,T>, mapb: map<U,T>, mapc: map<U,T>) : map<U,T>
+	function MapDisjointUnion3<U,T>(mapa: map<U,T>, mapb: map<U,T>, mapc: map<U,T>) : map<U,T>
 		requires mapa.Keys !! mapb.Keys !! mapc.Keys;
 		ensures MapDisjointUnion3(mapa, mapb, mapc).Keys == mapa.Keys + mapb.Keys + mapc.Keys;
 		ensures mapa.Keys != {} || mapb.Keys != {} || mapc.Keys != {} ==> MapDisjointUnion3(mapa, mapb, mapc).Keys != {};

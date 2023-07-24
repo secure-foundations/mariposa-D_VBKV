@@ -23,12 +23,12 @@ module InterpretationDiskOps {
   import opened JournalIntervals
   import JournalBytes
 
-  function {:opaque} Parse(bytes: seq<byte>) : Option<Sector>
+  function Parse(bytes: seq<byte>) : Option<Sector>
   {
     Marshalling.parseSector(bytes)
   }
 
-  predicate {:opaque} ValidCheckedBytes(bytes: seq<byte>)
+  predicate ValidCheckedBytes(bytes: seq<byte>)
   requires 32 <= |bytes| < 0xffff_ffff_ffff_ffff
   {
     && D.ChecksumChecksOut(bytes)
@@ -41,10 +41,10 @@ module InterpretationDiskOps {
     && ValidCheckedBytes(bytes)
   }
 
-  function {:opaque} SectorOfBytes(bytes: seq<byte>) : Sector
+  function SectorOfBytes(bytes: seq<byte>) : Sector
   requires ValidBytes(bytes)
   {
-    reveal_ValidCheckedBytes();
+    /* reveal_ValidCheckedBytes(); */
     Parse(bytes[32..]).value
   }
 

@@ -36,7 +36,7 @@ module JournalistMarshallingImpl {
   ensures buf[..] == JournalistMarshallingModel.splice(
       old(buf[..]), start, ins);
   {
-    JournalistMarshallingModel.reveal_splice();
+   /*  JournalistMarshallingModel.reveal_splice(); */
     NativeArrays.CopySeqIntoArray(ins, 0, buf, start,
         |ins| as uint64);
   }
@@ -50,7 +50,7 @@ module JournalistMarshallingImpl {
   ensures buf[..] == JournalistMarshallingModel.writeOnto(
       old(buf[..]), numBlocks, start, bytes)
   {
-    JournalistMarshallingModel.reveal_writeOnto();
+   /*  JournalistMarshallingModel.reveal_writeOnto(); */
     
     if |bytes| as uint64 > 0 {
       var block: uint64 := start / 4064;
@@ -73,7 +73,7 @@ module JournalistMarshallingImpl {
   ensures buf[..] == JournalistMarshallingModel.writeIntOnto(
       old(buf[..]), numBlocks, start, val)
   {
-    JournalistMarshallingModel.reveal_writeIntOnto();
+   /*  JournalistMarshallingModel.reveal_writeIntOnto(); */
     WriteOnto(buf, numBlocks, start,
         pack_LittleEndian_Uint32(val));
   }
@@ -104,7 +104,7 @@ module JournalistMarshallingImpl {
   ensures buf[..] == JournalistMarshallingModel.writeJournalEntries(
       old(buf[..]), numBlocks, idx, entries[..], start, len)
   {
-    JournalistMarshallingModel.reveal_writeJournalEntries();
+   /*  JournalistMarshallingModel.reveal_writeJournalEntries(); */
     if len != 0 {
       var start' := if start+1 == seq_length(entries) then 0 else start+1;
       JournalistMarshallingModel.
@@ -132,13 +132,13 @@ module JournalistMarshallingImpl {
   ensures buf[..] == JournalistMarshallingModel.fillInChecksums(
       old(buf[..]), numBlocks, i)
   {
-    JournalistMarshallingModel.reveal_fillInChecksums();
+   /*  JournalistMarshallingModel.reveal_fillInChecksums(); */
     if i != numBlocks {
       var c := CRC32_C_Array_Impl.compute_crc32c_padded(buf, 4096*i as uint32 + 32, 4064);
       NativeArrays.CopySeqIntoArray(c, 0, buf, 4096*i, 32);
       assert buf[..] == JournalistMarshallingModel.splice(
           old(buf[..]), 4096*i, c) by {
-        JournalistMarshallingModel.reveal_splice();
+       /*  JournalistMarshallingModel.reveal_splice(); */
       }
       FillInChecksums(buf, numBlocks, i+1);
     }
@@ -157,8 +157,8 @@ module JournalistMarshallingImpl {
   ensures res == JournalistMarshallingModel.marshallJournalEntries(
       entries, start, len, numBlocks)
   {
-    reveal_WeightJournalEntries();
-    JournalistMarshallingModel.reveal_marshallJournalEntries();
+    /* reveal_WeightJournalEntries(); */
+   /*  JournalistMarshallingModel.reveal_marshallJournalEntries(); */
 
     var buf := NativeArrays.newArrayFill(numBlocks * 4096, 0);
     assert buf[..] == fill((numBlocks * 4096) as int, 0);

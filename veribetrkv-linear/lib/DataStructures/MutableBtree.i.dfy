@@ -80,7 +80,7 @@ abstract module LMutableBtree {
     requires node.Leaf?
     ensures result == MapLookupOption(Interpretation(node), needle)
   {
-    Model.reveal_Interpretation();
+   /*  Model.reveal_Interpretation(); */
     assert Model.Keys.IsStrictlySorted(node.keys);
     assert Model.Keys.IsSorted(node.keys);
     var posplus1 := Route(node.keys, needle);
@@ -97,8 +97,8 @@ abstract module LMutableBtree {
     ensures result == MapLookupOption(Interpretation(node), needle)
     decreases node, 0
   {
-    Model.reveal_Interpretation();
-    Model.reveal_AllKeys();
+   /*  Model.reveal_Interpretation(); */
+   /*  Model.reveal_AllKeys(); */
     var posplus1:uint64 := Route(node.pivots, needle);
     result := Query(lseq_peek(node.children, posplus1), needle);
     if result.Some? {
@@ -122,7 +122,7 @@ abstract module LMutableBtree {
     ensures result == (|Interpretation(node)| == 0)
   {
     if node.Leaf? {
-      Model.reveal_Interpretation();
+     /*  Model.reveal_Interpretation(); */
       result := 0 == seq_length(node.keys);
       assert !result ==> node.keys[0] in Interpretation(node);
     } else {
@@ -138,7 +138,7 @@ abstract module LMutableBtree {
   {
     if node.Leaf? {
       assert 0 < |node.keys| by {
-        Model.reveal_Interpretation();
+       /*  Model.reveal_Interpretation(); */
       }
       assert node.keys[0] == node.keys[..|node.keys|][0];
       result := seq_get(node.keys, 0);
@@ -170,7 +170,7 @@ abstract module LMutableBtree {
   {
     if node.Leaf? {
       assert 0 < |node.keys| by {
-        Model.reveal_Interpretation();
+       /*  Model.reveal_Interpretation(); */
       }
       var nkeys: uint64 := seq_length(node.keys) as uint64;
       assert node.keys[nkeys - 1] == node.keys[..nkeys][nkeys - 1];
@@ -205,7 +205,7 @@ abstract module LMutableBtree {
     linear var rootkeys := seq_empty();
     linear var rootvalues := seq_empty();
     root := Model.Leaf(rootkeys, rootvalues);
-    Model.reveal_Interpretation();
+   /*  Model.reveal_Interpretation(); */
   }
 
   predicate method Full(shared node: Node)
@@ -266,7 +266,7 @@ abstract module LMutableBtree {
       seq(|node.children|, i requires 0<=i<|node.children| => Height(node.children[i]))
   }
 
-  function {:opaque} Height(node: Node): nat
+  function Height(node: Node): nat
     requires Model.WF(node)
     ensures node.Leaf? ==> Height(node) == 0
     decreases node, 1
@@ -286,7 +286,7 @@ abstract module LMutableBtree {
   {
     Model.SubIndexPreservesWF(node, from, to);
     var heights := IndexHeights(node);
-    reveal_Height();
+    /* reveal_Height(); */
     assert IndexHeights(Model.SubIndex(node, from, to)) == heights[from .. to]; // trigger
     SubseqMax(heights, from, to);
   }
@@ -357,7 +357,7 @@ abstract module LMutableBtree {
       var boundary := len / 2;
       left, right, pivot := SplitIndex(node, boundary);
     }
-    Model.reveal_AllKeys();
+   /*  Model.reveal_AllKeys(); */
   }
 
   method SplitChildOfIndex(linear node: Node, childidx: uint64)
@@ -388,7 +388,7 @@ abstract module LMutableBtree {
     children := InsertLSeq(children, right, childidx + 1);
     splitNode := Model.Index(pivots, children);
     assert Model.OpaquePartOfSplitChildOfIndex(node, splitNode, childidx as nat) by {
-      Model.reveal_OpaquePartOfSplitChildOfIndex();
+     /*  Model.reveal_OpaquePartOfSplitChildOfIndex(); */
     }
     Model.SplitChildOfIndexPreservesWF(node, splitNode, childidx as int);
 
@@ -396,7 +396,7 @@ abstract module LMutableBtree {
     ghost var wit := seq(|splitNode.children|, i requires 0<=i<|splitNode.children| =>
       if i <= childidx as nat then i else i-1);
     SeqMaxCorrespondence(IndexHeights(node), IndexHeights(splitNode), wit);
-    assert Height(splitNode) <= Height(node) by { reveal_Height(); }
+    assert Height(splitNode) <= Height(node) by { /* reveal_Height(); */ }
   }
 
   method InsertLeaf(linear node: Node, key: Key, value: Value)
@@ -418,12 +418,12 @@ abstract module LMutableBtree {
     } else {
       oldvalue := None;
       keys := InsertSeq(keys, key, (pos + 1) as uint64);
-      Model.Keys.reveal_IsStrictlySorted();
+     /*  Model.Keys.reveal_IsStrictlySorted(); */
       values := InsertSeq(values, value, (pos + 1) as uint64);
     }
     n2 := Model.Leaf(keys, values);
     Model.InsertLeafIsCorrect(node, key, value);
-    Model.reveal_Interpretation();
+   /*  Model.reveal_Interpretation(); */
   }
   
   lemma ChildrenAreShorter(parent: Node, childidx: nat)
@@ -435,7 +435,7 @@ abstract module LMutableBtree {
     var child := parent.children[childidx];
     assert IndexHeights(parent)[childidx] == Height(child); // trigger
     assert Height(child) in IndexHeights(parent);  // trigger *harder*
-    reveal_Height();
+    /* reveal_Height(); */
   }
 
   method InsertIndex(linear node: Node, key: Key, value: Value)
@@ -457,7 +457,7 @@ abstract module LMutableBtree {
       Model.SplitChildOfIndexPreservesWF(node, n2, childidx as nat);
       Model.SplitChildOfIndexPreservesInterpretation(node, n2, childidx as nat);
       Model.SplitChildOfIndexPreservesAllKeys(node, n2, childidx as nat);
-      assert n2.pivots[childidx] in Model.AllKeys(node) by { Model.reveal_AllKeys(); }
+      assert n2.pivots[childidx] in Model.AllKeys(node) by {/*  Model.reveal_AllKeys(); */ }
 
       var t: int32 := Model.KeysImpl.cmp(seq_get(n2.pivots, childidx), key);
       if  t <= 0 {
@@ -490,7 +490,7 @@ abstract module LMutableBtree {
     if oldvalue.Some? {
       Model.InterpretationDelegation(preparedNode, key);
     } else {
-      Model.reveal_Interpretation();
+     /*  Model.reveal_Interpretation(); */
     }
   }
 
@@ -532,9 +532,9 @@ abstract module LMutableBtree {
     ensures Model.AllKeys(node) != {}
   {
     if node.Leaf? {
-      assert node.keys[0] in Model.AllKeys(node) by { Model.reveal_AllKeys(); }
+      assert node.keys[0] in Model.AllKeys(node) by {/*  Model.reveal_AllKeys(); */ }
     } else {
-      assert node.pivots[0] in Model.AllKeys(node) by { Model.reveal_AllKeys(); }
+      assert node.pivots[0] in Model.AllKeys(node) by {/*  Model.reveal_AllKeys(); */ }
     }
   }
   

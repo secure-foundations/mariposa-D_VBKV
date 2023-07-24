@@ -130,7 +130,7 @@ abstract module Transactable {
     }
   }
   
-  predicate {:opaque} OpTransaction(s: Variables, s': Variables, ops: seq<Op>)
+  predicate OpTransaction(s: Variables, s': Variables, ops: seq<Op>)
     // These postconditions help automation a lot.
     ensures OpTransaction(s, s', ops) && |ops| == 1 ==>
       && OpStep(s, s', ops[0])
@@ -167,7 +167,7 @@ abstract module Transactable {
   ensures |ops1| < |ops|
   ensures |ops2| < |ops|
   {
-    reveal_OpTransaction();
+    /* reveal_OpTransaction(); */
     var path: seq<Variables> :| IsStatePath(s, s', ops, path);
     ops1 := ops[..|ops|-1];
     ops2 := [ops[|ops|-1]];
@@ -181,7 +181,7 @@ abstract module Transactable {
   requires OpTransaction(smid, s', ops2)
   ensures OpTransaction(s, s', ops1 + ops2)
   {
-    reveal_OpTransaction();
+    /* reveal_OpTransaction(); */
     var path1 :| IsStatePath(s, smid, ops1, path1);
     var path2 :| IsStatePath(smid, s', ops2, path2);
     var path := path1 + path2[1..];
@@ -194,7 +194,7 @@ abstract module Transactable {
   requires OpStep(s, s', ops[0]);
   ensures OpTransaction(s, s', ops);
   {
-    reveal_OpTransaction();
+    /* reveal_OpTransaction(); */
     var path := [s, s'];
     assert IsStatePath(s, s', ops, path);
   }
@@ -205,7 +205,7 @@ abstract module Transactable {
   requires OpStep(s', s'', ops[1]);
   ensures OpTransaction(s, s'', ops);
   {
-    reveal_OpTransaction();
+    /* reveal_OpTransaction(); */
     var path := [s, s', s''];
     assert IsStatePath(s, s'', ops, path);
   }
@@ -217,7 +217,7 @@ abstract module Transactable {
   requires OpStep(s'', s''', ops[2]);
   ensures OpTransaction(s, s''', ops);
   {
-    reveal_OpTransaction();
+    /* reveal_OpTransaction(); */
     var path := [s, s', s'', s'''];
     assert IsStatePath(s, s''', ops, path);
   }
@@ -229,7 +229,7 @@ abstract module Transactable {
   ensures OpTransaction(s, smid, DropLast(ops))
   ensures OpStep(smid, s', Last(ops))
   {
-    reveal_OpTransaction();
+    /* reveal_OpTransaction(); */
     var path :| IsStatePath(s, s', ops, path);
     smid := path[|path| - 2];
     assert IsStatePath(s, smid, DropLast(ops), DropLast(path));

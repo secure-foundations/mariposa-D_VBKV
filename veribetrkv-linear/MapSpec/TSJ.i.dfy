@@ -255,7 +255,7 @@ abstract module TSJ {
   // Only makes sense when t is a suffix of s.
   // Result is that s-t+t == s for the usual notion
   // of sequence addition.
-  function {:opaque} SeqSub<T>(s: seq<T>, t: seq<T>) : seq<T>
+  function SeqSub<T>(s: seq<T>, t: seq<T>) : seq<T>
   requires IsSuffix(s, t)
   ensures SeqSub(s, t) + t == s
   {
@@ -268,7 +268,7 @@ abstract module TSJ {
   ensures SeqSub(a, b) + SeqSub(b + c, d)
       == SeqSub(a + c, d)
   {
-    reveal_SeqSub();
+    /* reveal_SeqSub(); */
   }
 
   predicate advances(

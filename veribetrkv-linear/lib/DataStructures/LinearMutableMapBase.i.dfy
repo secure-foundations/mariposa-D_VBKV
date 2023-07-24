@@ -14,29 +14,29 @@ module LinearMutableMapBase {
   import opened Options
   import opened Sequences
 
-  function method {:opaque} lshift(a: uint64, b: uint32) : uint64
+  function method lshift(a: uint64, b: uint32) : uint64
   requires 0 <= b < 64
   {
     ((a as bv64) << b) as uint64
   }
 
-  function method {:opaque} rshift(a: uint64, b: uint32) : uint64
+  function method rshift(a: uint64, b: uint32) : uint64
   requires 0 <= b < 64
   {
     ((a as bv64) >> b) as uint64
   }
 
-  function method {:opaque} bitnot(a: uint64) : uint64
+  function method bitnot(a: uint64) : uint64
   {
     ((a as bv64) ^ 0xffff_ffff_ffff_ffff) as uint64
   }
 
-  function method {:opaque} bitxor(a: uint64, b: uint64) : uint64
+  function method bitxor(a: uint64, b: uint64) : uint64
   {
     ((a as bv64) ^ (b as bv64)) as uint64
   }
 
-  function method {:opaque} hash64(k: uint64): uint64
+  function method hash64(k: uint64): uint64
   {
     var k0 := u64add(bitnot(k), lshift(k, 21));
     var k1 := bitxor(k0, rshift(k0, 24));
@@ -180,7 +180,7 @@ module LinearMutableMapBase {
     && FilledWithKey(elements, foundSlot, key)
   }
 
-  predicate {:opaque} SomeSkipCountExplainsKey<V>(elements: seq<Item<V>>, key: uint64)
+  predicate SomeSkipCountExplainsKey<V>(elements: seq<Item<V>>, key: uint64)
   requires ValidElements(elements)
   {
     exists skips :: SlotExplainsKey(elements, skips, key)

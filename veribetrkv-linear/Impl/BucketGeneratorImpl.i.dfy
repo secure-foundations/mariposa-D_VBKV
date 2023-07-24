@@ -26,7 +26,7 @@ module BucketGeneratorImpl {
     | Compose(linear top: Generator, linear bot: Generator, 
       next: BucketIteratorModel.IteratorOutput, ghost height: nat)
   {
-    predicate {:opaque} Inv()
+    predicate Inv()
     decreases height, 1
     {
       Inv1()
@@ -62,7 +62,7 @@ module BucketGeneratorImpl {
     static lemma reveal_Inv_for(bg: Generator)
     ensures bg.Inv() == bg.Inv1()
     {
-      bg.reveal_Inv();
+     /*  bg.reveal_Inv(); */
     }
 
     function I() : BucketGeneratorModel.Generator
@@ -101,9 +101,9 @@ module BucketGeneratorImpl {
     {
       reveal_Inv_for(self);
 
-      BucketGeneratorModel.reveal_BasicGenPop();
-      BucketGeneratorModel.reveal_MergeGenPop();
-      BucketGeneratorModel.reveal_GenPop();
+     /*  BucketGeneratorModel.reveal_BasicGenPop(); */
+     /*  BucketGeneratorModel.reveal_MergeGenPop(); */
+     /*  BucketGeneratorModel.reveal_GenPop(); */
       if self.Basic? {
         inout self.biter.IterInc();
       } else {
@@ -170,7 +170,7 @@ module BucketGeneratorImpl {
       inout ghost g.height := g.top.height + g.bot.height + 1;
       assert g.Inv1();
       reveal_Inv_for(g);
-      BucketGeneratorModel.reveal_GenCompose();
+     /*  BucketGeneratorModel.reveal_GenCompose(); */
     }
 
     static method GenFromBucketWithLowerBound(shared bucket: MutBucket, start: UI.RangeStart)
@@ -198,7 +198,7 @@ module BucketGeneratorImpl {
       g := Basic(biter, 1);
       assert g.Inv1();
       reveal_Inv_for(g);
-      BucketGeneratorModel.reveal_GenFromBucketWithLowerBound();
+     /*  BucketGeneratorModel.reveal_GenFromBucketWithLowerBound(); */
     }
   }
 }

@@ -221,7 +221,7 @@ module PivotBetreeSpec {
     }
   }
 
-  function {:opaque} LookupUpperBound(lookup: Lookup, key: Key) : Option<Key>
+  function LookupUpperBound(lookup: Lookup, key: Key) : Option<Key>
   requires LookupVisitsWFNodes(lookup)
   requires LookupBoundedKey(key, lookup)
   {
@@ -292,7 +292,7 @@ module PivotBetreeSpec {
     [writeop]
   }
 
-  function {:opaque} NodeInsertKeyValue(node: Node, key: Key, msg: Message) : Node
+  function NodeInsertKeyValue(node: Node, key: Key, msg: Message) : Node
   requires WFNode(node)
   requires BoundedKey(node.pivotTable, key)
   {
@@ -409,7 +409,7 @@ module PivotBetreeSpec {
   //// Useful functions and lemmas for Split, Merge (other redirects)
 
   // theses things needs additional proof to prove boundedness 
-  function {:opaque} CutoffNodeAndKeepLeft(node: Node, pivot: Key) : (node': Node)
+  function CutoffNodeAndKeepLeft(node: Node, pivot: Key) : (node': Node)
   requires WFNode(node)
   requires ValidLeftCutOffKey(node.pivotTable, pivot)
   ensures node.children.Some? <==> node'.children.Some?
@@ -420,11 +420,11 @@ module PivotBetreeSpec {
   ensures WeightBucketList(node'.buckets) <= WeightBucketList(node.buckets)
   ensures |node'.buckets| <= |node.buckets|
   {
-    reveal_SplitBucketLeft();
+    /* reveal_SplitBucketLeft(); */
     var cLeft := CutoffForLeft(node.pivotTable, pivot);
     var bplleftPivots := SplitLeft(node.pivotTable, pivot);
 
-    reveal_CutoffForLeft();
+    /* reveal_CutoffForLeft(); */
   
     var leftChildren := if node.children.Some? then Some(node.children.value[.. cLeft+1]) else None;
     var leftBuckets := SplitBucketListLeft(node.buckets, node.pivotTable, cLeft, pivot);
@@ -434,7 +434,7 @@ module PivotBetreeSpec {
     Node(bplleftPivots, leftChildren, leftBuckets)
   }
 
-  function {:opaque} CutoffNodeAndKeepRight(node: Node, pivot: Key) : (node': Node)
+  function CutoffNodeAndKeepRight(node: Node, pivot: Key) : (node': Node)
   requires WFNode(node)
   requires BoundedKey(node.pivotTable, pivot)
   ensures node.children.Some? <==> node'.children.Some?
@@ -445,7 +445,7 @@ module PivotBetreeSpec {
   ensures WeightBucketList(node'.buckets) <= WeightBucketList(node.buckets)
   ensures |node'.buckets| <= |node.buckets|
   {
-    reveal_SplitBucketRight();
+    /* reveal_SplitBucketRight(); */
     var cRight := CutoffForRight(node.pivotTable, pivot);
     var bplrightPivots := SplitRight(node.pivotTable, pivot);
 
@@ -468,7 +468,7 @@ module PivotBetreeSpec {
     && (rpivot.None? ==> Last(node.pivotTable) == bpl.Keyspace.Max_Element)
   }
 
-  function {:opaque} CutoffNode(node: Node, lpivot: Key, rpivot: Option<Key>) : (node' : Node)
+  function CutoffNode(node: Node, lpivot: Key, rpivot: Option<Key>) : (node' : Node)
   requires WFNode(node)
   requires ValidSplitKey(node, lpivot, rpivot)
   ensures node.children.Some? <==> node'.children.Some?
@@ -502,8 +502,8 @@ module PivotBetreeSpec {
   ensures lpivot == node2.pivotTable[0].e
   ensures Last(node2.pivotTable) == KeyToElement(rpivot)
   {
-    reveal_CutoffNodeAndKeepLeft();
-    reveal_CutoffNodeAndKeepRight();
+    /* reveal_CutoffNodeAndKeepLeft(); */
+    /* reveal_CutoffNodeAndKeepRight(); */
   }
 
   //// Split
@@ -709,7 +709,7 @@ module PivotBetreeSpec {
     forall key : Key | MS.InDomain(key)
     ensures BoundedKey(pt, key)
     {
-      G.Keyspace.SeqComparison.reveal_lte();
+     /*  G.Keyspace.SeqComparison.reveal_lte(); */
     }
   }
 

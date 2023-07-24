@@ -58,7 +58,7 @@ module JournalIntervals {
       journal[i]
   }
 
-  predicate {:opaque} JournalUpdate(
+  predicate JournalUpdate(
       journal: seq<Option<JournalBlock>>,
       journal': seq<Option<JournalBlock>>,
       indices: JournalInterval,
@@ -91,7 +91,7 @@ module JournalIntervals {
       journal'[i] == CyclicSpliceValue(journal, indices, newEntries, i))
   ensures JournalUpdate(journal, journal', indices, newEntries)
   {
-    reveal_JournalUpdate();
+    /* reveal_JournalUpdate(); */
   }
 
   predicate InCyclicRange(i: int, indices: JournalInterval)
@@ -164,7 +164,7 @@ module JournalIntervals {
     )
   }
 
-  function {:opaque} CyclicSlice<T>(s: seq<T>, interval: JournalInterval) : seq<T>
+  function CyclicSlice<T>(s: seq<T>, interval: JournalInterval) : seq<T>
   requires |s| == NumJournalBlocks() as int
   requires 0 <= interval.start < NumJournalBlocks() as int
   requires 0 <= interval.len <= NumJournalBlocks() as int
@@ -270,7 +270,7 @@ module JournalIntervals {
   ensures Disk_HasJournal(journal, JournalInterval(start, 0))
   ensures Disk_Journal(journal, JournalInterval(start, 0)) == []
   {
-    reveal_CyclicSlice();
+    /* reveal_CyclicSlice(); */
     parseJournalRangeEmpty();
   }
 
@@ -308,8 +308,8 @@ module JournalIntervals {
     var c2 := CyclicSlice(journal', interval);
 
     assert c1 == c2 by {
-      reveal_CyclicSlice();
-      reveal_JournalUpdate();
+      /* reveal_CyclicSlice(); */
+      /* reveal_JournalUpdate(); */
     }
   }
 
@@ -337,8 +337,8 @@ module JournalIntervals {
     forall i | 0 <= i < |slice'|
     ensures slice'[i].Some?
     {
-      reveal_CyclicSlice();
-      reveal_JournalUpdate();
+      /* reveal_CyclicSlice(); */
+      /* reveal_JournalUpdate(); */
       if i < interval.len {
         if interval.start + i < NumJournalBlocks() as int {
           calc {
@@ -364,13 +364,13 @@ module JournalIntervals {
     var a := concatFold(slice');
     var b := concatFold(slice) + jr;
 
-    assert |a| == |b| by { reveal_CyclicSlice(); }
+    assert |a| == |b| by { /* reveal_CyclicSlice(); */ }
 
     forall i | 0 <= i < |a|
     ensures a[i] == b[i]
     {
-      reveal_CyclicSlice();
-      reveal_JournalUpdate();
+      /* reveal_CyclicSlice(); */
+      /* reveal_JournalUpdate(); */
       if i < interval.len {
         if interval.start + i < NumJournalBlocks() as int {
           calc {
@@ -443,7 +443,7 @@ module JournalIntervals {
     assert CyclicSlice(journal, interval)
         == CyclicSlice(journal, front)
           + CyclicSlice(journal, back)
-      by { reveal_CyclicSlice(); }
+      by { /* reveal_CyclicSlice(); */ }
 
     concatFoldAdditive(
         CyclicSlice(journal, front),
@@ -466,7 +466,7 @@ module JournalIntervals {
   {
     var c1 := CyclicSlice(journal, interval);
     var c2 := CyclicSlice(journal', interval);
-    reveal_CyclicSlice();
+    /* reveal_CyclicSlice(); */
     assert |c1| == |c2|;
     forall i | 0 <= i < |c1|
     ensures c1[i] == c2[i]
@@ -481,7 +481,7 @@ module JournalIntervals {
   ensures ContiguousJournalInterval(interval)
   ensures JournalRangeLocation(interval.start as uint64, interval.len as uint64) == loc
   {
-    reveal_ValidJournalLocation();
+    /* reveal_ValidJournalLocation(); */
     JournalInterval(
       (loc.addr as int - JournalStartAddr() as int) / 4096,
       loc.len as int / 4096
@@ -499,7 +499,7 @@ module JournalIntervals {
   ensures Disk_HasJournalRange(journal, interval)
   ensures Disk_JournalRange(journal, interval) == jr
   {
-    reveal_CyclicSlice();
+    /* reveal_CyclicSlice(); */
     var slice := CyclicSlice(journal, interval);
     forall i | 0 <= i < |slice|
     ensures slice[i].Some?
@@ -518,7 +518,7 @@ module JournalIntervals {
   requires Disk_HasJournalRange(journal, interval)
   ensures journal[interval.start + i].Some?
   {
-    reveal_CyclicSlice();
+    /* reveal_CyclicSlice(); */
     var slice := CyclicSlice(journal, interval);
     assert journal[interval.start + i]
         == slice[i];
@@ -534,7 +534,7 @@ module JournalIntervals {
   requires Disk_HasJournal(journal, interval)
   ensures Disk_HasJournalRange(journal, sub)
   {
-    reveal_CyclicSlice();
+    /* reveal_CyclicSlice(); */
     var slice := CyclicSlice(journal, interval);
     var subslice := CyclicSlice(journal, sub);
     var diff := if sub.start >= interval.start then sub.start - interval.start else sub.start - interval.start + NumJournalBlocks() as int;

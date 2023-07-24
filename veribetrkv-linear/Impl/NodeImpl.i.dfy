@@ -184,7 +184,7 @@ module NodeImpl {
     ensures node.Inv()
     ensures node.I() == BT.CutoffNodeAndKeepLeft(I(), pivot);
     {
-      BT.reveal_CutoffNodeAndKeepLeft();
+     /*  BT.reveal_CutoffNodeAndKeepLeft(); */
       var cLeft := Pivots.ComputeCutoffForLeft(this.pivotTable, pivot);
       var leftPivots := Pivots.ComputeSplitLeft(this.pivotTable, pivot, cLeft);
       var leftChildren := if this.children.Some? then Some(this.children.value[.. cLeft + 1]) else None;
@@ -203,7 +203,7 @@ module NodeImpl {
     ensures node.Inv()
     ensures node.I() == BT.CutoffNodeAndKeepRight(I(), pivot);
     {
-      BT.reveal_CutoffNodeAndKeepRight();
+     /*  BT.reveal_CutoffNodeAndKeepRight(); */
       var cRight := Pivots.ComputeCutoffForRight(this.pivotTable, pivot);
       var rightPivots := Pivots.ComputeSplitRight(this.pivotTable, pivot, cRight);
       var rightChildren := if this.children.Some? then Some(this.children.value[cRight ..]) else None;
@@ -226,7 +226,7 @@ module NodeImpl {
     ensures node.Inv()
     ensures node.I() == BT.CutoffNode(I(), lbound, rbound)
     {
-      BT.reveal_CutoffNode();
+     /*  BT.reveal_CutoffNode(); */
       match rbound {
         case None => {
           node := CutoffNodeAndKeepRight(lbound);
@@ -283,7 +283,7 @@ module NodeImpl {
     ensures self.Inv()
     ensures self.I() == BT.NodeInsertKeyValue(old_self.I(), key, msg)
     {
-      BT.reveal_NodeInsertKeyValue();
+     /*  BT.reveal_NodeInsertKeyValue(); */
 
       var r := Pivots.ComputeRoute(self.pivotTable, key);
 

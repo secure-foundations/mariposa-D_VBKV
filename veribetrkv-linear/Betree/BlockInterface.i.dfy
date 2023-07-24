@@ -211,7 +211,7 @@ abstract module BlockInterface refines Transactable {
     requires Transaction(s, s', ops)
     ensures Inv(s')
   {
-    reveal_OpTransaction();
+    /* reveal_OpTransaction(); */
     var path :| IsStatePath(s, s', ops, path);
     var i := 0;
     while i < |ops|

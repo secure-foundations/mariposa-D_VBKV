@@ -8,7 +8,7 @@ include "../NativeTypes.s.dfy"
 module {:extern} NativePackedInts {
   import opened NativeTypes
 
-  function {:opaque} unpack_LittleEndian_Uint32(s: seq<byte>) : uint32
+  function unpack_LittleEndian_Uint32(s: seq<byte>) : uint32
   requires |s| == 4
   {
     (s[0] as uint32)
@@ -17,7 +17,7 @@ module {:extern} NativePackedInts {
     + (s[3] as uint32 * 0x1_00_00_00)
   }
 
-  function {:opaque} unpack_LittleEndian_Uint64(s: seq<byte>) : uint64
+  function unpack_LittleEndian_Uint64(s: seq<byte>) : uint64
   requires |s| == 8
   {
     (s[0] as uint64)
@@ -30,7 +30,7 @@ module {:extern} NativePackedInts {
     + (s[7] as uint64 * 0x1_00_00_00_00_00_00_00)
   }
 
-  function {:opaque} unpack_LittleEndian_Uint32_Seq(
+  function unpack_LittleEndian_Uint32_Seq(
       packed: seq<byte>,
       len: int) : (unpacked: seq<uint32>)
   requires |packed| == len * 4
@@ -47,7 +47,7 @@ module {:extern} NativePackedInts {
     )
   }
 
-  function {:opaque} unpack_LittleEndian_Uint64_Seq(
+  function unpack_LittleEndian_Uint64_Seq(
       packed: seq<byte>,
       len: int) : (unpacked: seq<uint64>)
   requires |packed| == len * 8

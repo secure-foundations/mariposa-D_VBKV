@@ -521,7 +521,7 @@ module CommitterImpl {
 
       if jr.Some? {
         assert |jr.value| <= NumJournalBlocks() as int by {
-          reveal_ValidJournalLocation();
+          /* reveal_ValidJournalLocation(); */
         }
 
         if self.journalFrontRead == Some(id) {

@@ -153,7 +153,7 @@ module LinearContentMutableMap {
     }
   }
 
-  function {:opaque} getEmptyWitness<V>(self: FixedSizeLinearHashMap<V>, i: uint64) : (res : uint64)
+  function getEmptyWitness<V>(self: FixedSizeLinearHashMap<V>, i: uint64) : (res : uint64)
   requires FixedSizeInv(self)
   requires 0 <= i as int <= |self.storage|
   requires forall j | 0 <= j < i as int :: !self.storage[j].Empty?
@@ -221,7 +221,7 @@ module LinearContentMutableMap {
       shared var entry := lseq_peek(self.storage, slotIdx);
       if entry.Empty? || (entry.Tombstone? && entry.key == key) {
         assert key in self.contents ==> SlotExplainsKey(toItems(self.storage), skips as nat, key) by {
-          reveal_SomeSkipCountExplainsKey();
+          /* reveal_SomeSkipCountExplainsKey(); */
         }
         return;
       } else if entry.key == key {

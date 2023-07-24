@@ -12,7 +12,7 @@ module Multisets {
   {
   }
 
-  function {:opaque} Choose<A>(s: multiset<A>) : (result: A)
+  function Choose<A>(s: multiset<A>) : (result: A)
     requires 0 < |s|
     ensures result in s
   {
@@ -20,7 +20,7 @@ module Multisets {
     a
   }
 
-  function {:opaque} Apply<A, B>(fn: A ~> B, s: multiset<A>) : (result: multiset<B>)
+  function Apply<A, B>(fn: A ~> B, s: multiset<A>) : (result: multiset<B>)
     requires forall x | x in s :: fn.requires(x)
     ensures |result| == |s|
     reads set x, o | x in s && o in fn.reads(x) :: o
@@ -38,7 +38,7 @@ module Multisets {
     requires forall x | x in s :: fn1(x) == fn2(x)
     ensures Apply(fn1, s) == Apply(fn2, s)
   {
-    reveal_Apply();
+    /* reveal_Apply(); */
     if |s| == 0 {
     } else {
       var x := Choose(s);
@@ -50,7 +50,7 @@ module Multisets {
     requires fn.requires(x)
     ensures Apply(fn, multiset{x}) == multiset{fn(x)}
   {
-    reveal_Apply();
+    /* reveal_Apply(); */
   }
   
   lemma ApplyAdditive<A,B>(fn: A ~> B, s1: multiset<A>, s2: multiset<A>)
@@ -68,13 +68,13 @@ module Multisets {
       if x in s1 {
         calc {
           Apply(fn, s1+s2);
-          { reveal_Apply(); }
+          { /* reveal_Apply(); */ }
           multiset{fn(x)} + Apply(fn, (s1+s2) - multiset{x});
           { assert (s1+s2) - multiset{x} == (s1 - multiset{x}) + s2; }
           multiset{fn(x)} + Apply(fn, (s1 - multiset{x}) + s2);
           { ApplyAdditive(fn, s1 - multiset{x}, s2); }
           multiset{fn(x)} + Apply(fn, s1 - multiset{x}) + Apply(fn, s2);
-          { reveal_Apply(); }
+          { /* reveal_Apply(); */ }
           Apply(fn, multiset{x}) + Apply(fn, s1 - multiset{x}) + Apply(fn, s2);
           { ApplyAdditive(fn, multiset{x}, s1 - multiset{x}); }
           Apply(fn, multiset{x} + (s1 - multiset{x})) + Apply(fn, s2);
@@ -84,13 +84,13 @@ module Multisets {
       } else {
         calc {
           Apply(fn, s1+s2);
-          { reveal_Apply(); }
+          { /* reveal_Apply(); */ }
           multiset{fn(x)} + Apply(fn, (s1+s2) - multiset{x});
           { assert (s1+s2) - multiset{x} == s1 + (s2 - multiset{x}); }
           multiset{fn(x)} + Apply(fn, s1 + (s2 - multiset{x}));
           { ApplyAdditive(fn, s1, s2 - multiset{x}); }
           multiset{fn(x)} + Apply(fn, s1) + Apply(fn, s2 - multiset{x});
-          { reveal_Apply(); }
+          { /* reveal_Apply(); */ }
           Apply(fn, multiset{x}) + Apply(fn, s1) + Apply(fn, s2 - multiset{x});
           { ApplyAdditive(fn, multiset{x}, s2 - multiset{x}); }
           Apply(fn, multiset{x} + (s2 - multiset{x})) + Apply(fn, s1);
@@ -118,7 +118,7 @@ module Multisets {
     decreases s
   {
     if |s| == 0 {
-      reveal_Apply();
+      /* reveal_Apply(); */
     } else {
       var m := multiset(s);
       var x := Choose(m);
@@ -127,7 +127,7 @@ module Multisets {
       var s' := s[.. i] + s[i + 1 ..];
       calc {
         Apply(fn, m);
-        { reveal_Apply(); }
+        { /* reveal_Apply(); */ }
         multiset{fn(x)} + Apply(fn, m');
         { assert s == s[.. i] + [s[i]] + s[i + 1 ..]; }
         { assert m' == multiset(s'); }
@@ -149,7 +149,7 @@ module Multisets {
     && forall x, y | inv(x) && inv(y) :: add.requires(x, y) && inv(add(x, y))
   }
   
-  function {:opaque} Fold<A(!new)>(zero: A, add: (A, A) ~> A, inv: A -> bool, s: multiset<A>) : (result: A)
+  function Fold<A(!new)>(zero: A, add: (A, A) ~> A, inv: A -> bool, s: multiset<A>) : (result: A)
     requires Foldable(zero, add, inv)
     requires forall x | x in s :: inv(x)
     ensures |s| == 0 ==> result == zero
@@ -174,30 +174,30 @@ module Multisets {
     requires inv(x)
     ensures Fold(zero, add, inv, multiset{x}) == add(x, zero)
   {
-    reveal_Fold();
+    /* reveal_Fold(); */
   }
   
   lemma FoldSimpleSingleton<A(!new)>(zero: A, add: (A, A) -> A, x: A)
     ensures FoldSimple(zero, add, multiset{x}) == add(x, zero)
   {
-    reveal_Fold();
+    /* reveal_Fold(); */
   }
   
-  predicate {:opaque} IsIdentity<A(!new)>(add: (A, A) ~> A, inv: A -> bool, zero: A)
+  predicate IsIdentity<A(!new)>(add: (A, A) ~> A, inv: A -> bool, zero: A)
     reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
   {
     && Foldable(zero, add, inv)
     && forall a | inv(a) :: add(zero, a) == add(a, zero) == a
   }
 
-  predicate {:opaque} IsCommutative<A(!new)>(add: (A, A) ~> A, inv: A -> bool)
+  predicate IsCommutative<A(!new)>(add: (A, A) ~> A, inv: A -> bool)
     requires forall x, y | inv(x) && inv(y) :: add.requires(x, y)
     reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
   {
     forall a, b | inv(a) && inv(b) :: add(a, b) == add(b, a)
   }
 
-  predicate {:opaque} IsAssociative<A(!new)>(add: (A, A) ~> A, inv: A -> bool)
+  predicate IsAssociative<A(!new)>(add: (A, A) ~> A, inv: A -> bool)
     requires forall x, y | inv(x) && inv(y) :: add.requires(x, y) && inv(add(x, y))
     reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
   {
@@ -235,14 +235,14 @@ module Multisets {
     if |s1| == 0 {
       assert s1 + s2 == s2;
       assert add(f1, f2) == Fold(zero, add, inv, s2) by {
-        reveal_IsIdentity();
-        reveal_Fold();
+        /* reveal_IsIdentity(); */
+        /* reveal_Fold(); */
       }
     } else if |s2| == 0 {
       assert s1 + s2 == s1;
       assert add(f1, f2) == Fold(zero, add, inv, s1) by {
-        reveal_IsIdentity();
-        reveal_Fold();
+        /* reveal_IsIdentity(); */
+        /* reveal_Fold(); */
       }
     } else {
       var x := Choose(s1 + s2);
@@ -250,15 +250,15 @@ module Multisets {
       if x in s1 {
         calc {
           fs;
-          { reveal_Fold(); }
+          { /* reveal_Fold(); */ }
           add(x, Fold(zero, add, inv, (s1 + s2) - multiset{x}));
           { assert (s1 + s2) - multiset{x} == (s1 - multiset{x}) + s2; }
           add(x, Fold(zero, add, inv, (s1 - multiset{x}) + s2));
           { FoldAdditive(zero, add, inv, s1 - multiset{x}, s2); }
           add(x, add(Fold(zero, add, inv, s1 - multiset{x}), Fold(zero, add, inv, s2)));
-          { reveal_IsAssociative(); }
+          { /* reveal_IsAssociative(); */ }
           add(add(x, Fold(zero, add, inv, s1 - multiset{x})), Fold(zero, add, inv, s2));
-          { reveal_IsIdentity(); reveal_Fold(); }
+          { /* reveal_IsIdentity(); */ reveal_Fold(); }
           add(add(Fold(zero, add, inv, multiset{x}), Fold(zero, add, inv, s1 - multiset{x})), Fold(zero, add, inv, s2));
           { FoldAdditive(zero, add, inv, multiset{x}, s1 - multiset{x}); }
           add(Fold(zero, add, inv, multiset{x} + (s1 - multiset{x})), Fold(zero, add, inv, s2));
@@ -268,19 +268,19 @@ module Multisets {
       } else {
         calc {
           fs;
-          { reveal_Fold(); }
+          { /* reveal_Fold(); */ }
           add(x, Fold(zero, add, inv, (s1 + s2) - multiset{x}));
           { assert (s1 + s2) - multiset{x} == s1 + (s2 - multiset{x}); }
           add(x, Fold(zero, add, inv, s1 + (s2 - multiset{x})));
           { FoldAdditive(zero, add, inv, s1, s2 - multiset{x}); }
           add(x, add(Fold(zero, add, inv, s1), Fold(zero, add, inv, s2 - multiset{x})));
-          { reveal_IsAssociative(); }
+          { /* reveal_IsAssociative(); */ }
           add(add(x, Fold(zero, add, inv, s1)), Fold(zero, add, inv, s2 - multiset{x}));
-          { reveal_IsCommutative(); }
+          { /* reveal_IsCommutative(); */ }
           add(add(Fold(zero, add, inv, s1), x), Fold(zero, add, inv, s2 - multiset{x}));
-          { reveal_IsAssociative(); }
+          { /* reveal_IsAssociative(); */ }
           add(Fold(zero, add, inv, s1), add(x, Fold(zero, add, inv, s2 - multiset{x})));
-          { reveal_IsIdentity(); reveal_Fold(); }
+          { /* reveal_IsIdentity(); */ reveal_Fold(); }
           add(Fold(zero, add, inv, s1), add(Fold(zero, add, inv, multiset{x}), Fold(zero, add, inv, s2 - multiset{x})));
           { FoldAdditive(zero, add, inv, multiset{x}, s2 - multiset{x}); }
           add(Fold(zero, add, inv, s1), Fold(zero, add, inv, multiset{x} + (s2 - multiset{x})));
@@ -319,9 +319,9 @@ module Multisets {
         add(Sequences.FoldFromRight(add, zero, s'), b);
         { FoldSeqRemove(zero, add, s', i); }
         add(add(Sequences.FoldFromRight(add, zero, s'[.. i] + s'[i + 1 ..]), a), b);
-        { reveal_IsIdentity(); }
-        { reveal_IsCommutative(); }
-        { reveal_IsAssociative(); }
+        { /* reveal_IsIdentity(); */ }
+        { /* reveal_IsCommutative(); */ }
+        { /* reveal_IsAssociative(); */ }
         add(add(Sequences.FoldFromRight(add, zero, s'[.. i] + s'[i + 1 ..]), b), a);
         { assert s[.. i] + s[i + 1 ..] == s'[.. i] + s'[i + 1 ..] + [b]; }
         add(Sequences.FoldFromRight(add, zero, s[.. i] + s[i + 1 ..]), a);
@@ -336,7 +336,7 @@ module Multisets {
     ensures FoldSimple(zero, add, multiset(s)) == Sequences.FoldFromRight(add, zero, s)
   {
     if |s| == 0 {
-      reveal_Fold();
+      /* reveal_Fold(); */
     } else {
       var m := multiset(s);
       var a := Choose(m);
@@ -345,9 +345,9 @@ module Multisets {
       var s' := s[.. i] + s[i + 1 ..];
       calc {
         FoldSimple(zero, add, m);
-        { reveal_Fold(); }
+        { /* reveal_Fold(); */ }
         add(a, FoldSimple(zero, add, m'));
-        { reveal_IsCommutative(); }
+        { /* reveal_IsCommutative(); */ }
         add(FoldSimple(zero, add, m'), a);
         { assert s == s[.. i] + [s[i]] + s[i + 1 ..]; }
         { assert m' == multiset(s'); }
@@ -367,9 +367,9 @@ module Multisets {
     ensures IsAssociativeSimple<nat>(AddNat)
     ensures IsIdentitySimple<nat>(AddNat, 0)
   {
-    reveal_IsCommutative();
-    reveal_IsAssociative();
-    reveal_IsIdentity();
+    /* reveal_IsCommutative(); */
+    /* reveal_IsAssociative(); */
+    /* reveal_IsIdentity(); */
   }
 
   

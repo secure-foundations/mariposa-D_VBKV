@@ -56,14 +56,14 @@ module DiskLayout {
     )
   }
 
-  predicate method {:opaque} ValidNodeAddr(addr: Addr) {
+  predicate method ValidNodeAddr(addr: Addr) {
     //exists j: int :: j * BlockSize() as int == addr as int
     //addr % BlockSize() == 0
     && addr % NodeBlockSizeUint64() == 0
     && addr >= NodeBlockSizeUint64() * MinNodeBlockIndexUint64()
   }
 
-  predicate method {:opaque} ValidJournalLocation(loc: Location) {
+  predicate method ValidJournalLocation(loc: Location) {
     //exists j: int :: addr == 0 <= j < NumJournalBlocks()
     //    && 2 * 4096 + j * 4096
     && loc.addr % 4096 == 0
@@ -80,7 +80,7 @@ module DiskLayout {
     && loc.addr as int + loc.len as int <= 
         (2 + NumJournalBlocks() as int) * 4096
   {
-    reveal_ValidJournalLocation();
+    /* reveal_ValidJournalLocation(); */
   }
 
   predicate method ValidIndirectionTableLocation(loc: Location)
@@ -97,7 +97,7 @@ module DiskLayout {
   ensures ValidNodeAddr(addr)
       ==> addr >= IndirectionTable2Addr() + IndirectionTableMaxLength()
   {
-    reveal_ValidNodeAddr();
+    /* reveal_ValidNodeAddr(); */
   }
 
 
@@ -181,7 +181,7 @@ module DiskLayout {
   ensures i * NodeBlockSize() as int == addr as int
   ensures i >= MinNodeBlockIndex()
   {
-    reveal_ValidNodeAddr();
+    /* reveal_ValidNodeAddr(); */
     i := addr as int / NodeBlockSize() as int;
   }
 
@@ -195,7 +195,7 @@ module DiskLayout {
   requires i as int >= MinNodeBlockIndex()
   ensures ValidNodeAddr(i * NodeBlockSizeUint64())
   {
-    reveal_ValidNodeAddr();
+    /* reveal_ValidNodeAddr(); */
   }
 
   lemma overlappingLocsSameType(loc1: Location, loc2: Location)
@@ -220,7 +220,7 @@ module DiskLayout {
   requires overlap(loc1, loc2)
   ensures loc1.addr == loc2.addr
   {
-    reveal_ValidNodeAddr();
+    /* reveal_ValidNodeAddr(); */
   }
 
   lemma overlappingIndirectionTablesSameAddr(loc1: Location, loc2: Location)
@@ -236,7 +236,7 @@ module DiskLayout {
   requires start as int + len as int <= NumJournalBlocks() as int
   ensures ValidJournalLocation(loc)
   {
-    reveal_ValidJournalLocation();
+    /* reveal_ValidJournalLocation(); */
     Location(JournalPoint(start), len * 4096)
   }
 
@@ -326,12 +326,12 @@ module DiskLayout {
         <= loc2.addr as int + loc2.len as int
   }
 
-  function {:opaque} JournalBlockIdx(loc: Location) : (i : int)
+  function JournalBlockIdx(loc: Location) : (i : int)
   requires ValidJournalLocation(loc)
   ensures 0 <= i < NumJournalBlocks() as int
   ensures loc.addr == JournalPoint(i as uint64)
   {
-    reveal_ValidJournalLocation();
+    /* reveal_ValidJournalLocation(); */
     (loc.addr as int - (2 * 4096)) / 4096
   }
 

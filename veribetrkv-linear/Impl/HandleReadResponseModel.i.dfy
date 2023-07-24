@@ -42,12 +42,12 @@ module HandleReadResponseModel {
   ensures BBC.Next(s.bc.I(), s'.bc.I(),
     IDiskOp(diskOp(io)).bdop, vop);
   {
-    reveal_Parse();
-    Marshalling.reveal_parseCheckedSector();
-    Marshalling.reveal_parseSector();
-    reveal_SectorOfBytes();
-    reveal_ValidCheckedBytes();
-    reveal_Parse();
+    /* reveal_Parse(); */
+   /*  Marshalling.reveal_parseCheckedSector(); */
+   /*  Marshalling.reveal_parseSector(); */
+    /* reveal_SectorOfBytes(); */
+    /* reveal_ValidCheckedBytes(); */
+    /* reveal_Parse(); */
 
     assert BC.NoOp(s.bc.I(), s'.bc.I(),
       IDiskOp(diskOp(io)).bdop, vop);
