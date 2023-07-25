@@ -511,9 +511,9 @@ module BucketsLib {
     var blist' := SplitBucketInList(blist, slot, pivot);
     /* reveal_SplitBucketInList(); */
     assert BucketWellMarshalled(SplitBucketLeft(blist[slot], pivot))
-      by { /* reveal_SplitBucketLeft(); */ reveal_IsStrictlySorted(); }
+      by { /* reveal_SplitBucketLeft(); */ /* reveal_IsStrictlySorted(); */}
     assert BucketWellMarshalled(SplitBucketRight(blist[slot], pivot))
-      by { /* reveal_SplitBucketRight(); */ reveal_IsStrictlySorted(); }
+      by { /* reveal_SplitBucketRight(); */ /* reveal_IsStrictlySorted(); */ }
     forall i | 0 <= i < |blist'|
     ensures BucketWellMarshalled(blist'[i])
     {

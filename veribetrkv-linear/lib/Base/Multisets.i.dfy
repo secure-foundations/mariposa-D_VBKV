@@ -258,7 +258,7 @@ module Multisets {
           add(x, add(Fold(zero, add, inv, s1 - multiset{x}), Fold(zero, add, inv, s2)));
           { /* reveal_IsAssociative(); */ }
           add(add(x, Fold(zero, add, inv, s1 - multiset{x})), Fold(zero, add, inv, s2));
-          { /* reveal_IsIdentity(); */ reveal_Fold(); }
+          { /* reveal_IsIdentity(); */ /* reveal_Fold(); */ }
           add(add(Fold(zero, add, inv, multiset{x}), Fold(zero, add, inv, s1 - multiset{x})), Fold(zero, add, inv, s2));
           { FoldAdditive(zero, add, inv, multiset{x}, s1 - multiset{x}); }
           add(Fold(zero, add, inv, multiset{x} + (s1 - multiset{x})), Fold(zero, add, inv, s2));
@@ -280,7 +280,7 @@ module Multisets {
           add(add(Fold(zero, add, inv, s1), x), Fold(zero, add, inv, s2 - multiset{x}));
           { /* reveal_IsAssociative(); */ }
           add(Fold(zero, add, inv, s1), add(x, Fold(zero, add, inv, s2 - multiset{x})));
-          { /* reveal_IsIdentity(); */ reveal_Fold(); }
+          { /* reveal_IsIdentity(); */ /* reveal_Fold(); */ }
           add(Fold(zero, add, inv, s1), add(Fold(zero, add, inv, multiset{x}), Fold(zero, add, inv, s2 - multiset{x})));
           { FoldAdditive(zero, add, inv, multiset{x}, s2 - multiset{x}); }
           add(Fold(zero, add, inv, s1), Fold(zero, add, inv, multiset{x} + (s2 - multiset{x})));
