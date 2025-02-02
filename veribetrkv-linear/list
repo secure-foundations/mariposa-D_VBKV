@@ -1,0 +1,2805 @@
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Betree/BetreeSpec.i.dfy
+function {:opaque} RedirectReads(redirect: Redirect) : (res: seq<ReadOp>)
+requires ValidRedirect(redirect)
+ensures |res| == |redirect.old_childrefs| + 1
+{
+[ ReadOp(redirect.parentref, redirect.old_parent) ]
++ RedirectChildReads(redirect.old_childrefs, redirect.old_children)
+}
+
+function RedirectChildAllocs(childrefs: seq<Reference>, children: imap<Reference, Node>) : (ops: seq<Op>)
+requires forall ref :: ref in childrefs ==> ref in children
+---
+function {:opaque} RedirectOps(redirect: Redirect) : seq<Op>
+requires ValidRedirect(redirect)
+{
+RedirectChildAllocs(redirect.new_childrefs, redirect.new_children)
++ [ G.WriteOp(redirect.parentref, redirect.new_parent) ]
+}
+
+
+datatype BetreeStep =
+| BetreeQuery(q: LookupQuery)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Betree/Transactable.i.dfy
+predicate {:opaque} OpTransaction(s: Variables, s': Variables, ops: seq<Op>)
+ensures OpTransaction(s, s', ops) && |ops| == 1 ==>
+&& OpStep(s, s', ops[0])
+ensures OpTransaction(s, s', ops) && |ops| == 2 ==> exists sint ::
+&& OpStep(s, sint, ops[0])
+&& OpStep(sint, s', ops[1])
+ensures OpTransaction(s, s', ops) && |ops| == 3 ==> exists sint, sint' ::
+&& OpStep(s, sint, ops[0])
+&& OpStep(sint, sint', ops[1])
+&& OpStep(sint', s', ops[2])
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/BlockCacheSystem/DiskLayout.i.dfy
+predicate method {:opaque} ValidNodeAddr(addr: Addr) {
+&& addr % NodeBlockSizeUint64() == 0
+&& addr >= NodeBlockSizeUint64() * MinNodeBlockIndexUint64()
+}
+
+predicate method {:opaque} ValidJournalLocation(loc: Location) {
+&& loc.addr % 4096 == 0
+&& loc.len % 4096 == 0
+&& loc.addr >= 2*4096
+&& 0 <= (loc.addr - 2*4096) / 4096 < NumJournalBlocks()
+---
+predicate method {:opaque} ValidJournalLocation(loc: Location) {
+&& loc.addr % 4096 == 0
+&& loc.len % 4096 == 0
+&& loc.addr >= 2*4096
+&& 0 <= (loc.addr - 2*4096) / 4096 < NumJournalBlocks()
+&& loc.addr <= 0xffff_ffff_ffff_ffff - loc.len
+&& loc.addr + loc.len <= (2 + NumJournalBlocks()) * 4096
+}
+
+lemma lemma_validJournalBounds(loc: Location)
+---
+function {:opaque} JournalBlockIdx(loc: Location) : (i : int)
+requires ValidJournalLocation(loc)
+ensures 0 <= i < NumJournalBlocks() as int
+ensures loc.addr == JournalPoint(i as uint64)
+{
+reveal_ValidJournalLocation();
+(loc.addr as int - (2 * 4096)) / 4096
+}
+
+
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/BlockCacheSystem/JournalInterval.i.dfy
+predicate {:opaque} JournalUpdate(
+journal: seq<Option<JournalBlock>>,
+journal': seq<Option<JournalBlock>>,
+indices: JournalInterval,
+newEntries: seq<JournalBlock>)
+ensures JournalUpdate(journal, journal', indices, newEntries)
+==>
+&& ValidJournal(journal)
+&& ValidJournal(journal')
+&& ValidJournalInterval(indices)
+---
+function {:opaque} CyclicSlice<T>(s: seq<T>, interval: JournalInterval) : seq<T>
+requires |s| == NumJournalBlocks() as int
+requires 0 <= interval.start < NumJournalBlocks() as int
+requires 0 <= interval.len <= NumJournalBlocks() as int
+{
+if interval.start + interval.len <= NumJournalBlocks() as int then
+s[interval.start .. interval.start + interval.len]
+else
+s[interval.start ..] +
+s[.. interval.start + interval.len - NumJournalBlocks() as int]
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/BlockCacheSystem/JournalRange.i.dfy
+function {:opaque} parseHeader(s: JournalBlock) : Header
+requires |s| >= 8
+{
+Header(
+unpack_LittleEndian_Uint32(s[0..4]) as int,
+unpack_LittleEndian_Uint32(s[4..8]) as int
+)
+}
+
+function parseEntries(s: seq<byte>, len: int, idx: int)
+---
+function {:opaque} WeightJournalEntries(s: seq<JournalEntry>) : int
+ensures WeightJournalEntries(s) >= 0
+{
+if |s| == 0 then
+0
+else
+SumJournalEntries(s) + 8
+}
+
+lemma lenTimes8LeSum(s: seq<JournalEntry>)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/ByteBlockCacheSystem/AsyncDiskModel.s.dfy
+predicate {:opaque} ChecksumChecksOut(s: seq<byte>) {
+&& |s| >= 32
+&& s[0..32] == CRC32_C.crc32_c_padded(s[32..])
+}
+
+predicate ChecksumsCheckOutForSlice(realContents: seq<byte>, fakeContents: seq<byte>, i: int, j: int)
+requires |realContents| == |fakeContents|
+requires 0 <= i <= j <= |realContents|
+{
+
+---
+function {:opaque} splice(bytes: seq<byte>, start: int, ins: seq<byte>) : seq<byte>
+requires 0 <= start
+requires start + |ins| <= |bytes|
+{
+bytes[.. start] + ins + bytes[start + |ins| ..]
+}
+
+predicate ProcessWrite(s: Variables, s': Variables, id: ReqId)
+{
+&& id in s.reqWrites
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/ByteBlockCacheSystem/InterpretationDiskContents.i.dfy
+function {:opaque} atLoc(loc: DiskLayout.Location, contents: seq<byte>) : (res : seq<byte>)
+requires locInBounds(loc, contents)
+ensures |res| == loc.len as int
+{
+contents[loc.addr .. loc.addr as int + loc.len as int]
+}
+
+function atLocWithWrites(loc: DiskLayout.Location, contents: seq<byte>, reqs: map<ReqId, ReqWrite>) : seq<byte>
+{
+withWrites(contents, reqs, loc.addr as int, loc.len as int)
+---
+function {:opaque} withWritesI(s: seq<byte>, reqs: map<ReqId, ReqWrite>, a: int, len: int)
+: (res: seq<byte>)
+requires len >= 0
+ensures |res| == len
+ensures forall i | 0 <= i < len :: res[i] == byteWithWrites(s, reqs, a + i)
+{
+if len == 0 then [] else
+withWritesI(s, reqs, a, len-1) + [byteWithWrites(s, reqs, a+len-1)]
+}
+
+---
+function {:opaque} withWrites(s: seq<byte>, reqs: map<ReqId, ReqWrite>, a: int, len: int)
+: (res: seq<byte>)
+requires len >= 0
+ensures |res| == len
+{
+withWritesI(s, reqs, a, len)
+}
+
+predicate reqWritesOverlap(req1: ReqWrite, req2: ReqWrite)
+{
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/ByteBlockCacheSystem/InterpretationDisk.i.dfy
+function {:opaque} DiskJournalOfContentsI(contents: seq<byte>, reqWrites: map<D.ReqId, D.ReqWrite>, i: int) : (res : seq<Option<JournalBlock>>)
+requires 0 <= i <= NumJournalBlocks() as int
+ensures |res| == i
+ensures forall j | 0 <= j < i :: res[j] == JournalBlockAt(contents, reqWrites, j)
+{
+if i == 0 then [] else
+DiskJournalOfContentsI(contents, reqWrites, i-1) + [JournalBlockAt(contents, reqWrites, i-1)]
+}
+
+function DiskJournal(disk: D.Variables) : seq<Option<JournalBlock>>
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/ByteBlockCacheSystem/InterpretationDiskOps.i.dfy
+function {:opaque} Parse(bytes: seq<byte>) : Option<Sector>
+{
+Marshalling.parseSector(bytes)
+}
+
+predicate {:opaque} ValidCheckedBytes(bytes: seq<byte>)
+requires 32 <= |bytes| < 0xffff_ffff_ffff_ffff
+{
+&& D.ChecksumChecksOut(bytes)
+&& Parse(bytes[32..]).Some?
+---
+predicate {:opaque} ValidCheckedBytes(bytes: seq<byte>)
+requires 32 <= |bytes| < 0xffff_ffff_ffff_ffff
+{
+&& D.ChecksumChecksOut(bytes)
+&& Parse(bytes[32..]).Some?
+}
+
+predicate ValidBytes(bytes: seq<byte>)
+{
+&& 32 <= |bytes| < 0xffff_ffff_ffff_ffff
+---
+function {:opaque} SectorOfBytes(bytes: seq<byte>) : Sector
+requires ValidBytes(bytes)
+{
+reveal_ValidCheckedBytes();
+Parse(bytes[32..]).value
+}
+
+predicate ValidSuperblockBytes(bytes: seq<byte>)
+{
+&& ValidBytes(bytes)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/ByteBlockCacheSystem/JournalBytes.i.dfy
+function {:opaque} JournalBlockOfByteSeq(s: seq<byte>): (res: Option<JournalBlock>)
+ensures res.Some? ==> |res.value| == 4064
+{
+if |s| == 4096 && D.ChecksumChecksOut(s) then
+Some(s[32..])
+else
+None
+}
+
+function {:opaque} JournalRangeOfByteSeq(s: seq<byte>): (res : Option<JournalRange>)
+---
+function {:opaque} JournalRangeOfByteSeq(s: seq<byte>): (res : Option<JournalRange>)
+ensures res.Some? ==> |res.value| * 4096 == |s|
+ensures res.Some? ==> forall i | 0 <= i < |res.value| :: |res.value[i]| == 4064
+{
+if s == [] then
+Some([])
+else if |s| >= 4096 && JournalBlockOfByteSeq(s[0..4096]).Some? then (
+var rest := JournalRangeOfByteSeq(s[4096..]);
+if rest.Some? then (
+Some([JournalBlockOfByteSeq(s[0..4096]).value] + rest.value)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/ByteBlockCacheSystem/Marshalling.i.dfy
+predicate {:opaque} isStrictlySortedPivots(pivots: Pivots.PivotTable)
+ensures isStrictlySortedPivots(pivots) <==> Pivots.Keyspace.IsStrictlySorted(pivots)
+{
+Pivots.Keyspace.reveal_IsStrictlySorted();
+
+if |pivots| >= 2 then (
+isStrictlySortedPivotsIterate(pivots, 1)
+) else (
+true
+)
+---
+function {:opaque} parseSector(data: seq<byte>) : (s : Option<Sector>)
+{
+if |data| < 0x1_0000_0000_0000_0000 then (
+match parse_Val(data, SectorGrammar()).0 {
+case Some(v) => valToSector(v)
+case None => None
+}
+) else (
+None
+)
+---
+function {:opaque} parseCheckedSector(data: seq<byte>) : (s : Option<Sector>)
+{
+if |data| >= 32 && CRC32_C.crc32_c_padded(data[32..]) == data[..32] then
+parseSector(data[32..])
+else
+None
+}
+
+
+lemma singleMapRemove1<K,V>(m0: map<K, V>, m: map<K, V>, k: K, v: V)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/BlockAllocatorImpl.i.dfy
+predicate {:opaque} Inv()
+{
+&& ephemeral.Inv()
+&& (frozen.lSome? ==> frozen.value.Inv())
+&& persistent.Inv()
+&& outstanding.Inv()
+&& full.Inv()
+&& BitmapModel.Len(ephemeral.I()) == NumBlocks()
+&& (frozen.lSome? ==> BitmapModel.Len(frozen.value.I()) == NumBlocks())
+&& BitmapModel.Len(persistent.I()) == NumBlocks()
+---
+function {:opaque} I() : BlockAllocatorModel.BlockAllocatorModel
+requires Inv()
+{
+reveal Inv();
+
+BlockAllocatorModel.BlockAllocatorModel(ephemeral.I(),
+(if frozen.lNone? then None else Some(frozen.value.I())),
+persistent.I(),
+outstanding.I(),
+full.I())
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/BookkeepingModel.i.dfy
+function {:opaque} getFreeRef(s: BBC.Variables, refUpperBound: uint64)
+: (ref : Option<BT.G.Reference>)
+requires s.Ready?
+requires forall r | r in s.ephemeralIndirectionTable.graph :: r <= refUpperBound
+ensures ref.Some? ==> RefAvailable(s, ref.value)
+{
+var i := refUpperBound;
+if i == 0xffff_ffff_ffff_ffff then (
+None
+) else (
+---
+function {:opaque} getFreeRef2(s: BBC.Variables, avoid: BT.G.Reference, refUpperBound: uint64)
+: (ref : Option<BT.G.Reference>)
+requires s.Ready?
+requires forall r | r in s.ephemeralIndirectionTable.graph :: r <= refUpperBound
+ensures ref.Some? ==> RefAvailable(s, ref.value)
+ensures ref.Some? ==> ref.value != avoid
+{
+var i := refUpperBound;
+if i == 0xffff_ffff_ffff_ffff then (
+None
+---
+function {:opaque} writeBookkeeping(s: BBC.Variables, ref: BT.G.Reference, children: Option<seq<BT.G.Reference>>)
+: (s': BBC.Variables)
+requires s.WriteAllocConditions()
+requires ChildrenConditions(s, children)
+ensures s'.Ready?
+ensures s'.cache == s.cache
+ensures s'.WriteAllocConditions()
+ensures |s'.ephemeralIndirectionTable.graph| <= |s.ephemeralIndirectionTable.graph| + 1
+{
+var succs := if children.Some? then children.value else [];
+---
+function {:opaque} allocBookkeeping(s: BBC.Variables, children: Option<seq<BT.G.Reference>>, refUpperBound: uint64)
+: (p: (BBC.Variables, Option<BT.G.Reference>))
+requires s.WriteAllocConditions()
+requires ChildrenConditions(s, children)
+requires forall r | r in s.ephemeralIndirectionTable.graph :: r <= refUpperBound
+
+ensures var (s', id) := p;
+&& s'.Ready?
+&& s'.WriteAllocConditions()
+&& |s'.ephemeralIndirectionTable.graph| <= |s.ephemeralIndirectionTable.graph| + 1
+---
+function {:opaque} writeBookkeepingNoSuccsUpdate(s: BBC.Variables, ref: BT.G.Reference)
+: (s': BBC.Variables)
+requires s.WriteAllocConditions()
+requires ref in s.ephemeralIndirectionTable.graph
+ensures s'.Ready?
+ensures s'.cache == s.cache
+ensures s'.WriteAllocConditions()
+ensures |s'.ephemeralIndirectionTable.graph| <= |s.ephemeralIndirectionTable.graph| + 1
+{
+var eph := s.ephemeralIndirectionTable.
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/BucketGeneratorImpl.i.dfy
+predicate {:opaque} Inv()
+decreases height, 1
+{
+Inv1()
+}
+
+predicate Inv1()
+decreases height, 0
+{
+&& (this.Basic? ==> (
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/BucketGeneratorModel.i.dfy
+function {:opaque} BasicGenPop(g: Generator) : (g' : Generator)
+requires WF(g)
+requires GenLeft(g).Next?
+requires g.BasicGenerator?
+decreases g, 0
+ensures WF(g')
+{
+BasicGenerator(
+g.bucket,
+IterInc(g.bucket, g.it))
+---
+function {:opaque} MergeGenPop(g: Generator) : (g' : Generator)
+requires WF(g)
+requires GenLeft(g).Next?
+requires g.ComposeGenerator?
+decreases g, 0
+ensures WF(g')
+{
+var top := g.top;
+var bot := g.bot;
+if GenLeft(top).Next? && GenLeft(bot).Next?
+---
+function {:opaque} GenPop(g: Generator) : (g' : Generator)
+requires WF(g)
+requires GenLeft(g).Next?
+decreases g, 1
+ensures WF(g')
+{
+match g {
+case BasicGenerator(bucket, it) => (
+BasicGenPop(g)
+)
+---
+function {:opaque} GenCompose(top: Generator, bot: Generator) : (g' : Generator)
+requires WF(top)
+requires WF(bot)
+ensures WF(g')
+{
+
+if GenLeft(top).Next? && GenLeft(bot).Next?
+&& GenLeft(top).key == GenLeft(bot).key then (
+ComposeGenerator(
+GenPop(top),
+---
+function {:opaque} GenFromBucketWithLowerBound(bucket: Bucket, start: UI.RangeStart) : (g : Generator)
+requires WFBucket(bucket)
+ensures WF(g)
+{
+var it := match start {
+case SExclusive(key) => IterFindFirstGt(bucket, key)
+case SInclusive(key) => IterFindFirstGte(bucket, key)
+case NegativeInf => IterStart(bucket)
+};
+BasicGenerator(bucket, it)
+---
+function {:opaque} GenFromBucketStackWithLowerBound(buckets: seq<Bucket>, start: UI.RangeStart) : (g : Generator)
+requires |buckets| >= 1
+requires forall i | 0 <= i < |buckets| :: WFBucket(buckets[i])
+decreases |buckets|
+ensures WF(g)
+{
+if |buckets| == 1 then (
+GenFromBucketWithLowerBound(buckets[0], start)
+) else (
+GenCompose(
+---
+predicate {:opaque} Monotonic(g: Generator)
+{
+g.ComposeGenerator? ==> (
+&& (g.next.Next? && GenLeft(g.top).Next? ==> lt(g.next.key, GenLeft(g.top).key))
+&& (g.next.Next? && GenLeft(g.bot).Next? ==> lt(g.next.key, GenLeft(g.bot).key))
+&& (g.next.Done? ==> GenLeft(g.top).Done?)
+&& (g.next.Done? ==> GenLeft(g.bot).Done?)
+&& Monotonic(g.top)
+&& Monotonic(g.bot)
+)
+---
+function {:opaque} BucketOf(g: Generator) : BucketMap
+requires WF(g)
+{
+match g {
+case BasicGenerator(bucket, it) =>
+if it.next.Done? then map[]
+else map k | k in bucket.as_map() && lte(it.next.key, k) :: bucket.as_map()[k]
+case ComposeGenerator(top, bot, next) =>
+if next.Done? then map[]
+else Compose(BucketOf(top), BucketOf(bot))[next.key := next.msg]
+---
+function {:opaque} decreaser(g: Generator) : nat
+requires WF(g)
+{
+match g {
+case BasicGenerator(bucket, it) => (
+it.decreaser
+)
+case ComposeGenerator(top, bot, next) => (
+decreaser(top) + decreaser(bot) + (if next.Next? then 1 else 0)
+)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/BucketSuccessorLoopModel.i.dfy
+function {:opaque} ProcessGenerator(
+g: Generator,
+maxToFind: int,
+upTo: Option<Key>,
+results: seq<UI.SuccResult>) : UI.SuccResultList
+requires WF(g)
+requires |results| < maxToFind
+decreases decreaser(g)
+{
+lemmaDecreaserDecreases(g);
+---
+function {:opaque} GetSuccessorInBucketStack(
+buckets: seq<Bucket>,
+maxToFind: int,
+start: UI.RangeStart,
+upTo: Option<Key>) : UI.SuccResultList
+requires |buckets| >= 1
+requires maxToFind >= 1
+requires forall i | 0 <= i < |buckets| :: WFBucket(buckets[i])
+{
+var g := GenFromBucketStackWithLowerBound(buckets, start);
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/CoordinationImpl.i.dfy
+requires old_s.jc.Inv() // [yizhou7][NOTE]: this is implied by s.Inv(), but opaqued
+requires old_s.jc.status.StatusReady?
+
+requires old_s.jc.journalist.I().replayJournal == []
+
+modifies io
+ensures s.WF()
+ensures M.Next(old_s.I(), s.I(), UI.NoOp, diskOp(IIO(io)))
+{
+wait := false;
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/FlushPolicyModel.i.dfy
+function {:opaque} getActionToSplit(s: BBC.Variables, stack: seq<BT.G.Reference>, slots: seq<uint64>, i: uint64) : (action : Action)
+requires 0 <= i as int < |stack|
+requires ValidStackSlots(s, stack, slots)
+{
+if i == 0 then
+if s.totalCacheSize() <= MaxCacheSize() - 1 then (
+ActionGrow
+) else (
+ActionEvict
+)
+---
+function {:opaque} getActionToFlush(s: BBC.Variables, stack: seq<BT.G.Reference>, slots: seq<uint64>) : (BBC.Variables, Action)
+requires |stack| <= 40
+requires ValidStackSlots(s, stack, slots)
+requires BBC.Inv(s)
+decreases 0x1_0000_0000_0000_0000 - |stack|
+{
+if |stack| as uint64 == 40 then (
+(s, ActionFail)
+) else (
+var ref := stack[|stack| as uint64 - 1];
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/GrowModel.i.dfy
+function {:opaque} grow(s: BBC.Variables, refUpperBound: uint64)
+: (BBC.Variables)
+requires BBC.Inv(s)
+requires s.Ready?
+requires BT.G.Root() in s.cache
+requires forall r | r in s.ephemeralIndirectionTable.graph :: r <= refUpperBound
+{
+lemmaChildrenConditionsOfNode(s, BT.G.Root());
+
+if (
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/IndirectionTable.i.dfy
+function {:opaque} PredCounts(t: HashMap) : (m: map<BT.G.Reference, int>)
+{
+map ref | ref in t.contents :: t.contents[ref].predCount as int
+}
+
+datatype PredecessorEdge = PredecessorEdge(src: BT.G.Reference, ghost idx: int)
+
+function PredecessorSet(graph: map<BT.G.Reference, seq<BT.G.Reference>>, dest: BT.G.Reference) : set<PredecessorEdge>
+{
+set src, idx | src in graph && 0 <= idx < |graph[src]| && graph[src][idx] == dest :: PredecessorEdge(src, idx)
+---
+predicate {:opaque} Inv()
+ensures Inv() ==> this.locs.Keys <= this.graph.Keys
+{
+&& LinearMutableMap.Inv(this.t)
+&& this.locs == Locs(this.t)
+&& this.graph == Graph(this.t)
+&& this.predCounts == PredCounts(this.t)
+&& (this.garbageQueue.lSome? ==> this.garbageQueue.value.Inv())
+&& ValidPredCounts(this.predCounts, this.graph)
+&& BC.GraphClosed(this.graph)
+---
+static predicate {:opaque} ComputeRefCountsSharedInv(tbl': HashMap, tbl: HashMap)
+ensures ComputeRefCountsSharedInv(tbl', tbl) ==> tbl'.count as int <= MaxSize()
+{
+&& (tbl'.count as int <= MaxSize())
+&& (forall ref | ref in tbl.contents :: ref in tbl'.contents)
+&& (forall ref | ref in tbl'.contents :: ref in tbl.contents)
+&& (forall ref | ref in tbl.contents :: tbl'.contents[ref].loc == tbl.contents[ref].loc)
+&& (forall ref | ref in tbl.contents :: tbl'.contents[ref].succs == tbl.contents[ref].succs)
+&& (forall ref | ref in tbl.contents :: |tbl.contents[ref].succs| <= MaxNumChildren())
+}
+---
+static predicate {:opaque} ComputeRefCountsOuterLoopInv0(tbl': HashMap, tbl: HashMap, it: LinearMutableMap.Iterator<Entry>)
+requires (forall ref | ref in tbl.contents :: ref in tbl'.contents)
+{
+&& (forall ref | ref in tbl'.contents :: tbl'.contents[ref].predCount as int <= 0x1_0000_0000_0000) // ???
+&& (forall ref | ref in tbl.contents :: tbl'.contents[ref].predCount as int == |PredecessorSetRestricted(Graph(tbl), ref, it.s)| + IsRoot(ref))
+}
+
+static predicate ComputeRefCountsOuterLoopInv(tbl': HashMap, tbl: HashMap, it: LinearMutableMap.Iterator<Entry>)
+{
+&& LinearMutableMap.Inv(tbl')
+---
+static predicate {:opaque} ComputeRefCountsInnerLoopInv0(tbl': HashMap, tbl: HashMap, it: LinearMutableMap.Iterator<Entry>, succs: seq<BT.G.Reference>, i: uint64)
+requires it.next.Next?
+requires ComputeRefCountsSharedInv(tbl', tbl)
+{
+&& (forall ref | ref in tbl'.contents :: tbl'.contents[ref].predCount as int <= 0x1_0000_0000_0000 + i as int)
+&& (RevealComputeRefCountsSharedDomainInv(tbl', tbl);
+forall ref | ref in tbl'.contents :: tbl'.contents[ref].loc == tbl.contents[ref].loc)
+&& (forall ref | ref in tbl'.contents :: tbl'.contents[ref].predCount as int == |PredecessorSetRestrictedPartial(Graph(tbl), ref, it.s, it.next.key, i as int)| + IsRoot(ref))
+}
+
+---
+function {:opaque} getRefUpperBound() : (r: uint64)
+requires Inv()
+ensures forall ref | ref in this.graph :: ref <= r
+{
+reveal Inv();
+this.refUpperBound
+}
+
+shared method GetRefUpperBound() returns (r: uint64)
+requires this.Inv()
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/InsertModel.i.dfy
+function {:opaque} InsertKeyValue(s: BBC.Variables, key: Key, value: Value)
+: (BBC.Variables, bool)
+requires BBC.Inv(s)
+requires s.Ready?
+requires BT.G.Root() in s.cache
+requires var root := s.cache[BT.G.Root()];
+&& BT.WFNode(root)
+&& BoundedKey(root.pivotTable, key)
+{
+lemmaChildrenConditionsOfNode(s, BT.G.Root());
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/IOModel.i.dfy
+function {:opaque} getFreeLoc(s: ImplVariables, len: uint64)
+: (res : Option<Location>)
+requires s.Ready?
+requires s.WFBCVars()
+requires len <= NodeBlockSizeUint64()
+ensures res.Some? ==> 0 <= res.value.addr as int / NodeBlockSize() < NumBlocks()
+{
+var i := BlockAllocatorModel.Alloc(s.blockAllocator.I());
+if i.Some? then
+Some(DiskLayout.Location((i.value * NodeBlockSize()) as uint64, len))
+---
+predicate {:opaque} FindLocationAndRequestWrite(io: IO, s: ImplVariables, sector: Sector,
+id: Option<D.ReqId>, loc: Option<DiskLayout.Location>, io': IO)
+requires s.Ready?
+requires s.WFBCVars()
+ensures FindLocationAndRequestWrite(io, s, sector, id, loc, io') ==>
+loc.Some? ==> 0 <= loc.value.addr as int / NodeBlockSize() < NumBlocks()
+{
+&& var dop := diskOp(io');
+&& (dop.NoDiskOp? || dop.ReqWriteOp?)
+&& (dop.NoDiskOp? ==> (
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/JournalistMarshallingModel.i.dfy
+function {:opaque} cyclicSlice<T>(t: seq<T>, start: uint64, l: uint64) : (res: seq<T>)
+requires 0 <= start as int < |t|
+requires 0 <= l as int <= |t|
+ensures |res| == l as int
+{
+if start as int + l as int <= |t| then
+t[start .. start as int + l as int]
+else
+t[start ..] + t[.. start as int + l as int - |t| as int]
+}
+---
+function {:opaque} withoutChecksums(buf: seq<byte>, numBlocks: uint64) : (res: seq<byte>)
+requires |buf| == 4096 * numBlocks as int
+ensures  |res| == 4064 * numBlocks as int
+{
+if numBlocks == 0 then [] else buf[32..4096] + withoutChecksums(buf[4096..], numBlocks-1)
+}
+
+lemma withoutChecksumsEq(buf: seq<byte>, numBlocks: uint64, block: uint64, idx: uint64)
+requires |buf| == 4096 * numBlocks as int
+requires 0 <= block < numBlocks
+---
+function {:opaque} splice(bytes: seq<byte>, start: uint64, ins: seq<byte>) : (res: seq<byte>)
+requires 0 <= start
+requires start as int + |ins| <= |bytes|
+requires |bytes| < 0x1_0000_0000_0000_0000
+ensures |res| == |bytes|
+{
+bytes[.. start] + ins + bytes[start + |ins| as uint64 ..]
+}
+
+function {:opaque} writeOnto(buf: seq<byte>, numBlocks: uint64, start: uint64, bytes: seq<byte>)
+---
+function {:opaque} writeOnto(buf: seq<byte>, numBlocks: uint64, start: uint64, bytes: seq<byte>)
+: (buf' : seq<byte>)
+requires |buf| == 4096 * numBlocks as int
+requires numBlocks <= NumJournalBlocks()
+requires |bytes| <= 4064
+requires 0 <= start as int <= start as int + |bytes| <= 4064 * numBlocks as int
+ensures |buf'| == |buf|
+{
+if |bytes| as uint64 > 0 then (
+var block := start / 4064;
+---
+function {:opaque} writeIntOnto(buf: seq<byte>, numBlocks: uint64, idx: uint64, val: uint32) : (buf' : seq<byte>)
+requires |buf| == 4096 * numBlocks as int
+requires numBlocks <= NumJournalBlocks()
+requires 0 <= idx
+requires idx as int + 4 <= numBlocks as int * 4064
+ensures |buf'| == |buf|
+{
+var t := pack_LittleEndian_Uint32(val);
+writeOnto(buf, numBlocks, idx, t)
+}
+---
+function {:opaque} writeJournalEntries(buf: seq<byte>, numBlocks: uint64, idx: uint64,
+entries: seq<JournalEntry>, start: uint64, len: uint64) : (buf' : seq<byte>)
+requires |buf| == 4096 * numBlocks as int
+requires numBlocks <= NumJournalBlocks()
+requires 0 <= start as int < |entries|
+requires 0 <= len as int <= |entries|
+requires |entries| < 0xfff_ffff_ffff_ffff
+requires idx as int + SumJournalEntries(cyclicSlice(entries, start, len)) <= 4064 * numBlocks as int
+ensures |buf'| == |buf|
+decreases len
+---
+function {:opaque} fillInChecksums(buf: seq<byte>, numBlocks: uint64, i: uint64) : (buf' : seq<byte>)
+requires |buf| == numBlocks as int * 4096
+requires numBlocks <= NumJournalBlocks()
+requires 0 <= i <= numBlocks
+ensures |buf'| == |buf|
+decreases numBlocks - i
+{
+if i == numBlocks then
+buf
+else (
+---
+predicate {:opaque} hasHeader(buf: seq<byte>, header: Header)
+{
+&& |buf| >= 8
+&& unpack_LittleEndian_Uint32(buf[0..4]) as int == header.nentries
+&& unpack_LittleEndian_Uint32(buf[4..8]) as int == header.nblocks
+}
+
+predicate hasEntryAt(buf: seq<byte>, entry: JournalEntry, start: int)
+{
+var idx0 := start;
+---
+function {:opaque} marshallJournalEntries(entries: seq<JournalEntry>,
+start: uint64, len: uint64, numBlocks: uint64)
+: (res: seq<byte>)
+requires 0 <= start as int < |entries|
+requires 0 <= len as int <= |entries|
+requires |entries| <= 0xffff_ffff
+requires WeightJournalEntries(cyclicSlice(entries, start, len)) <= 4064 * numBlocks as int
+requires 1 <= numBlocks <= NumJournalBlocks()
+ensures JournalRangeOfByteSeq(res).Some?
+ensures parseJournalRange(JournalRangeOfByteSeq(res).value)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/LeafModel.i.dfy
+function {:opaque} repivotLeaf(s: BBC.Variables, ref: BT.G.Reference, node: Node)
+: (s': BBC.Variables)
+requires BBC.Inv(s)
+requires s.Ready?
+requires ref in s.ephemeralIndirectionTable.graph
+requires ref in s.cache
+requires node == s.cache[ref]
+requires node.children.None?
+requires |node.buckets| == 1
+{
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/QueryModel.i.dfy
+function {:opaque} new_lookup(lookup: seq<BT.G.ReadOp>, ref: BT.G.Reference, node: BT.G.Node) : seq<BT.G.ReadOp>
+{
+lookup + [BT.G.ReadOp(ref, node)]
+}
+
+lemma AugmentLookup(lookup': seq<BT.G.ReadOp>, lookup: seq<BT.G.ReadOp>, ref: BT.G.Reference, node: BT.G.Node, key: Key, cache: map<BT.G.Reference, BT.G.Node>, graph: map<BT.G.Reference, seq<BT.G.Reference>>)
+requires lookup' == new_lookup(lookup, ref, node)
+requires |lookup| > 0 ==> BT.WFLookupForKey(lookup, key)
+requires forall i | 0 <= i < |lookup| :: lookup[i].ref in graph
+requires forall i | 0 <= i < |lookup| :: MapsTo(cache, lookup[i].ref, lookup[i].node)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/SplitModel.i.dfy
+function {:opaque} splitBookkeeping(s: BBC.Variables, left_childref: BT.G.Reference, right_childref: BT.G.Reference, parentref: BT.G.Reference, fused_parent_children: seq<BT.G.Reference>, left_child: Node, right_child: Node, slot: int) : (s': BBC.Variables)
+requires 0 <= slot < |fused_parent_children|
+requires s.Ready?
+requires s.WriteAllocConditions()
+requires ChildrenConditions(s, left_child.children)
+requires ChildrenConditions(s, right_child.children)
+requires ChildrenConditions(s, Some(fused_parent_children))
+requires |fused_parent_children| < MaxNumChildren()
+ensures s'.Ready?
+ensures s'.cache == s.cache
+---
+function {:opaque} splitCacheChanges(s: BBC.Variables, left_childref: BT.G.Reference,
+right_childref: BT.G.Reference, parentref: BT.G.Reference, slot: int, num_children_left: int, pivot: Key, left_child: Node, right_child: Node) : (s': BBC.Variables)
+requires s.Ready?
+requires parentref in s.cache
+requires BT.WFNode(s.cache[parentref]);
+requires PivotInsertable(s.cache[parentref].pivotTable, slot+1, pivot)
+requires s.cache[parentref].children.Some?
+requires 0 <= slot < |s.cache[parentref].children.value|
+{
+var fused_parent := s.cache[parentref];
+---
+function {:opaque} splitDoChanges(s: BBC.Variables, child: Node,
+left_childref: BT.G.Reference, right_childref: BT.G.Reference, parentref: BT.G.Reference,
+fused_parent_children: seq<BT.G.Reference>, slot: int) : (s': BBC.Variables)
+requires s.Ready?
+requires parentref in s.cache
+requires BT.WFNode(s.cache[parentref]);
+requires BT.WFNode(child);
+requires s.cache[parentref].children.Some?
+requires 0 <= slot < |s.cache[parentref].children.value|
+requires 0 <= slot < |fused_parent_children|
+---
+function {:opaque} splitChild(s: BBC.Variables, parentref: BT.G.Reference,
+childref: BT.G.Reference, slot: int, lbound: Key, ubound: Option<Key>, refUpperBound: uint64): (s': BBC.Variables)
+requires s.Ready?
+requires BBC.Inv(s)
+requires parentref in s.cache
+requires childref in s.cache
+requires BT.WFNode(s.cache[parentref]);
+requires BT.WFNode(s.cache[childref]);
+requires s.cache[parentref].children.Some?
+requires 0 <= slot < |s.cache[parentref].children.value|
+---
+function {:opaque} doSplit(s: BBC.Variables, parentref: BT.G.Reference, childref: BT.G.Reference, slot: int, refUpperBound: uint64)
+: (s': BBC.Variables)
+requires s.Ready?
+requires BBC.Inv(s)
+requires childref in s.ephemeralIndirectionTable.graph
+requires parentref in s.ephemeralIndirectionTable.graph
+requires childref in s.cache
+requires parentref in s.cache
+requires s.cache[parentref].children.Some?
+requires |s.cache[parentref].buckets| <= MaxNumChildren() - 1
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/StateBCImpl.i.dfy
+predicate {:opaque} ConsistentBitmapInteral(
+ephemeralIndirectionTable: SectorType.IndirectionTable,
+frozenIndirectionTable: lOption<SectorType.IndirectionTable>,
+persistentIndirectionTable: SectorType.IndirectionTable,
+outstandingBlockWrites: map<BC.ReqId, BC.OutstandingWrite>,
+blockAllocator: BlockAllocatorModel.BlockAllocatorModel)
+{
+&& (forall i: int :: ephemeralIndirectionTable.IsLocAllocIndirectionTable(i)
+<==> IT.IndirectionTable.IsLocAllocBitmap(blockAllocator.ephemeral, i))
+&& (forall i: int :: persistentIndirectionTable.IsLocAllocIndirectionTable(i)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/Impl/SuccModel.i.dfy
+function {:opaque} getPathInternal(
+s: BBC.Variables,
+io: IO,
+key: Key,
+acc: seq<Bucket>,
+start: UI.RangeStart,
+upTo: Option<Key>,
+maxToFind: int,
+ref: BT.G.Reference,
+counter: uint64,
+---
+function {:opaque} getPath(
+s: BBC.Variables,
+io: IO,
+key: Key,
+acc: seq<Bucket>,
+start: UI.RangeStart,
+upTo: Option<Key>,
+maxToFind: int,
+ref: BT.G.Reference,
+counter: uint64)
+---
+function {:opaque} doSucc(s: BBC.Variables, io: IO, start: UI.RangeStart, maxToFind: int)
+: (res : (BBC.Variables, IO, Option<UI.SuccResultList>))
+requires BBC.Inv(s)
+requires io.IOInit?
+requires s.Ready?
+requires maxToFind >= 1
+{
+var startKey := if start.NegativeInf? then [] else start.key;
+getPath(s, io, startKey, [], start, None, maxToFind, BT.G.Root(), 40)
+}
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Base/BitsetLemmas.i.dfy
+function method {:opaque} bit(i: uint64) : bv64
+requires i < 64
+{
+1 as bv64 << i
+}
+
+function method {:opaque} bit_and(a: bv64, b: bv64) : bv64
+{
+a & b
+}
+---
+function method {:opaque} bit_and(a: bv64, b: bv64) : bv64
+{
+a & b
+}
+
+function method {:opaque} bit_or(a: bv64, b: bv64) : bv64
+{
+a | b
+}
+
+---
+function method {:opaque} bit_or(a: bv64, b: bv64) : bv64
+{
+a | b
+}
+
+function method {:opaque} bit_comp(a: bv64) : bv64
+{
+0xffff_ffff_ffff_ffff ^ a
+}
+
+---
+function method {:opaque} bit_comp(a: bv64) : bv64
+{
+0xffff_ffff_ffff_ffff ^ a
+}
+
+lemma and_or_dist(a: bv64, b: bv64, c: bv64)
+ensures bit_and(bit_or(a, b), c)
+== bit_or(bit_and(a, c), bit_and(b, c))
+{
+reveal_bit_and();
+---
+predicate method {:opaque} in_set(i: uint64, a: bv64)
+requires i < 64
+{
+bit_and(a, bit(i)) != 0
+}
+
+function method {:opaque} set_bit_to_1(a: bv64, i: uint64) : bv64
+requires i < 64
+{
+bit_or(a, bit(i))
+---
+function method {:opaque} set_bit_to_1(a: bv64, i: uint64) : bv64
+requires i < 64
+{
+bit_or(a, bit(i))
+}
+
+function method {:opaque} set_bit_to_0(a: bv64, i: uint64) : bv64
+requires i < 64
+{
+bit_and(a, bit_comp(bit(i)))
+---
+function method {:opaque} set_bit_to_0(a: bv64, i: uint64) : bv64
+requires i < 64
+{
+bit_and(a, bit_comp(bit(i)))
+}
+
+lemma bit_and_and_comp(a: bv64)
+ensures bit_comp(a) & a == 0
+{
+reveal_bit_comp();
+---
+function method {:opaque} bit_or_uint64(a: uint64, b: uint64) : uint64
+{
+bit_or(a as bv64, b as bv64) as uint64
+}
+
+predicate method {:opaque} in_set_uint64(i: uint64, a: uint64)
+requires i < 64
+{
+in_set(i, a as bv64)
+}
+---
+predicate method {:opaque} in_set_uint64(i: uint64, a: uint64)
+requires i < 64
+{
+in_set(i, a as bv64)
+}
+
+function method {:opaque} set_bit_to_1_uint64(a: uint64, i: uint64) : uint64
+requires i < 64
+{
+set_bit_to_1(a as bv64, i) as uint64
+---
+function method {:opaque} set_bit_to_1_uint64(a: uint64, i: uint64) : uint64
+requires i < 64
+{
+set_bit_to_1(a as bv64, i) as uint64
+}
+
+function method {:opaque} set_bit_to_0_uint64(a: uint64, i: uint64) : uint64
+requires i < 64
+{
+set_bit_to_0(a as bv64, i) as uint64
+---
+function method {:opaque} set_bit_to_0_uint64(a: uint64, i: uint64) : uint64
+requires i < 64
+{
+set_bit_to_0(a as bv64, i) as uint64
+}
+
+lemma bv64cast(a: bv64)
+ensures (a as uint64) as bv64 == a
+{
+MathAxioms.as_int_as_bv64(a);
+---
+function {:opaque} b2u(b:bv64) : uint64
+{
+b as uint64
+}
+
+function {:opaque} u2b(u:uint64) : bv64
+{
+u as bv64
+}
+
+---
+function {:opaque} u2b(u:uint64) : bv64
+{
+u as bv64
+}
+
+lemma u2b_inverse_b2u(a:bv64)
+ensures u2b(b2u(a)) == a;
+{
+reveal b2u();
+reveal u2b();
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Base/MapRemove.s.dfy
+function {:opaque} MapRemove1<K,V>(m:map<K,V>, k:K) : (m':map<K,V>)
+ensures forall j :: j in m && j != k ==> j in m'
+ensures forall j :: j in m' ==> j in m && j != k
+ensures forall j :: j in m' ==> m'[j] == m[j]
+ensures |m'.Keys| <= |m.Keys|
+ensures k in m ==> |m'| == |m| - 1
+ensures k !in m ==> |m'| == |m|
+{
+var m' := map j | j in m && j != k :: m[j];
+assert m'.Keys == m.Keys - {k};
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Base/Maps.i.dfy
+function {:opaque} MapRemove<K,V>(m:map<K,V>, ks:set<K>) : (m':map<K,V>)
+ensures forall k :: k in m && k !in ks ==> k in m'
+ensures forall k :: k in m' ==> k in m && k !in ks
+ensures forall j :: j in m' ==> m'[j] == m[j]
+ensures |m'.Keys| <= |m.Keys|
+ensures |m'| <= |m|
+{
+var m':= map j | j in m && j !in ks :: m[j];
+assert m'.Keys == m.Keys - ks;
+m'
+---
+function {:opaque} MapRemoveStrong<K,V>(m:map<K,V>, ks:set<K>) : (m':map<K,V>)
+ensures m'.Keys == m.Keys - ks
+ensures forall j :: j in m' ==> m'[j] == m[j]
+ensures |m'.Keys| <= |m.Keys|
+ensures |m'| <= |m|
+{
+reveal_MapRemove();
+MapRemove(m, ks)
+}
+
+---
+function {:opaque} MapRemove1Strong<K,V>(m:map<K,V>, k:K) : (m':map<K,V>)
+ensures m'.Keys == m.Keys - {k}
+ensures forall j :: j in m' ==> m'[j] == m[j]
+ensures |m'.Keys| <= |m.Keys|
+ensures |m'| <= |m|
+{
+MapRemove_s.reveal_MapRemove1();
+MapRemove1(m, k)
+}
+
+---
+function {:opaque} IMapRemove<K,V>(m:imap<K,V>, ks:iset<K>) : (m':imap<K,V>)
+ensures m'.Keys == m.Keys - ks
+ensures forall j :: j in m' ==> m'[j] == m[j]
+{
+imap j | j in m && j !in ks :: m[j]
+}
+
+function {:opaque} IMapRemove1<K,V>(m:imap<K,V>, k:K) : (m':imap<K,V>)
+ensures m'.Keys == m.Keys - iset{k}
+ensures forall j :: j in m' ==> m'[j] == m[j]
+---
+function {:opaque} IMapRemove1<K,V>(m:imap<K,V>, k:K) : (m':imap<K,V>)
+ensures m'.Keys == m.Keys - iset{k}
+ensures forall j :: j in m' ==> m'[j] == m[j]
+{
+imap j | j in m && j != k :: m[j]
+}
+
+function MapRestrict<K,V>(m:map<K,V>, ks: set<K>) : (m':map<K,V>) {
+map k | k in ks && k in m :: m[k]
+}
+---
+function {:opaque} MapDisjointUnion<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc: map<U,T>)
+requires mapa.Keys !! mapb.Keys;
+ensures mapc.Keys == mapa.Keys + mapb.Keys;
+ensures forall k :: k in mapa.Keys ==> mapa[k] == mapc[k];
+ensures forall k :: k in mapb.Keys ==> mapb[k] == mapc[k];
+{
+map x : U | (x in mapa.Keys + mapb.Keys) :: if x in mapa then mapa[x] else mapb[x]
+}
+
+function {:opaque} MapUnionPreferA<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc:map<U,T>)
+---
+function {:opaque} MapUnionPreferA<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc:map<U,T>)
+ensures mapc.Keys == mapa.Keys + mapb.Keys;
+ensures forall k :: k in mapa.Keys ==> mapc[k] == mapa[k];
+ensures forall k :: k in mapb.Keys - mapa.Keys ==> mapc[k] == mapb[k];
+ensures forall k :: k in mapa.Keys && !(k in mapb.Keys) ==> mapc[k] == mapa[k]; // no-set-op translation is easier for Dafny
+{
+map x : U | (x in mapa.Keys + mapb.Keys) :: if x in mapa then mapa[x] else mapb[x]
+}
+
+function {:opaque} MapUnionPreferB<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc:map<U,T>)
+---
+function {:opaque} MapUnionPreferB<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc:map<U,T>)
+ensures mapc.Keys == mapa.Keys + mapb.Keys;
+ensures forall k :: k in mapb.Keys ==> mapc[k] == mapb[k];
+ensures forall k :: k in mapa.Keys - mapb.Keys ==> mapc[k] == mapa[k];
+ensures forall k :: k in mapa.Keys && !(k in mapb.Keys) ==> mapc[k] == mapa[k]; // no-set-op translation is easier for Dafny
+{
+map x : U | (x in mapa.Keys + mapb.Keys) :: if x in mapb then mapb[x] else mapa[x]
+}
+
+function {:opaque} MapUnion<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc: map<U,T>)
+---
+function {:opaque} MapUnion<U,T>(mapa: map<U,T>, mapb: map<U,T>) : (mapc: map<U,T>)
+ensures mapc.Keys == mapa.Keys + mapb.Keys;
+ensures forall k :: k in mapa.Keys -mapb.Keys ==> mapa[k] == mapc[k];
+ensures forall k :: k in mapb.Keys - mapa.Keys ==> mapb[k] == mapc[k];
+ensures forall k :: k in mapa.Keys * mapb.Keys ==>	mapb[k] == mapc[k] || mapa[k] == mapc[k];
+{
+MapUnionPreferA(mapa, mapb)
+}
+
+function {:opaque} IMapUnionPreferA<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc:imap<U,T>)
+---
+function {:opaque} IMapUnionPreferA<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc:imap<U,T>)
+ensures mapc.Keys == mapa.Keys + mapb.Keys;
+ensures forall k :: k in mapa.Keys ==> mapc[k] == mapa[k];
+ensures forall k :: k in mapb.Keys - mapa.Keys ==> mapc[k] == mapb[k];
+ensures forall k :: k in mapb.Keys && !(k in mapa.Keys) ==> mapc[k] == mapb[k]; // no-set-op translation is easier for Dafny
+{
+imap x : U | (x in mapa.Keys + mapb.Keys) :: if x in mapa then mapa[x] else mapb[x]
+}
+
+function {:opaque} IMapUnionPreferB<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc:imap<U,T>)
+---
+function {:opaque} IMapUnionPreferB<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc:imap<U,T>)
+ensures mapc.Keys == mapa.Keys + mapb.Keys;
+ensures forall k :: k in mapb.Keys ==> mapc[k] == mapb[k];
+ensures forall k :: k in mapa.Keys - mapb.Keys ==> mapc[k] == mapa[k];
+ensures forall k :: k in mapa.Keys && !(k in mapb.Keys) ==> mapc[k] == mapa[k]; // no-set-op translation is easier for Dafny
+{
+imap x : U | (x in mapa.Keys + mapb.Keys) :: if x in mapb then mapb[x] else mapa[x]
+}
+
+function {:opaque} IMapUnion<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc: imap<U,T>)
+---
+function {:opaque} IMapUnion<U,T>(mapa: imap<U,T>, mapb: imap<U,T>) : (mapc: imap<U,T>)
+ensures mapc.Keys == mapa.Keys + mapb.Keys;
+ensures forall k :: k in mapa.Keys -mapb.Keys ==> mapa[k] == mapc[k];
+ensures forall k :: k in mapb.Keys - mapa.Keys ==> mapb[k] == mapc[k];
+ensures forall k :: k in mapa.Keys * mapb.Keys ==>	mapb[k] == mapc[k] || mapa[k] == mapc[k];
+{
+IMapUnionPreferA(mapa, mapb)
+}
+
+function {:opaque} MapDisjointUnion3<U,T>(mapa: map<U,T>, mapb: map<U,T>, mapc: map<U,T>) : map<U,T>
+---
+function {:opaque} MapDisjointUnion3<U,T>(mapa: map<U,T>, mapb: map<U,T>, mapc: map<U,T>) : map<U,T>
+requires mapa.Keys !! mapb.Keys !! mapc.Keys;
+ensures MapDisjointUnion3(mapa, mapb, mapc).Keys == mapa.Keys + mapb.Keys + mapc.Keys;
+ensures mapa.Keys != {} || mapb.Keys != {} || mapc.Keys != {} ==> MapDisjointUnion3(mapa, mapb, mapc).Keys != {};
+ensures forall k :: k in mapa.Keys ==> mapa[k] == MapDisjointUnion3(mapa, mapb, mapc)[k];
+ensures forall k :: k in mapb.Keys ==> mapb[k] == MapDisjointUnion3(mapa, mapb, mapc)[k];
+ensures forall k :: k in mapc.Keys ==> mapc[k] == MapDisjointUnion3(mapa, mapb, mapc)[k];
+ensures MapDisjointUnion3(mapa, mapb, mapc) == MapDisjointUnion(mapa, MapDisjointUnion(mapb, mapc))
+== MapDisjointUnion(MapDisjointUnion(mapa, mapb), mapc);
+{
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Base/Multisets.i.dfy
+function {:opaque} Choose<A>(s: multiset<A>) : (result: A)
+requires 0 < |s|
+ensures result in s
+{
+var a :| a in s;
+a
+}
+
+function {:opaque} Apply<A, B>(fn: A ~> B, s: multiset<A>) : (result: multiset<B>)
+requires forall x | x in s :: fn.requires(x)
+---
+function {:opaque} Apply<A, B>(fn: A ~> B, s: multiset<A>) : (result: multiset<B>)
+requires forall x | x in s :: fn.requires(x)
+ensures |result| == |s|
+reads set x, o | x in s && o in fn.reads(x) :: o
+{
+if |s| == 0 then
+multiset{}
+else
+var x := Choose(s);
+multiset{fn(x)} + Apply(fn, s - multiset{x})
+---
+function {:opaque} Fold<A(!new)>(zero: A, add: (A, A) ~> A, inv: A -> bool, s: multiset<A>) : (result: A)
+requires Foldable(zero, add, inv)
+requires forall x | x in s :: inv(x)
+ensures |s| == 0 ==> result == zero
+ensures inv(result)
+reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
+{
+if |s| == 0 then
+zero
+else
+---
+predicate {:opaque} IsIdentity<A(!new)>(add: (A, A) ~> A, inv: A -> bool, zero: A)
+reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
+{
+&& Foldable(zero, add, inv)
+&& forall a | inv(a) :: add(zero, a) == add(a, zero) == a
+}
+
+predicate {:opaque} IsCommutative<A(!new)>(add: (A, A) ~> A, inv: A -> bool)
+requires forall x, y | inv(x) && inv(y) :: add.requires(x, y)
+reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
+---
+predicate {:opaque} IsCommutative<A(!new)>(add: (A, A) ~> A, inv: A -> bool)
+requires forall x, y | inv(x) && inv(y) :: add.requires(x, y)
+reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
+{
+forall a, b | inv(a) && inv(b) :: add(a, b) == add(b, a)
+}
+
+predicate {:opaque} IsAssociative<A(!new)>(add: (A, A) ~> A, inv: A -> bool)
+requires forall x, y | inv(x) && inv(y) :: add.requires(x, y) && inv(add(x, y))
+reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
+---
+predicate {:opaque} IsAssociative<A(!new)>(add: (A, A) ~> A, inv: A -> bool)
+requires forall x, y | inv(x) && inv(y) :: add.requires(x, y) && inv(add(x, y))
+reads set x, y, o | inv(x) && inv(y) && o in add.reads(x, y) :: o
+{
+forall a, b, c | inv(a) && inv(b) && inv(c) :: add(add(a, b), c) == add(a, add(b, c))
+}
+
+
+predicate IsIdentitySimple<A(!new)>(add: (A, A) -> A, zero: A)
+{
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Base/PackedIntsLib.i.dfy
+function method {:opaque} pack_LittleEndian_Uint32(i: uint32)
+: (s : seq<byte>)
+ensures |s| == 4
+ensures unpack_LittleEndian_Uint32(s) == i
+{
+var d0 := i % 256;
+var i1 := (i - d0) / 256;
+var d1 := i1 % 256;
+var i2 := (i1 - d1) / 256;
+var d2 := i2 % 256;
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Base/Sequences.i.dfy
+predicate {:opaque} NoDupes<T>(a: seq<T>) {
+(forall i, j :: 0 <= i < |a| && 0 <= j < |a| && i != j ==> a[i] != a[j])
+}
+
+lemma {:timeLimitMultiplier 3} DisjointConcatenation<T>(a: seq<T>, b: seq<T>)
+requires NoDupes(a);
+requires NoDupes(b);
+requires multiset(a) !! multiset(b);
+ensures NoDupes(a + b);
+{
+---
+function {:opaque} Range(n: int) : seq<int>
+requires n >= 0
+ensures |Range(n)| == n
+ensures forall i | 0 <= i < n :: Range(n)[i] == i
+{
+if n == 0 then [] else Range(n-1) + [n-1]
+}
+
+function Apply<E,R>(f: (E ~> R), run: seq<E>) : (result: seq<R>)
+requires forall i :: 0 <= i < |run| ==> f.requires(run[i])
+---
+function {:opaque} ApplyOpaque<E,R>(f: (E ~> R), run: seq<E>) : (result: seq<R>)
+requires forall i :: 0 <= i < |run| ==> f.requires(run[i])
+ensures |result| == |run|
+ensures forall i :: 0 <= i < |run| ==> result[i] == f(run[i]);
+reads set i, o | 0 <= i < |run| && o in f.reads(run[i]) :: o
+{
+Apply(f, run)
+}
+
+function Filter<E>(f : (E ~> bool), run: seq<E>) : (result: seq<E>)
+---
+function {:opaque} remove<A>(s: seq<A>, pos: int) : seq<A>
+requires 0 <= pos < |s|
+ensures |remove(s, pos)| == |s| - 1
+ensures forall i | 0 <= i < pos :: remove(s, pos)[i] == s[i]
+ensures forall i | pos <= i < |s| - 1 :: remove(s, pos)[i] == s[i+1]
+{
+s[.. pos] + s[pos + 1 ..]
+}
+
+function {:opaque} RemoveOneValue<V>(s: seq<V>, v: V) : (s': seq<V>)
+---
+function {:opaque} RemoveOneValue<V>(s: seq<V>, v: V) : (s': seq<V>)
+ensures NoDupes(s) ==> NoDupes(s') && Set(s') == Set(s) - {v}
+{
+reveal_NoDupes();
+if v !in s then s else
+var i :| 0 <= i < |s| && s[i] == v;
+s[.. i] + s[i + 1 ..]
+}
+
+function {:opaque} insert<A>(s: seq<A>, a: A, pos: int) : seq<A>
+---
+function {:opaque} insert<A>(s: seq<A>, a: A, pos: int) : seq<A>
+requires 0 <= pos <= |s|;
+ensures |insert(s,a,pos)| == |s| + 1;
+ensures forall i :: 0 <= i < pos ==> insert(s, a, pos)[i] == s[i];
+ensures forall i :: pos <= i < |s| ==> insert(s, a, pos)[i+1] == s[i];
+ensures insert(s, a, pos)[pos] == a;
+{
+s[..pos] + [a] + s[pos..]
+}
+
+---
+function {:opaque} replace1with2<A>(s: seq<A>, a: A, b: A, pos: int) : seq<A>
+requires 0 <= pos < |s|;
+ensures |replace1with2(s,a,b,pos)| == |s| + 1;
+ensures forall i :: 0 <= i < pos ==> replace1with2(s, a, b, pos)[i] == s[i];
+ensures forall i :: pos < i < |s| ==> replace1with2(s, a, b, pos)[i+1] == s[i];
+ensures replace1with2(s, a, b, pos)[pos] == a;
+ensures replace1with2(s, a, b, pos)[pos + 1] == b;
+{
+s[..pos] + [a, b] + s[pos+1..]
+}
+---
+function {:opaque} replace2with1<A>(s: seq<A>, a: A, pos: int) : seq<A>
+requires 0 <= pos < |s| - 1;
+ensures |replace2with1(s,a,pos)| == |s| - 1;
+ensures forall i :: 0 <= i < pos ==> replace2with1(s, a, pos)[i] == s[i];
+ensures forall i :: pos < i < |s| - 1 ==> replace2with1(s, a, pos)[i] == s[i+1];
+ensures replace2with1(s, a, pos)[pos] == a;
+{
+s[..pos] + [a] + s[pos+2..]
+}
+
+---
+function {:opaque} concat<A>(a: seq<A>, b: seq<A>) : seq<A>
+ensures |concat(a,b)| == |a| + |b|
+ensures forall i :: 0 <= i < |a| ==> a[i] == concat(a,b)[i];
+ensures forall i :: 0 <= i < |b| ==> b[i] == concat(a,b)[|a| + i];
+{
+a + b
+}
+
+function {:opaque} concat3<A>(a: seq<A>, b: A, c: seq<A>) : seq<A>
+ensures |concat3(a,b,c)| == |a| + |c| + 1
+---
+function {:opaque} concat3<A>(a: seq<A>, b: A, c: seq<A>) : seq<A>
+ensures |concat3(a,b,c)| == |a| + |c| + 1
+ensures forall i :: 0 <= i < |a| ==> a[i] == concat3(a,b,c)[i];
+ensures concat3(a,b,c)[|a|] == b;
+ensures forall i :: 0 <= i < |c| ==> c[i] == concat3(a,b,c)[|a| + 1 + i];
+{
+a + [b] + c
+}
+
+function {:opaque} concatSeq<A>(a: seq<seq<A>>) : seq<A>
+---
+function {:opaque} concatSeq<A>(a: seq<seq<A>>) : seq<A>
+{
+if |a| == 0 then [] else concatSeq(DropLast(a)) + Last(a)
+}
+
+lemma concatSeqAdditive<A>(a: seq<seq<A>>, b: seq<seq<A>>)
+ensures concatSeq(a + b) == concatSeq(a) + concatSeq(b)
+{
+if b == [] {
+calc {
+---
+predicate {:opaque} IsPrefix<A>(a: seq<A>, b: seq<A>)
+ensures IsPrefix(a, b) ==> |a| <= |b|
+{
+&& |a| <= |b|
+&& a == b[..|a|]
+}
+
+predicate {:opaque} IsSuffix<A>(a: seq<A>, b: seq<A>) {
+&& |a| <= |b|
+&& a == b[|b|-|a|..]
+---
+predicate {:opaque} IsSuffix<A>(a: seq<A>, b: seq<A>) {
+&& |a| <= |b|
+&& a == b[|b|-|a|..]
+}
+
+function {:opaque} SeqIndexIterate<A>(run: seq<A>, needle: A, i: int) : (res : Option<int>)
+requires 0 <= i <= |run|
+ensures res.Some? ==> 0 <= res.value < |run| && run[res.value] == needle
+ensures res.None? ==> forall j | i <= j < |run| :: run[j] != needle
+decreases |run| - i
+---
+function {:opaque} SeqIndexIterate<A>(run: seq<A>, needle: A, i: int) : (res : Option<int>)
+requires 0 <= i <= |run|
+ensures res.Some? ==> 0 <= res.value < |run| && run[res.value] == needle
+ensures res.None? ==> forall j | i <= j < |run| :: run[j] != needle
+decreases |run| - i
+{
+if i == |run| then None
+else if run[i] == needle then Some(i)
+else SeqIndexIterate(run, needle, i+1)
+}
+---
+function {:opaque} SeqIndex<A>(run: seq<A>, needle: A) : (res : Option<int>)
+ensures res.Some? ==> 0 <= res.value < |run| && run[res.value] == needle
+ensures res.None? ==> forall i | 0 <= i < |run| :: run[i] != needle
+{
+SeqIndexIterate(run, needle, 0)
+}
+
+function {:opaque} SeqOfLength<V>(length: nat, v: V) : (res: seq<V>)
+ensures |res| == length
+ensures forall i: nat | i < |res| :: res[i] == v
+---
+function {:opaque} SeqOfLength<V>(length: nat, v: V) : (res: seq<V>)
+ensures |res| == length
+ensures forall i: nat | i < |res| :: res[i] == v
+{
+if length == 0 then
+[]
+else
+[v] + SeqOfLength(length - 1, v)
+}
+
+---
+function method {:opaque} SeqIndexUpdate<T>(s: seq<T>, i: uint64, t: T) : seq<T>
+requires i as int + 1 < 0x1_0000_0000_0000_0000
+requires 0 <= i as int < |s|
+ensures SeqIndexUpdate(s, i, t) == s[i as int := t]
+{
+s[..i] + [t] + s[i+1..]
+}
+
+function {:opaque} Zip<A,B>(a: seq<A>, b: seq<B>) : seq<(A,B)>
+requires |a| == |b|
+---
+function {:opaque} Zip<A,B>(a: seq<A>, b: seq<B>) : seq<(A,B)>
+requires |a| == |b|
+ensures |Zip(a, b)| == |a|
+ensures forall i :: 0 <= i < |Zip(a, b)| ==> Zip(a, b)[i] == (a[i], b[i])
+{
+if |a| == 0 then []
+else Zip(DropLast(a), DropLast(b)) + [(Last(a), Last(b))]
+}
+
+function {:opaque} Unzip<A,B>(z: seq<(A, B)>) : (seq<A>, seq<B>)
+---
+function {:opaque} Unzip<A,B>(z: seq<(A, B)>) : (seq<A>, seq<B>)
+ensures |Unzip(z).0| == |Unzip(z).1| == |z|
+ensures forall i :: 0 <= i < |z| ==> (Unzip(z).0[i], Unzip(z).1[i]) == z[i]
+{
+if |z| == 0 then ([], [])
+else
+var (a, b) := Unzip(DropLast(z));
+(a + [Last(z).0], b + [Last(z).1])
+}
+
+---
+function {:opaque} FlattenShape<A>(seqs: seq<seq<A>>) : (shape: seq<nat>)
+ensures |shape| == |seqs|
+ensures forall i :: 0 <= i < |shape| ==> shape[i] == |seqs[i]|
+{
+if |seqs| == 0 then []
+else FlattenShape(DropLast(seqs)) + [|Last(seqs)|]
+}
+
+lemma FlattenShapeAdditive<A>(seqs1: seq<seq<A>>, seqs2: seq<seq<A>>)
+ensures FlattenShape(seqs1 + seqs2) == FlattenShape(seqs1) + FlattenShape(seqs2)
+---
+function {:opaque} FlattenLength(shape: seq<nat>) : nat
+ensures |shape| == 0 ==> FlattenLength(shape) == 0
+{
+if |shape| == 0 then 0
+else FlattenLength(DropLast(shape)) + Last(shape)
+}
+
+
+lemma {:induction true} FlattenLengthAdditive(shape1: seq<nat>, shape2: seq<nat>)
+ensures FlattenLength(shape1 + shape2) == FlattenLength(shape1) + FlattenLength(shape2)
+---
+function {:opaque} Flatten<A>(seqs: seq<seq<A>>) : seq<A>
+ensures |Flatten(seqs)| == FlattenLength(FlattenShape(seqs))
+ensures |seqs| == 0 ==> |Flatten(seqs)| == 0
+{
+reveal_FlattenShape();
+reveal_FlattenLength();
+if |seqs| == 0 then []
+else Flatten(DropLast(seqs)) + Last(seqs)
+}
+
+---
+function {:opaque} seqMax(s: seq<int>): int
+requires 0 < |s|
+ensures forall k :: k in s ==> seqMax(s) >= k
+ensures seqMax(s) in s
+{
+assert s == DropLast(s) + [Last(s)];
+if |s| == 1
+then s[0]
+else Math.max(seqMax(DropLast(s)), Last(s))
+}
+---
+function {:opaque} fill<T>(n: int, t: T) : (res: seq<T>)
+requires n >= 0
+ensures |res| == n
+ensures forall i | 0 <= i < n :: res[i] == t
+{
+if n == 0 then [] else fill(n-1, t) + [t]
+}
+
+lemma sum_slice_second<T>(a: seq<T>, b: seq<T>, i: int, j: int)
+requires |a| <= i <= j <= |a| + |b|
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Base/total_order.i.dfy
+predicate {:opaque} IsSorted(run: seq<Element>)
+ensures |run| == 0 ==> IsSorted(run)
+ensures |run| == 1 ==> IsSorted(run)
+{
+forall i, j :: 0 <= i <= j < |run| ==> lte(run[i], run[j])
+}
+
+predicate IsStrictlySortedInternal(run: seq<Element>)
+{
+forall i, j :: 0 <= i < j < |run| ==> lt(run[i], run[j])
+---
+predicate {:opaque} IsStrictlySorted(run: seq<Element>)
+ensures |run| == 0 ==> IsStrictlySorted(run)
+ensures |run| == 1 ==> IsStrictlySorted(run)
+ensures IsStrictlySorted(run) ==> IsSorted(run)
+{
+var b := IsStrictlySortedInternal(run);
+if b then
+StrictlySortedImpliesSorted(run);
+b
+else
+---
+function {:opaque} binarySearchIndexOfFirstKeyGte(s: seq<Element>, key: Element) : (i: int)
+ensures 0 <= i <= |s|
+ensures i > 0 ==> lt(s[i-1], key)
+ensures i < |s| ==> lte(key, s[i])
+{
+binarySearchIndexOfFirstKeyGteIter(s, key, 0, |s| + 1)
+}
+
+function IndexOfFirstGt(run: seq<Element>, needle: Element) : (result: nat)
+requires IsSorted(run)
+---
+function {:opaque} binarySearchIndexOfFirstKeyGt(s: seq<Element>, key: Element) : (i: int)
+ensures 0 <= i <= |s|
+ensures i > 0 ==> lte(s[i-1], key)
+ensures i < |s| ==> lt(key, s[i])
+{
+binarySearchIndexOfFirstKeyGtIter(s, key, 0, |s| + 1)
+}
+
+lemma strictlySortedInsert(l: seq<Element>, k: Element, pos: int)
+requires -1 <= pos < |l|;
+---
+predicate {:opaque} NotMinimum(a: Element) {
+exists b :: lt(b, a)
+}
+
+lemma IsNotMinimum(a: Element, b: Element)
+requires lt(a, b)
+ensures NotMinimum(b)
+{
+reveal_NotMinimum();
+}
+---
+predicate {:opaque} SortedSeqForMap<V>(s: seq<(Element, V)>, m: map<Element, V>)
+{
+&& IsStrictlySorted(Seq.Unzip(s).0)
+&& (forall i :: 0 <= i < |s| ==> s[i].0 in m && m[s[i].0] == s[i].1)
+&& (forall key :: key in m ==> (exists i :: 0 <= i < |s| && s[i].0 == key && s[i].1 == m[key]))
+}
+
+function {:opaque} minimum(s: set<Element>) : (x : Element)
+requires |s| >= 1
+ensures x in s
+---
+function {:opaque} minimum(s: set<Element>) : (x : Element)
+requires |s| >= 1
+ensures x in s
+ensures forall y | y in s :: lte(x, y)
+{
+var a :| a in s;
+var s' := s - {a};
+if s' == {} then (
+assert s == {a};
+a
+---
+function {:opaque} minimumOpt(s: set<Element>) : (x : Option<Element>)
+ensures x.Some? ==> x.value in s
+ensures x.Some? ==> forall y | y in s :: lte(x.value, y)
+ensures x.None? ==> s == {}
+{
+if s == {} then None else Some(minimum(s))
+}
+
+function {:opaque} maximum(s: set<Element>) : (x : Element)
+requires |s| >= 1
+---
+function {:opaque} maximum(s: set<Element>) : (x : Element)
+requires |s| >= 1
+ensures x in s
+ensures forall y | y in s :: lte(y, x)
+{
+var a :| a in s;
+var s' := s - {a};
+if s' == {} then (
+assert s == {a};
+a
+---
+function {:opaque} maximumOpt(s: set<Element>) : (x : Option<Element>)
+ensures x.Some? ==> x.value in s
+ensures x.Some? ==> forall y | y in s :: lte(y, x.value)
+ensures x.None? ==> s == {}
+{
+if s == {} then None else Some(maximum(s))
+}
+}
+
+}*/
+---
+predicate {:opaque} ltedef(a: Element, b: Element) {
+a <= b
+}
+}
+
+module Nat_Order refines Total_Order {
+type Element = nat
+
+function SomeElement() : Element { 0 }
+
+---
+predicate {:opaque} ltedef(a: Element, b: Element) {
+a <= b
+}
+}
+
+module Uint32_Order refines Total_Order {
+type Element = uint32
+
+function SomeElement() : Element { 0 }
+
+---
+predicate method {:opaque} ltedef(a: Element, b: Element) {
+a <= b
+}
+}
+
+module Uint64_Order refines Total_Order {
+type Element = uint64
+
+function SomeElement() : Element { 0 }
+
+---
+predicate method {:opaque} ltedef(a: Element, b: Element) {
+a <= b
+}
+}
+
+
+module Char_Order refines Total_Order {
+type Element = char
+
+function SomeElement() : Element { '\0' }
+---
+predicate method {:opaque} lte(a: Element, b: Element) {
+reveal_ltedef();
+a <= b
+}
+
+predicate method {:opaque} ltedef(a: Element, b: Element) {
+a <= b
+}
+}
+
+---
+predicate method {:opaque} ltedef(a: Element, b: Element) {
+a <= b
+}
+}
+
+module Lexicographic_Byte_Order refines Total_Order {
+import SeqComparison
+type Element = seq<NativeTypes.byte>
+
+import Base_Order = Byte_Order
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/BoundedPivotsLib.i.dfy
+function {:opaque} CutoffForLeft(pt: PivotTable, pivot: Key) : int
+requires WFPivots(pt)
+requires ValidLeftCutOffKey(pt, pivot)
+ensures 0 <= CutoffForLeft(pt, pivot) < NumBuckets(pt)
+ensures forall i | 0 <= i <= CutoffForLeft(pt, pivot) :: Keyspace.lt(pt[i], KeyToElement(pivot));
+ensures forall i | CutoffForLeft(pt, pivot) < i < |pt| :: Keyspace.lte(KeyToElement(pivot), pt[i]);
+{
+Keyspace.LargestLt(pt, KeyToElement(pivot))
+}
+
+---
+function {:opaque} CutoffForRight(pt: PivotTable, pivot: Key) : int
+requires WFPivots(pt)
+requires BoundedKey(pt, pivot)
+ensures 0 <= CutoffForRight(pt, pivot) < NumBuckets(pt)
+ensures forall i | 0 <= i <= CutoffForRight(pt, pivot) :: Keyspace.lte(pt[i], KeyToElement(pivot));
+ensures forall i | CutoffForRight(pt, pivot) < i < |pt| :: Keyspace.lt(KeyToElement(pivot), pt[i]);
+{
+Route(pt, pivot)
+}
+
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/BucketFlushModel.i.dfy
+function {:opaque} mergeToOneChild(
+top_keys: seq<Key>,
+top_msgs: seq<Message>,
+from: nat,
+to: nat,
+bot_keys: seq<Key>,
+bot_msgs: seq<Message>,
+bot_from: nat,
+acc_keys: seq<Key>,
+acc_msgs: seq<Message>,
+---
+function {:opaque} mergeToChildren(
+top: Bucket,
+pivots: PivotTable,
+bots: seq<Bucket>,
+slack: nat) : (result: mergeResult)
+requires WFBucket(top)
+requires forall i | 0 <= i < |bots| :: WFBucket(bots[i])
+requires 0 < |bots| == NumBuckets(pivots)
+ensures |result.bots| == |bots|
+{
+---
+function {:opaque} partialFlush(
+top: Bucket,
+pivots: PivotTable,
+bots: seq<Bucket>) : (res : partialFlushResult)
+requires WFBucket(top)
+requires forall i | 0 <= i < |bots| :: WFBucket(bots[i])
+requires 0 < |bots| == NumBuckets(pivots)
+requires WeightBucketList(bots) <= MaxTotalBucketWeight()
+ensures |res.bots| == |bots|
+{
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/BucketImpl.i.dfy
+static function {:opaque} ISeq(s: seq<MutBucket>) : (bs : seq<Bucket>)
+ensures |bs| == |s|
+ensures forall i | 0 <= i < |s| :: bs[i] == s[i].bucket
+decreases |s|
+{
+if |s| == 0 then [] else ISeq(DropLast(s)) + [Last(s).I()]
+}
+
+static lemma ISeqInduction(s: seq<MutBucket>)
+requires |s| > 0
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/BucketIteratorModel.i.dfy
+predicate {:opaque} WFIter(bucket: Bucket, it: Iterator)
+ensures WFIter(bucket, it) ==>
+&& PreWFBucket(bucket)
+&& it.decreaser >= 0
+&& (it.next.Next? && BucketWellMarshalled(bucket) ==> (
+&& it.next.key in bucket.as_map()
+&& bucket.as_map()[it.next.key] == it.next.msg
+))
+{
+&& PreWFBucket(bucket)
+---
+function {:opaque} IterStart(bucket: Bucket) : (it' : Iterator)
+requires WFBucket(bucket)
+ensures WFIter(bucket, it')
+{
+reveal WFIter();
+iterForIndex(bucket, 0)
+}
+
+function {:opaque} IterFindFirstGte(bucket: Bucket, key: Key) : (it' : Iterator)
+requires WFBucket(bucket)
+---
+function {:opaque} IterFindFirstGte(bucket: Bucket, key: Key) : (it' : Iterator)
+requires WFBucket(bucket)
+ensures WFIter(bucket, it')
+ensures it'.next.Next? ==> Keyspace.lte(key, it'.next.key)
+{
+iterForIndex(bucket,
+Keyspace.binarySearchIndexOfFirstKeyGte(bucket.keys, key))
+}
+
+function {:opaque} IterFindFirstGt(bucket: Bucket, key: Key) : (it' : Iterator)
+---
+function {:opaque} IterFindFirstGt(bucket: Bucket, key: Key) : (it' : Iterator)
+requires WFBucket(bucket)
+ensures WFIter(bucket, it')
+ensures it'.next.Next? ==> Keyspace.lt(key, it'.next.key)
+{
+reveal WFIter();
+iterForIndex(bucket,
+Keyspace.binarySearchIndexOfFirstKeyGt(bucket.keys, key))
+}
+
+---
+function {:opaque} IterInc(bucket: Bucket, it: Iterator) : (it' : Iterator)
+requires WFBucket(bucket)
+requires WFIter(bucket, it)
+requires it.next.Next?
+ensures WFIter(bucket, it')
+ensures it'.decreaser < it.decreaser
+{
+reveal WFIter();
+iterForIndex(bucket, it.idx + 1)
+}
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/BucketMap.i.dfy
+function {:opaque} BucketIntersect(bucket: BucketMap, keys: set<Key>) : (res : BucketMap)
+{
+map key | key in bucket && key in keys :: bucket[key]
+}
+
+function {:opaque} BucketComplement(bucket: BucketMap, keys: set<Key>) : (res : BucketMap)
+{
+map key | key in bucket && key !in keys :: bucket[key]
+}
+
+---
+function {:opaque} BucketComplement(bucket: BucketMap, keys: set<Key>) : (res : BucketMap)
+{
+map key | key in bucket && key !in keys :: bucket[key]
+}
+
+
+function {:opaque} ClampRange(bucket: BucketMap, start: UI.RangeStart, end: UI.RangeEnd) : (res : BucketMap)
+{
+map key | key in bucket && MS.InRange(start, key, end) :: bucket[key]
+}
+---
+function {:opaque} ClampRange(bucket: BucketMap, start: UI.RangeStart, end: UI.RangeEnd) : (res : BucketMap)
+{
+map key | key in bucket && MS.InRange(start, key, end) :: bucket[key]
+}
+
+function {:opaque} ClampStart(bucket: BucketMap, start: UI.RangeStart) : (res : BucketMap)
+{
+map key | key in bucket && MS.LowerBound(start, key) :: bucket[key]
+}
+
+---
+function {:opaque} ClampStart(bucket: BucketMap, start: UI.RangeStart) : (res : BucketMap)
+{
+map key | key in bucket && MS.LowerBound(start, key) :: bucket[key]
+}
+
+function {:opaque} ClampEnd(bucket: BucketMap, end: UI.RangeEnd) : (res : BucketMap)
+{
+map key | key in bucket && MS.UpperBound(key, end) :: bucket[key]
+}
+
+---
+function {:opaque} ClampEnd(bucket: BucketMap, end: UI.RangeEnd) : (res : BucketMap)
+{
+map key | key in bucket && MS.UpperBound(key, end) :: bucket[key]
+}
+
+
+function {:opaque} Compose(top: BucketMap, bot: BucketMap) : (res : BucketMap)
+{
+map key
+| key in top.Keys + bot.Keys
+---
+function {:opaque} Compose(top: BucketMap, bot: BucketMap) : (res : BucketMap)
+{
+map key
+| key in top.Keys + bot.Keys
+:: Merge(BucketGet(top, key), BucketGet(bot, key))
+}
+
+function {:opaque} ComposeSeq(buckets: seq<BucketMap>) : (res : BucketMap)
+{
+if |buckets| == 0 then map[] else Compose(ComposeSeq(DropLast(buckets)), Last(buckets))
+---
+function {:opaque} ComposeSeq(buckets: seq<BucketMap>) : (res : BucketMap)
+{
+if |buckets| == 0 then map[] else Compose(ComposeSeq(DropLast(buckets)), Last(buckets))
+}
+
+lemma ComposeSeq1(b: BucketMap)
+ensures ComposeSeq([b]) == b
+{
+calc {
+ComposeSeq([b]);
+---
+function {:opaque} KeyValueMapOfBucket(bucket: BucketMap) : map<Key, Value>
+{
+map key | key in bucket && Merge(bucket[key], DefineDefault()).value != DefaultValue()
+:: Merge(bucket[key], DefineDefault()).value
+}
+
+function {:opaque} SortedSeqOfKeyValueMap(m: map<Key, Value>) : seq<UI.SuccResult>
+{
+var max := UnboundedKeyspace.maximumOpt(m.Keys);
+if max.None? then
+---
+function {:opaque} SortedSeqOfKeyValueMap(m: map<Key, Value>) : seq<UI.SuccResult>
+{
+var max := UnboundedKeyspace.maximumOpt(m.Keys);
+if max.None? then
+[]
+else
+SortedSeqOfKeyValueMap(MapRemove1(m, max.value))
++ [UI.SuccResult(max.value, m[max.value])]
+}
+
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/BucketsLib.i.dfy
+function {:opaque} B(m: map<Key, Message>) : (b : Bucket)
+ensures PreWFBucket(b)
+ensures IsStrictlySorted(b.keys)
+ensures b.as_map() == m
+ensures WFBucketMap(m) ==> WFBucket(b)
+{
+IsStrictlySorted_seqs_of_map(m);
+map_of_seqs_of_seqs_of_map(m);
+var sp := seqs_of_map(m);
+var b := Bucket(sp.keys, sp.msgs);
+---
+function {:opaque} SplitBucketLeft(bucket: Bucket, pivot: Key) : (res: Bucket)
+requires PreWFBucket(bucket)
+ensures PreWFBucket(res)
+{
+var i := BoundedKeyspace.binarySearchIndexOfFirstKeyGte(bucket.keys, pivot);
+Bucket(bucket.keys[..i], bucket.msgs[..i])
+}
+
+function {:opaque} SplitBucketRight(bucket: Bucket, pivot: Key) : (res: Bucket)
+requires PreWFBucket(bucket)
+---
+function {:opaque} SplitBucketRight(bucket: Bucket, pivot: Key) : (res: Bucket)
+requires PreWFBucket(bucket)
+ensures PreWFBucket(res)
+{
+var i := BoundedKeyspace.binarySearchIndexOfFirstKeyGte(bucket.keys, pivot);
+Bucket(bucket.keys[i..], bucket.msgs[i..])
+}
+
+function SplitBucketListLeft(blist: BucketList, pivots: PivotTable, cLeft: int, key: Key) : BucketList
+requires WFBucketList(blist, pivots)
+---
+function {:opaque} SplitBucketInList(blist: BucketList, slot: int, pivot: Key) : BucketList
+requires 0 <= slot < |blist|
+requires PreWFBucket(blist[slot])
+{
+replace1with2(blist,
+SplitBucketLeft(blist[slot], pivot),
+SplitBucketRight(blist[slot], pivot),
+slot)
+}
+
+---
+function {:opaque} MergeBuckets(left: Bucket, right: Bucket) : (res : Bucket)
+requires PreWFBucket(left)
+requires PreWFBucket(right)
+ensures PreWFBucket(res)
+{
+Bucket(left.keys + right.keys, left.msgs + right.msgs)
+}
+
+function {:opaque} MergeBucketsInList(blist: BucketList, slot: int) : (blist' : BucketList)
+requires 0 <= slot < |blist| - 1
+---
+function {:opaque} MergeBucketsInList(blist: BucketList, slot: int) : (blist' : BucketList)
+requires 0 <= slot < |blist| - 1
+requires PreWFBucket(blist[slot])
+requires PreWFBucket(blist[slot+1])
+ensures |blist'| == |blist| - 1
+ensures PreWFBucket(blist'[slot])
+{
+replace2with1(blist,
+MergeBuckets(blist[slot], blist[slot+1]),
+slot)
+---
+function {:opaque} MapsOfBucketList(blist: BucketList) : (res : seq<BucketMap>)
+requires forall i | 0 <= i < |blist| :: PreWFBucket(blist[i])
+ensures |res| == |blist|
+ensures forall i | 0 <= i < |res| :: res[i] == blist[i].as_map()
+{
+seq(|blist|,
+i requires 0 <= i < |blist| => blist[i].as_map())
+}
+
+lemma B_empty_map()
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/BucketWeights.i.dfy
+function {:opaque} WeightKeyMultiset(keys: multiset<Key>) : (result: nat)
+ensures |keys| == 0 ==> result == 0
+{
+var weights := MSets.Apply(WeightKey, keys);
+assert |keys| == 0 ==> |weights| == 0;
+MSets.FoldSimple<nat>(0, MSets.AddNat, weights)
+}
+
+function {:opaque} WeightMessageMultiset(msgs: multiset<Message>) : (result: nat)
+ensures |msgs| == 0 ==> result == 0
+---
+function {:opaque} WeightMessageMultiset(msgs: multiset<Message>) : (result: nat)
+ensures |msgs| == 0 ==> result == 0
+{
+var weights := MSets.Apply(WeightMessage, msgs);
+assert |msgs| == 0 ==> |weights| == 0;
+MSets.FoldSimple<nat>(0, MSets.AddNat, weights)
+}
+
+function WeightKeyList(keys: seq<Key>) : (result: nat)
+ensures |keys| == 0 ==> result == 0
+---
+function {:opaque} WeightBucketList(buckets: BucketList) : (w:nat)
+{
+if |buckets| == 0 then 0 else (
+WeightBucketList(DropLast(buckets)) +
+WeightBucket(Last(buckets))
+)
+}
+
+function {:opaque} WeightBucketMap(m: BucketMap) : (w: nat)
+{
+---
+function {:opaque} WeightBucketMap(m: BucketMap) : (w: nat)
+{
+WeightKeyMultiset(multiset(m.Keys)) + WeightMessageMultiset(Multisets.ValueMultiset(m))
+}
+
+function method WeightKeyUint64(key: Key) : (w:uint64)
+ensures w as int == WeightKey(key)
+{
+4 + |key| as uint64
+}
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/PackedKV.i.dfy
+function {:opaque} psaSeq_Messages(psa: PSA.Psa, i: int) : (res : seq<Message>)
+requires PSA.WF(psa)
+requires 0 <= i <= |psa.offsets|
+ensures |res| == i
+ensures forall j | 0 <= j < i :: res[j] == bytestring_to_Message(PSA.psaElement(psa, j as uint64))
+{
+if i == 0 then [] else psaSeq_Messages(psa, i-1) + [
+bytestring_to_Message(PSA.psaElement(psa, (i-1) as uint64))]
+}
+
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Buckets/PackedStringArray.i.dfy
+function {:opaque} psaSeq(psa: Psa, i: int) : (res : seq<Key>)
+requires WF(psa)
+requires 0 <= i <= |psa.offsets|
+ensures |res| == i
+ensures forall j | 0 <= j < i :: res[j] == psaElement(psa, j as uint64)
+{
+if i == 0 then [] else psaSeq(psa, i-1) + [psaElement(psa, (i-1) as uint64)]
+}
+
+function I(psa: Psa) : seq<Key>
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Checksums/CRC32CArrayImpl.i.dfy
+function method {:opaque} alignment(idx: uint32) : (res : uint32)
+{
+var t := idx % 8;
+if t == 0 then 0 else 8 - t
+}
+
+lemma lemma_n_div_24_optimization(n: nat)
+ensures n < 256*24 ==> (n*2731)/65536 == n/24
+{
+}
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Checksums/CRC32CImpl.i.dfy
+function method {:opaque} alignment(idx: uint32) : (res : uint32)
+{
+var t := idx % 8;
+if t == 0 then 0 else 8 - t
+}
+
+lemma lemma_n_div_24_optimization(n: nat)
+ensures n < 256*24 ==> (n*2731)/65536 == n/24
+{
+}
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Checksums/CRC32C_Lemmas.i.dfy
+function {:opaque} advance(acc: Bits, data: Bits) : (acc': Bits)
+requires |acc| == 32
+ensures |acc'| == 32
+{
+reverse(mod_F2_X(
+xor(
+zeroes(32) + reverse(data),
+zeroes(|data|) + reverse(acc)
+),
+poly()
+---
+predicate {:opaque} advances_bytes(s: seq<byte>, i1: int, acc1: uint32, i2: int, acc2: uint32)
+requires 0 <= i1 <= i2 <= |s|
+{
+advance(bits_of_int(acc1 as int, 32), bits_of_bytes(s[i1..i2]))
+== bits_of_int(acc2 as int, 32)
+}
+
+lemma advances_bytes_refl(s: seq<byte>, i: int, acc: uint32)
+requires 0 <= i <= |s|
+ensures advances_bytes(s, i, acc, i, acc)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Checksums/CRC32C_Lut.i.dfy
+function method {:opaque} shift1(p: uint32) : (p' : uint32)
+{
+if p % 2 == 0 then
+p / 2
+else
+bitxor32(p / 2, 0x82F6_3b78)
+}
+
+lemma reverse_p()
+ensures reverse(poly())
+---
+function method {:opaque} compute_pow_mod_crc(
+n: uint64, p: uint32,
+n': uint64) : (p': uint32)
+requires n >= 33
+requires bits_of_int(p as int, 32) == pow_mod_crc(n as nat)
+requires n <= n'
+ensures bits_of_int(p' as int, 32) == pow_mod_crc(n' as nat)
+decreases n' - n
+{
+if n == n' then
+---
+function method {:opaque} compute_all_pow_mod_crc_iter(
+linear results: seq<uint32>,
+i: uint64) : (linear results': seq<uint32>)
+requires |results| == 512
+requires 1 <= i <= 512
+requires forall j:nat | 0 <= j < i as nat ::
+bits_of_int(results[j] as nat, 32) == pow_mod_crc(64*(j+1))
+ensures |results'| == 512
+ensures forall j:nat | 0 <= j < 512 ::
+bits_of_int(results'[j] as nat, 32) == pow_mod_crc(64*(j+1))
+---
+function method {:opaque} compute_all_pow_mod_crc() : (linear results': seq<uint32>)
+ensures |results'| == 512
+ensures forall j:nat | 0 <= j < 512 ::
+bits_of_int(results'[j] as nat, 32) == pow_mod_crc(64*(j+1))
+{
+linear var results := seq_alloc(512, 0);
+pow0();
+var first := compute_pow_mod_crc(33, 0x8000_0000, 64);
+compute_all_pow_mod_crc_iter(seq_set(results, 0, first), 1)
+}
+---
+function method {:opaque} combine(a: uint32, b: uint32) : (c: uint64)
+ensures bits_of_int(c as nat, 64) == bits_of_int(a as nat, 32) + bits_of_int(b as nat, 32)
+{
+lemma_bits_of_int_64_split((b as int) * 0x1_0000_0000 + a as int);
+(b as uint64) * 0x1_0000_0000 + (a as uint64)
+}
+
+function method {:opaque} compute_lut_iter(
+linear pmc: seq<uint32>,
+linear lut: seq<uint64>,
+---
+function method {:opaque} compute_lut_iter(
+linear pmc: seq<uint32>,
+linear lut: seq<uint64>,
+i: uint64) : (linear lut': seq<uint64>)
+requires |pmc| == 512
+requires forall j:nat | 0 <= j < 512 ::
+bits_of_int(pmc[j] as nat, 32) == pow_mod_crc(64*(j+1))
+requires |lut| == 257
+requires 1 <= i <= 257
+requires forall j:nat | 1 <= j < i as nat ::
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Checksums/CRC32C.s.dfy
+function {:opaque} crc32_c(s: seq<byte>) : (checksum : seq<byte>)
+ensures |checksum| == 4
+{
+var bitstream := zeroes(32) + reverse(bits_of_bytes(s));
+var bitstream1 := xor(bitstream, zeroes(|bitstream|-32) + ones(32));
+var m := mod_F2_X(bitstream1, bits_of_int(0x1_1EDC_6F41, 33));
+var m1 := xor(reverse(m), ones(32));
+[
+byte_of_bits(m1[0..8]),
+byte_of_bits(m1[8..16]),
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Checksums/F2_X_Lemmas.i.dfy
+function {:opaque} parity<V>(m: set<V>) : bool
+{
+|m| % 2 == 1
+}
+
+function set_partial(p: Bits, q: Bits, i: nat, j: nat) : set<(nat,nat)>
+{
+set a:nat, b: nat
+| a <= i && b <= i && a >= j && a + b == i
+&& bits_get(p, a) && bits_get(q, b)
+---
+function {:opaque} set_digit(p: Bits, q: Bits, i: nat) : set<(nat,nat)>
+{
+set a:nat, b: nat
+| a <= i && b <= i && a + b == i
+&& bits_get(p, a) && bits_get(q, b)
+:: (a,b)
+}
+
+lemma mset_mul_F2_X_digit(p: Bits, q: Bits, i: nat)
+ensures mul_F2_X_digit(p, q, i) == parity(set_digit(p, q, i))
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/DataStructures/BitmapImpl.i.dfy
+predicate {:opaque} Inv()
+{
+&& |bits| < 0x1_0000_0000_0000_0000 / 128
+}
+
+static function {:opaque} IPrefix(bits: seq<uint64>, i: int) : (res : BitmapModelT)
+requires 0 <= i <= 64 * |bits|
+ensures |res| == i
+ensures forall j | 0 <= j < i :: res[j] == BitsSetAtC(bits, j)
+{
+---
+static function {:opaque} IPrefix(bits: seq<uint64>, i: int) : (res : BitmapModelT)
+requires 0 <= i <= 64 * |bits|
+ensures |res| == i
+ensures forall j | 0 <= j < i :: res[j] == BitsSetAtC(bits, j)
+{
+if i == 0 then [] else IPrefix(bits, i-1) + [BitsSetAtC(bits, i-1)]
+}
+
+function {:opaque} I() : BitmapModelT
+requires Inv()
+---
+function {:opaque} I() : BitmapModelT
+requires Inv()
+{
+reveal Inv();
+IPrefix(bits, 64 * |bits|)
+}
+
+static method Constructor(len: uint64) returns (linear bm: Bitmap)
+requires len as int < 0x1_0000_0000_0000_0000 / 2
+requires len % 64 == 0
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/DataStructures/BitmapModel.i.dfy
+function {:opaque} BitSet(bm: BitmapModelT, i: int) : (bm' : BitmapModelT)
+requires 0 <= i < Len(bm)
+ensures Len(bm') == Len(bm)
+{
+bm[i := true]
+}
+
+function {:opaque} BitUnset(bm: BitmapModelT, i: int) : (bm' : BitmapModelT)
+requires 0 <= i < Len(bm)
+ensures Len(bm') == Len(bm)
+---
+function {:opaque} BitUnset(bm: BitmapModelT, i: int) : (bm' : BitmapModelT)
+requires 0 <= i < Len(bm)
+ensures Len(bm') == Len(bm)
+{
+bm[i := false]
+}
+
+predicate {:opaque} IsSet(bm: BitmapModelT, i: int)
+requires 0 <= i < Len(bm)
+{
+---
+predicate {:opaque} IsSet(bm: BitmapModelT, i: int)
+requires 0 <= i < Len(bm)
+{
+bm[i]
+}
+
+function {:opaque} EmptyBitmap(n: int) : (bm : BitmapModelT)
+requires n >= 0
+ensures Len(bm) == n
+ensures forall i | 0 <= i < Len(bm) :: !IsSet(bm, i)
+---
+function {:opaque} EmptyBitmap(n: int) : (bm : BitmapModelT)
+requires n >= 0
+ensures Len(bm) == n
+ensures forall i | 0 <= i < Len(bm) :: !IsSet(bm, i)
+{
+if n == 0 then [] else (
+var bm := EmptyBitmap(n-1) + [false];
+
+reveal_IsSet();
+assert forall i | 0 <= i < n - 1 :: !IsSet(EmptyBitmap(n-1), i);
+---
+function {:opaque} BitAlloc(bm: BitmapModelT) : (res: Option<int>)
+ensures res.Some? ==> 0 <= res.value < Len(bm)
+{
+BitAllocIter(bm, 0)
+}
+
+function {:opaque} BitUnion(a: BitmapModelT, b: BitmapModelT) : (res: BitmapModelT)
+requires Len(a) == Len(b)
+ensures Len(res) == Len(a)
+ensures forall i | 0 <= i < Len(res) :: IsSet(res, i) == (IsSet(a, i) || IsSet(b, i))
+---
+function {:opaque} BitUnion(a: BitmapModelT, b: BitmapModelT) : (res: BitmapModelT)
+requires Len(a) == Len(b)
+ensures Len(res) == Len(a)
+ensures forall i | 0 <= i < Len(res) :: IsSet(res, i) == (IsSet(a, i) || IsSet(b, i))
+{
+reveal_IsSet();
+if |a| == 0 then [] else (
+var res := BitUnion(a[..|a|-1], b[..|b|-1]) + [a[|a|-1] || b[|b|-1]];
+assert IsSet(res, |a|-1) == (IsSet(a, |a|-1) || IsSet(b, |a|-1));
+assert forall i | 0 <= i < Len(res)-1 :: IsSet(a, i) == IsSet(a[..|a|-1], i);
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/DataStructures/BtreeModel.i.dfy
+function {:opaque} AllKeys(node: Node) : set<Key>
+ensures node.Leaf? && 0 < |node.keys| ==> AllKeys(node) != {}
+ensures node.Index? && 0 < |node.pivots| ==> AllKeys(node) != {}
+{
+match node {
+case Leaf(keys, values) =>
+var result := set k | k in keys;
+if 0 < |node.keys| then
+assert node.keys[0] in result;
+result
+---
+function {:opaque} Interpretation(node: Node) : map<Key, Value>
+requires WF(node)
+decreases node
+{
+if node.Leaf? then
+Keys.PosEqLargestLteForAllElts(node.keys);
+map k | (k in node.keys) :: node.values[Keys.LargestLte(node.keys, k)]
+else
+map key |
+&& key in AllKeys(node)
+---
+predicate {:opaque} OpaquePartOfSplitChildOfIndex(oldindex: Node, newindex: Node, childidx: int)
+requires TransparentPartOfSplitChildOfIndex(oldindex, newindex, childidx)
+{
+&& lseqs(newindex.children) == Seq.replace1with2(lseqs(oldindex.children), newindex.children[childidx], newindex.children[childidx+1], childidx)
+}
+
+predicate SplitChildOfIndex(oldindex: Node, newindex: Node, childidx: int)
+{
+&& TransparentPartOfSplitChildOfIndex(oldindex, newindex, childidx)
+&& OpaquePartOfSplitChildOfIndex(oldindex, newindex, childidx)
+---
+function {:opaque} ToSeq(node: Node) : (kvlists : (seq<Key>, seq<Value>))
+requires WF(node)
+ensures |kvlists.0| == |kvlists.1|
+{
+if node.Leaf? then (node.keys, node.values)
+else
+var (keylists, valuelists) := ToSeqChildren(lseqs(node.children));
+(Flatten(keylists), Flatten(valuelists))
+}
+
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/DataStructures/LinearContentMutableMap.i.dfy
+function {:opaque} getEmptyWitness<V>(self: FixedSizeLinearHashMap<V>, i: uint64) : (res : uint64)
+requires FixedSizeInv(self)
+requires 0 <= i as int <= |self.storage|
+requires forall j | 0 <= j < i as int :: !self.storage[j].Empty?
+requires self.count as int < |self.storage|
+decreases |self.storage| - i as int
+ensures 0 <= res as int < |self.storage|
+ensures self.storage[res as int].Empty?
+{
+allNonEmptyImpliesCountEqStorageSize(self);
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/DataStructures/LinearMutableMapBase.i.dfy
+function method {:opaque} lshift(a: uint64, b: uint32) : uint64
+requires 0 <= b < 64
+{
+((a as bv64) << b) as uint64
+}
+
+function method {:opaque} rshift(a: uint64, b: uint32) : uint64
+requires 0 <= b < 64
+{
+((a as bv64) >> b) as uint64
+---
+function method {:opaque} rshift(a: uint64, b: uint32) : uint64
+requires 0 <= b < 64
+{
+((a as bv64) >> b) as uint64
+}
+
+function method {:opaque} bitnot(a: uint64) : uint64
+{
+((a as bv64) ^ 0xffff_ffff_ffff_ffff) as uint64
+}
+---
+function method {:opaque} bitnot(a: uint64) : uint64
+{
+((a as bv64) ^ 0xffff_ffff_ffff_ffff) as uint64
+}
+
+function method {:opaque} bitxor(a: uint64, b: uint64) : uint64
+{
+((a as bv64) ^ (b as bv64)) as uint64
+}
+
+---
+function method {:opaque} bitxor(a: uint64, b: uint64) : uint64
+{
+((a as bv64) ^ (b as bv64)) as uint64
+}
+
+function method {:opaque} hash64(k: uint64): uint64
+{
+var k0 := u64add(bitnot(k), lshift(k, 21));
+var k1 := bitxor(k0, rshift(k0, 24));
+var k2 := u64add(u64add(k1, lshift(k1, 3)), lshift(k1, 8));
+---
+function method {:opaque} hash64(k: uint64): uint64
+{
+var k0 := u64add(bitnot(k), lshift(k, 21));
+var k1 := bitxor(k0, rshift(k0, 24));
+var k2 := u64add(u64add(k1, lshift(k1, 3)), lshift(k1, 8));
+var k3 := bitxor(k2, rshift(k2, 14));
+var k4 := u64add(u64add(k3, lshift(k3, 2)), lshift(k3, 4));
+var k5 := bitxor(k4, rshift(k4, 28));
+var k6 := u64add(k5, lshift(k5, 31));
+
+---
+predicate {:opaque} SomeSkipCountExplainsKey<V>(elements: seq<Item<V>>, key: uint64)
+requires ValidElements(elements)
+{
+exists skips :: SlotExplainsKey(elements, skips, key)
+}
+
+predicate TwoNonEmptyValidSlotsWithSameKey<V>(elements: seq<Item<V>>, slot1: Slot, slot2: Slot)
+requires ValidElements(elements)
+{
+&& ValidSlot(|elements|, slot1)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/DataStructures/LinearMutableMap.i.dfy
+function {:opaque} getEmptyWitness<V>(self: FixedSizeLinearHashMap<V>, i: uint64) : (res : uint64)
+requires FixedSizeInv(self)
+requires 0 <= i as int <= |self.storage|
+requires forall j | 0 <= j < i :: !self.storage[j].Empty?
+requires self.count as int < |self.storage|
+decreases |self.storage| - i as int
+ensures 0 <= res as int < |self.storage|
+ensures self.storage[res].Empty?
+{
+allNonEmptyImpliesCountEqStorageSize(self);
+---
+function method {:opaque} Constructor<V>(size: uint64) : (linear self: LinearHashMap<V>)
+requires 128 <= size
+ensures Inv(self)
+ensures self.contents == map[]
+{
+linear var self := LinearHashMap(ConstructorFromSize(size), 0, map[]);
+
+assert forall slot :: ValidSlot(|self.underlying.storage|, slot) ==> !self.underlying.storage[slot.slot].Entry?;
+UnderlyingInvImpliesMapFromStorageMatchesContents(self.underlying, self.contents);
+assert MapFromStorage(self.underlying.storage) == self.contents;
+---
+method {:opaque} Destructor<V>(linear self: LinearHashMap<V>)
+{
+linear var LinearHashMap(underlying, _, _) := self;
+linear var FixedSizeLinearHashMap(storage, _, _) := underlying;
+var _ := seq_free(storage);
+}
+
+lemma LemmaEntryKeyInContents<V>(self: LinearHashMap<V>, i: uint64)
+requires Inv(self)
+requires 0 <= i as int < |self.underlying.storage|
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/DataStructures/LruModel.i.dfy
+predicate {:opaque} distinct(q: seq<uint64>)
+{
+forall i, j | 0 <= i < |q| && 0 <= j < |q| && i != j :: q[i] != q[j]
+}
+
+predicate WF(q: LruQueue)
+{
+distinct(q)
+}
+
+---
+function {:opaque} NextOpt(q: LruQueue) : (x : Option<uint64>)
+ensures x.Some? ==> x.value in I(q)
+ensures x.None? ==> I(q) == {}
+{
+if q == [] then None else Some(q[0])
+}
+
+function Pop(q: LruQueue) : (LruQueue, uint64)
+requires |I(q)| > 0
+{
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/DataStructures/MutableBtree.i.dfy
+function {:opaque} Height(node: Node): nat
+requires Model.WF(node)
+ensures node.Leaf? ==> Height(node) == 0
+decreases node, 1
+{
+if node.Leaf?
+then 0
+else
+var heights := IndexHeights(node); seqMax(heights) + 1
+}
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Lang/System/Bits.s.dfy
+function {:opaque} zeroes(l: nat) : (p: Bits)
+ensures |p| == l
+ensures forall i | 0 <= i < |p| :: !p[i]
+{
+if l == 0 then [] else zeroes(l-1) + [false]
+}
+
+function {:opaque} ones(l: nat) : (p: Bits)
+ensures |p| == l
+ensures forall i | 0 <= i < |p| :: p[i]
+---
+function {:opaque} ones(l: nat) : (p: Bits)
+ensures |p| == l
+ensures forall i | 0 <= i < |p| :: p[i]
+{
+if l == 0 then [] else ones(l-1) + [true]
+}
+
+
+function mm_cvtepu32_epi64(a: seq<bool>) : (b: seq<bool>)
+requires |a| == 128
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Lang/System/F2_X.s.dfy
+function {:opaque} reverse(s: Bits) : (s' : Bits)
+ensures |s'| == |s|
+ensures forall i | 0 <= i < |s'| :: s'[i] == s[|s| - 1 - i]
+{
+if |s| == 0 then []
+else reverse(s[1..]) + [s[0]]
+}
+
+function bool_xor(a: bool, b: bool) : (c: bool)
+{
+---
+function {:opaque} xor(p: Bits, q: Bits) : (r : Bits)
+requires |p| == |q|
+ensures |r| == |p|
+ensures forall i | 0 <= i < |r| :: r[i] == bool_xor(p[i], q[i])
+{
+if |p| == 0 then
+[]
+else
+xor(p[..|p|-1], q[..|q|-1]) + [bool_xor(p[|p|-1], q[|q|-1])]
+}
+---
+function {:opaque} mul_F2_X(p: Bits, q: Bits) : (r : Bits)
+ensures |r| == |p| + |q|
+ensures forall i | 0 <= i < |r| :: r[i] == mul_F2_X_digit(p, q, i)
+{
+seq(|p| + |q|, i requires 0 <= i => mul_F2_X_digit(p, q, i))
+}
+
+function shift(p: Bits, t: nat) : (r: Bits)
+{
+zeroes(t) + p
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Lang/System/PackedInts.s.dfy
+function {:opaque} unpack_LittleEndian_Uint32(s: seq<byte>) : uint32
+requires |s| == 4
+{
+(s[0] as uint32)
++ (s[1] as uint32 * 0x1_00)
++ (s[2] as uint32 * 0x1_00_00)
++ (s[3] as uint32 * 0x1_00_00_00)
+}
+
+function {:opaque} unpack_LittleEndian_Uint64(s: seq<byte>) : uint64
+---
+function {:opaque} unpack_LittleEndian_Uint64(s: seq<byte>) : uint64
+requires |s| == 8
+{
+(s[0] as uint64)
++ (s[1] as uint64 * 0x1_00)
++ (s[2] as uint64 * 0x1_00_00)
++ (s[3] as uint64 * 0x1_00_00_00)
++ (s[4] as uint64 * 0x1_00_00_00_00)
++ (s[5] as uint64 * 0x1_00_00_00_00_00)
++ (s[6] as uint64 * 0x1_00_00_00_00_00_00)
+---
+function {:opaque} unpack_LittleEndian_Uint32_Seq(
+packed: seq<byte>,
+len: int) : (unpacked: seq<uint32>)
+requires |packed| == len * 4
+ensures |unpacked| == len
+ensures forall i | 0 <= i < len ::
+unpacked[i] == unpack_LittleEndian_Uint32(packed[4*i .. 4*i + 4])
+{
+assert forall i | 0 <= i < len - 1 ::
+packed[4*i .. 4*i + 4] == packed[..4*(len-1)][4*i .. 4*i + 4];
+---
+function {:opaque} unpack_LittleEndian_Uint64_Seq(
+packed: seq<byte>,
+len: int) : (unpacked: seq<uint64>)
+requires |packed| == len * 8
+ensures |unpacked| == len
+ensures forall i | 0 <= i < len ::
+unpacked[i] == unpack_LittleEndian_Uint64(packed[8*i .. 8*i + 8])
+{
+assert forall i | 0 <= i < len - 1 ::
+packed[8*i .. 8*i + 8] == packed[..8*(len-1)][8*i .. 8*i + 8];
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Lang/System/SeqComparison.s.dfy
+predicate {:opaque} lte(a: seq<byte>, b: seq<byte>)
+decreases |a|
+{
+if |a| == 0 then (
+true
+) else (
+if |b| == 0 then (
+false
+) else (
+if a[0] < b[0] then true
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Marshalling/GenericMarshalling.i.dfy
+function {:opaque} SeqSum(t:seq<V>) : int
+ensures SeqSum(t) >= 0;
+{
+if |t| == 0 then 0
+else SizeOfV(t[0]) + SeqSum(t[1..])
+}
+
+function SizeOfV(val:V) : int
+ensures SizeOfV(val) >= 0;
+{
+---
+function {:opaque} parse_Array_contents(data:seq<byte>, eltType:G, len:uint64) : (Option<seq<V>>, seq<byte>)
+requires |data| < 0x1_0000_0000_0000_0000;
+requires ValidGrammar(eltType);
+decreases eltType, 1, len;
+ensures var (opt_seq, rest) := parse_Array_contents(data, eltType, len);
+|rest| <= |data| && (opt_seq.Some? ==>
+&& |opt_seq.value| == len as int
+&& forall i :: 0 <= i < |opt_seq.value| ==> ValidVal(opt_seq.value[i]) && ValInGrammar(opt_seq.value[i], eltType));
+{
+if len == 0 then
+---
+function {:opaque} parse_Tuple_contents(data:seq<byte>, eltTypes:seq<G>) : (Option<seq<V>>, seq<byte>)
+requires |data| < 0x1_0000_0000_0000_0000;
+requires |eltTypes| < 0x1_0000_0000_0000_0000;
+requires forall elt :: elt in eltTypes ==> ValidGrammar(elt);
+decreases eltTypes, 0;
+ensures var (opt_val, rest) := parse_Tuple_contents(data, eltTypes);
+|rest| <= |data| &&
+(opt_val.Some? ==> (|opt_val.value| == |eltTypes|
+&& forall i :: 0 <= i < |opt_val.value| ==> ValidVal(opt_val.value[i]) && ValInGrammar(opt_val.value[i], eltTypes[i])));
+{
+---
+function {:opaque} parse_Val(data:seq<byte>, grammar:G) : (Option<V>, seq<byte>)
+requires |data| < 0x1_0000_0000_0000_0000;
+requires ValidGrammar(grammar);
+decreases grammar, 0;
+ensures  var (val, rest) := parse_Val(data, grammar);
+|rest| <= |data| && (!val.None? ==> ValidVal(val.value) && ValInGrammar(val.value, grammar));
+{
+match grammar
+case GUint32             => parse_Uint32(data)
+case GUint64             => parse_Uint64(data)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/lib/Math/Math.i.dfy
+function {:opaque} power2(exp: nat) : nat
+ensures power2(exp) > 0;
+{
+if (exp==0) then
+1
+else
+2*power2(exp-1)
+}
+
+lemma lemma_2toX()
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/MapSpec/TSJ.i.dfy
+function {:opaque} SeqSub<T>(s: seq<T>, t: seq<T>) : seq<T>
+requires IsSuffix(s, t)
+ensures SeqSub(s, t) + t == s
+{
+s[.. |s| - |t|]
+}
+
+lemma SeqSubAdd<T>(a: seq<T>, b: seq<T>, c: seq<T>, d: seq<T>)
+requires IsSuffix(a, b)
+requires IsSuffix(b + c, d)
+---
+
+/home/yizhou7/mariposa-D_VBKV/veribetrkv-linear/PivotBetree/PivotBetreeSpec.i.dfy
+function {:opaque} LookupUpperBound(lookup: Lookup, key: Key) : Option<Key>
+requires LookupVisitsWFNodes(lookup)
+requires LookupBoundedKey(key, lookup)
+{
+if lookup == []
+then None
+else OptionKeyMin(
+LookupUpperBound(DropLast(lookup), key),
+LookupUpperBoundAtLayer(Last(lookup), key)
+)
+---
+function {:opaque} NodeInsertKeyValue(node: Node, key: Key, msg: Message) : Node
+requires WFNode(node)
+requires BoundedKey(node.pivotTable, key)
+{
+var r := Route(node.pivotTable, key);
+var bucket := node.buckets[r];
+var newBucket := BucketInsert(bucket, key, msg);
+node.(buckets := node.buckets[r := newBucket])
+}
+
+---
+function {:opaque} CutoffNodeAndKeepLeft(node: Node, pivot: Key) : (node': Node)
+requires WFNode(node)
+requires ValidLeftCutOffKey(node.pivotTable, pivot)
+ensures node.children.Some? <==> node'.children.Some?
+ensures WFNode(node')
+ensures node'.pivotTable[0] == node.pivotTable[0]
+ensures Last(node'.pivotTable) == KeyToElement(pivot)
+ensures G.Successors(node') <= G.Successors(node)
+ensures WeightBucketList(node'.buckets) <= WeightBucketList(node.buckets)
+ensures |node'.buckets| <= |node.buckets|
+---
+function {:opaque} CutoffNodeAndKeepRight(node: Node, pivot: Key) : (node': Node)
+requires WFNode(node)
+requires BoundedKey(node.pivotTable, pivot)
+ensures node.children.Some? <==> node'.children.Some?
+ensures WFNode(node')
+ensures pivot == node'.pivotTable[0].e
+ensures Last(node.pivotTable) == Last(node'.pivotTable)
+ensures G.Successors(node') <= G.Successors(node)
+ensures WeightBucketList(node'.buckets) <= WeightBucketList(node.buckets)
+ensures |node'.buckets| <= |node.buckets|
+---
+function {:opaque} CutoffNode(node: Node, lpivot: Key, rpivot: Option<Key>) : (node' : Node)
+requires WFNode(node)
+requires ValidSplitKey(node, lpivot, rpivot)
+ensures node.children.Some? <==> node'.children.Some?
+ensures WFNode(node')
+ensures lpivot == node'.pivotTable[0].e
+ensures rpivot.Some? ==> Last(node'.pivotTable) == KeyToElement(rpivot.value)
+ensures rpivot.None? ==> Last(node'.pivotTable) == Last(node.pivotTable)
+ensures G.Successors(node') <= G.Successors(node)
+ensures WeightBucketList(node'.buckets) <= WeightBucketList(node.buckets)
+---
+
